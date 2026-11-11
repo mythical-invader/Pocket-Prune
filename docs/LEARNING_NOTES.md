@@ -49,7 +49,7 @@ Some values differ per laptop (database address, llama.cpp folder) or are secret
 tokens). They must **not** be written in the code or committed to GitHub.
 
 - They are **environment variables**: named values the program reads at start-up, e.g.
-  `process.env.PORT`.
+  `process.env.API_PORT`.
 - To avoid typing them every time, we write them in a file called `.env` in the repo root.
   The `dotenv` library reads that file when `server.js` starts.
 - `.env` is listed in `.gitignore`, so Git never uploads it.
@@ -59,7 +59,7 @@ tokens). They must **not** be written in the code or committed to GitHub.
 ```js
 // server.js
 dotenv.config({ path: path.join(import.meta.dirname, '..', '.env') });
-const port = process.env.PORT || 8000; // use 8000 if PORT is not set
+const port = process.env.API_PORT || 8000; // use 8000 if API_PORT is not set
 ```
 
 ## 3. Branches, pull requests and CI (WP-00 / WP-01)

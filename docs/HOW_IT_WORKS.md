@@ -34,7 +34,7 @@ A plain-English walkthrough of the code, file by file. Each work package adds it
 
 | File                                                                                  | What it does                                                                                                      |
 | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `server.js`                                                                           | Loads `.env` from the root, then starts the app on `PORT` (8000).                                                 |
+| `server.js`                                                                           | Loads `.env` from the root, then starts the app on `API_PORT` (8000).                                             |
 | `app.js`                                                                              | Creates the Express app: JSON body parsing, request logging (morgan) and the routes. For now only `GET /api`.     |
 | `tests/app.test.js`                                                                   | Calls `GET /api` with supertest (no real port) and checks the answer. Every future API test follows this pattern. |
 | `worker/worker.js`                                                                    | Placeholder that only prints a message, so `npm run dev:worker` already works. Real worker: WP-11.                |

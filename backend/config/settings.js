@@ -13,7 +13,7 @@ const number = (value, fallback) =>
   value === undefined || value === '' ? fallback : Number(value);
 
 export const settings = {
-  port: number(env.PORT, 8000),
+  port: number(env.API_PORT, 8000), // not PORT: tools like Vite set PORT for themselves
   nodeEnv: env.NODE_ENV || 'development',
   mongoUri: env.MONGO_URI || 'mongodb://127.0.0.1:27017/pocketprune',
 
