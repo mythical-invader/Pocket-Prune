@@ -1,0 +1,29 @@
+{
+  "name": "pocketprune-backend",
+  "version": "0.0.1",
+  "private": true,
+  "description": "PocketPrune API (Express) and background worker",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "worker": "node worker/worker.js",
+    "seed": "node seed.js",
+    "test": "cross-env NODE_ENV=test vitest run"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "morgan": "^1.12.1"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.3.2",
+    "vitest": "^4.1.12"
+  }
+}

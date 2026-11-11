@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+data
+package-lock.json
+docs/*.pdf
+docs/*.docx
+CLAUDE.md
+docs/progress.json

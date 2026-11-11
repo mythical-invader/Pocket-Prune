@@ -1,0 +1,39 @@
+# CI — runs on every pull request and every push to main.
+# Checks: lint, backend tests, website build. Tests never need internet or llama.cpp
+# (commands are mocked), so this runs fine on GitHub's machines.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install
+        run: |
+          npm ci
+          npm ci --prefix backend
+          npm ci --prefix frontend
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Backend tests
+        run: npm test
+
+      - name: Website build
+        run: npm run build

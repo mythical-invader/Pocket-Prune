@@ -1,0 +1,54 @@
+{
+  "project": "PocketPrune",
+  "checkpoints": [
+    { "name": "Phase 1 (M1)", "date": "2026-11-22", "phase": 1 },
+    { "name": "Mid-term demo (40 %)", "date": "2026-12-07", "phase": 2 },
+    { "name": "Phase 3 (M3)", "date": "2027-01-17", "phase": 3 },
+    { "name": "Phase 4 (M4)", "date": "2027-03-14", "phase": 4 },
+    { "name": "Final (v1.0.0)", "date": "2027-04-25", "phase": 5 }
+  ],
+  "people": { "H": "Huzaifah", "S": "Sibghatullah" },
+  "wps": [
+    { "id": "WP-00", "title": "GitHub setup + shared Atlas database", "owner": "Both", "weight": 1, "phase": 1, "week": "1", "needs": [], "status": "in-progress", "pr": null },
+    { "id": "WP-01", "title": "Project setup", "owner": "H", "weight": 3, "phase": 1, "week": "1", "needs": ["WP-00"], "status": "in-review", "pr": null },
+    { "id": "WP-02", "title": "llama.cpp setup + first hand compression", "owner": "S", "weight": 4, "phase": 1, "week": "1", "needs": ["WP-00"], "status": "not-started", "pr": null },
+    { "id": "WP-03", "title": "Backend core", "owner": "H", "weight": 3, "phase": 1, "week": "1–2", "needs": ["WP-01"], "status": "not-started", "pr": null },
+    { "id": "WP-04", "title": "Command runner", "owner": "S", "weight": 3, "phase": 1, "week": "2", "needs": ["WP-01", "WP-02"], "status": "not-started", "pr": null },
+    { "id": "WP-05", "title": "Catalog + profiles API", "owner": "H", "weight": 3, "phase": 1, "week": "2", "needs": ["WP-03"], "status": "not-started", "pr": null },
+    { "id": "WP-06", "title": "CLI pipeline + fake pipeline", "owner": "S", "weight": 5, "phase": 1, "week": "2–3", "needs": ["WP-04"], "status": "not-started", "pr": null },
+    { "id": "WP-07", "title": "Website foundation", "owner": "H", "weight": 3, "phase": 1, "week": "2–3", "needs": ["WP-01"], "status": "not-started", "pr": null },
+
+    { "id": "WP-08", "title": "Preflight", "owner": "H", "weight": 3, "phase": 2, "week": "3", "needs": ["WP-05", "WP-07"], "status": "not-started", "pr": null },
+    { "id": "WP-09", "title": "Catalog trials", "owner": "S", "weight": 2, "phase": 2, "week": "3", "needs": ["WP-06"], "status": "not-started", "pr": null },
+    { "id": "WP-10", "title": "Jobs API", "owner": "H", "weight": 3, "phase": 2, "week": "3–4", "needs": ["WP-08"], "status": "not-started", "pr": null },
+    { "id": "WP-11", "title": "Worker", "owner": "S", "weight": 3, "phase": 2, "week": "4", "needs": ["WP-06", "WP-10"], "status": "not-started", "pr": null },
+    { "id": "WP-12", "title": "Job Progress page", "owner": "H", "weight": 2, "phase": 2, "week": "4", "needs": ["WP-10", "WP-11"], "status": "not-started", "pr": null },
+    { "id": "WP-13", "title": "Pipeline hardening", "owner": "S", "weight": 2, "phase": 2, "week": "4", "needs": ["WP-11"], "status": "not-started", "pr": null },
+
+    { "id": "WP-14", "title": "Benchmarking", "owner": "S", "weight": 4, "phase": 3, "week": "5–6", "needs": ["WP-13"], "status": "not-started", "pr": null },
+    { "id": "WP-15", "title": "Results table", "owner": "H", "weight": 3, "phase": 3, "week": "5–6", "needs": ["WP-12"], "status": "not-started", "pr": null },
+    { "id": "WP-16", "title": "Perplexity + demo mode", "owner": "S", "weight": 3, "phase": 3, "week": "7", "needs": ["WP-14"], "status": "not-started", "pr": null },
+    { "id": "WP-17", "title": "Charts + downloads", "owner": "H", "weight": 3, "phase": 3, "week": "7", "needs": ["WP-15"], "status": "not-started", "pr": null },
+    { "id": "WP-18", "title": "Recommender", "owner": "S", "weight": 4, "phase": 3, "week": "8–9", "needs": ["WP-16"], "status": "not-started", "pr": null },
+    { "id": "WP-19", "title": "Recommendation card + export", "owner": "H", "weight": 3, "phase": 3, "week": "8–9", "needs": ["WP-17", "WP-18"], "status": "not-started", "pr": null },
+    { "id": "WP-20", "title": "Benchmark report + remove fake pipeline", "owner": "S", "weight": 2, "phase": 3, "week": "10", "needs": ["WP-18", "WP-19"], "status": "not-started", "pr": null },
+
+    { "id": "WP-21", "title": "Auth", "owner": "H", "weight": 3, "phase": 4, "week": "11", "needs": ["WP-20"], "status": "not-started", "pr": null },
+    { "id": "WP-22", "title": "Cancel + retry", "owner": "S", "weight": 3, "phase": 4, "week": "11–12", "needs": ["WP-20"], "status": "not-started", "pr": null },
+    { "id": "WP-23", "title": "History page", "owner": "H", "weight": 3, "phase": 4, "week": "12–13", "needs": ["WP-21", "WP-22"], "status": "not-started", "pr": null },
+    { "id": "WP-24", "title": "Storage clean-up + reuse", "owner": "S", "weight": 2, "phase": 4, "week": "13", "needs": ["WP-22"], "status": "not-started", "pr": null },
+    { "id": "WP-25", "title": "Admin, Help, storage quota", "owner": "H", "weight": 3, "phase": 4, "week": "14", "needs": ["WP-21", "WP-24"], "status": "not-started", "pr": null },
+    { "id": "WP-26", "title": "Docker + performance", "owner": "S", "weight": 2, "phase": 4, "week": "14–15", "needs": ["WP-24"], "status": "not-started", "pr": null },
+    { "id": "WP-M1", "title": "App setup + theme + login", "owner": "H", "weight": 2, "phase": 4, "week": "15", "needs": ["WP-21"], "status": "not-started", "pr": null },
+    { "id": "WP-M2", "title": "App new job + progress", "owner": "S", "weight": 2, "phase": 4, "week": "16", "needs": ["WP-M1"], "status": "not-started", "pr": null },
+    { "id": "WP-M3", "title": "App results + history + settings", "owner": "H", "weight": 2, "phase": 4, "week": "17", "needs": ["WP-M2"], "status": "not-started", "pr": null },
+    { "id": "WP-M4", "title": "App build (APK)", "owner": "S", "weight": 2, "phase": 4, "week": "18", "needs": ["WP-M3"], "status": "not-started", "pr": null },
+
+    { "id": "WP-27", "title": "Worker tests", "owner": "S", "weight": 3, "phase": 5, "week": "19", "needs": ["WP-26"], "status": "not-started", "pr": null },
+    { "id": "WP-28", "title": "API tests + security", "owner": "H", "weight": 3, "phase": 5, "week": "19", "needs": ["WP-25"], "status": "not-started", "pr": null },
+    { "id": "WP-29", "title": "Usability test", "owner": "H", "weight": 2, "phase": 5, "week": "20–21", "needs": ["WP-25"], "status": "not-started", "pr": null },
+    { "id": "WP-30", "title": "Hosting or offline demo", "owner": "S", "weight": 2, "phase": 5, "week": "20–21", "needs": ["WP-26"], "status": "not-started", "pr": null },
+    { "id": "WP-31", "title": "User guide", "owner": "H", "weight": 2, "phase": 5, "week": "22", "needs": ["WP-29"], "status": "not-started", "pr": null },
+    { "id": "WP-32", "title": "Admin guide", "owner": "S", "weight": 2, "phase": 5, "week": "22", "needs": ["WP-30"], "status": "not-started", "pr": null }
+  ]
+}
