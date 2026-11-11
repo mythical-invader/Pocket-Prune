@@ -1,0 +1,634 @@
+/* components.css — styles for the shared components and the page layout.
+   Every value comes from theme.js (CSS variables), so changing the theme changes the site.
+   Owner: Huzaifah. */
+
+/* ---------- Layout: top bar, pipeline rail, page body ---------- */
+
+.topbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.topbar__inner,
+.shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+}
+
+.topbar__inner {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-right: auto;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.brand__mark {
+  color: var(--color-primary);
+}
+
+.brand__first {
+  color: var(--color-primary);
+}
+
+.topnav {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.topnav__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 12px;
+  border-radius: var(--radius-md);
+  color: var(--color-textMuted);
+  text-decoration: none;
+  font-size: var(--font-size-md);
+}
+
+.topnav__link:hover {
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+.topnav__link.active {
+  color: var(--color-primary);
+  background: var(--color-primarySoft);
+  font-weight: var(--font-weight-bold);
+}
+
+.shell {
+  padding-top: var(--space-lg);
+  padding-bottom: 64px;
+}
+
+.rail {
+  margin-bottom: var(--space-lg);
+}
+
+/* Step content on the left, "Your job" summary on the right. */
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.workspace__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+.workspace__side {
+  position: sticky;
+  top: var(--space-lg);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ---------- Card ---------- */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(27, 31, 36, 0.04);
+}
+
+.card--selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+/* ---------- Button ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease-out,
+    border-color 0.15s ease-out;
+}
+
+.btn--md {
+  min-height: 42px;
+  padding: 0 var(--space-md);
+  font-size: var(--font-size-md);
+}
+
+.btn--sm {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: var(--font-size-sm);
+}
+
+.btn--primary {
+  background: var(--color-primary);
+  color: var(--color-primaryText);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-primaryHover);
+}
+
+.btn--secondary {
+  background: var(--color-surface);
+  border-color: var(--color-borderStrong);
+  color: var(--color-text);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-textMuted);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.btn--danger {
+  background: var(--color-surface);
+  border-color: var(--color-borderStrong);
+  color: var(--color-dangerText);
+}
+
+.btn--danger:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  background: var(--color-dangerSoft);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+/* ---------- Badge ---------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 2px var(--space-sm);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.badge--neutral {
+  background: var(--color-background);
+  color: var(--color-textMuted);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+.badge--info {
+  background: var(--color-primarySoft);
+  color: var(--color-primaryHover);
+}
+
+.badge--success {
+  background: var(--color-successSoft);
+  color: var(--color-successText);
+}
+
+.badge--warning {
+  background: var(--color-warningSoft);
+  color: var(--color-warningText);
+}
+
+.badge--danger {
+  background: var(--color-dangerSoft);
+  color: var(--color-dangerText);
+}
+
+/* ---------- Pipeline / stage stepper ---------- */
+
+.stepper {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+}
+
+.stepper__list {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepper__step {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.stepper__step:last-child {
+  flex: 0 0 auto;
+}
+
+/* The connecting line after each step. */
+.stepper__step:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  margin: 0 var(--space-md);
+  background: var(--color-border);
+  border-radius: 1px;
+}
+
+.stepper__step--line-done:not(:last-child)::after {
+  background: var(--color-primary);
+}
+
+.stepper__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--space-xs);
+  border-radius: var(--radius-md);
+  color: var(--color-textMuted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.stepper__item:hover .stepper__label {
+  color: var(--color-text);
+}
+
+.stepper__dot {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--color-borderStrong);
+  background: var(--color-surface);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+}
+
+.stepper__step--done .stepper__dot {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.stepper__step--current .stepper__dot {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primaryText);
+}
+
+.stepper__step--current .stepper__label {
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}
+
+/* ---------- Progress bar ---------- */
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress__track {
+  flex: 1;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 5px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.progress__value {
+  min-width: 48px;
+  text-align: right;
+  font-weight: var(--font-weight-bold);
+}
+
+/* ---------- Compression ladder (signature) ---------- */
+
+.ladder {
+  display: grid;
+  grid-template-columns: auto minmax(60px, 1fr) auto;
+  gap: var(--space-sm) 12px;
+  margin: 0;
+  align-items: center;
+}
+
+.ladder__row {
+  display: contents;
+}
+
+.ladder__level {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.ladder__hint {
+  display: block;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-textMuted);
+  font-size: 12px;
+}
+
+.ladder__bar-cell {
+  margin: 0;
+}
+
+.ladder__bar {
+  display: block;
+  min-width: 3px; /* a tiny file still shows a visible bar */
+  height: 10px;
+  border-radius: 5px;
+  background: var(--color-primary);
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ladder__bar--baseline {
+  background: var(--color-ladderBaseline);
+}
+
+.ladder__value {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  text-align: right;
+}
+
+/* ---------- Page header ---------- */
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.page-header__description {
+  margin-top: 6px;
+  color: var(--color-textMuted);
+  max-width: 68ch;
+}
+
+.page-header__actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+/* ---------- Empty, loader, alert ---------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 40px var(--space-lg);
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-borderStrong);
+  border-radius: var(--radius-lg);
+}
+
+.empty__icon {
+  color: var(--color-textMuted);
+  margin-bottom: var(--space-xs);
+}
+
+.empty__description {
+  max-width: 48ch;
+  color: var(--color-textMuted);
+  margin-bottom: var(--space-sm);
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  color: var(--color-textMuted);
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+
+.alert--danger {
+  background: var(--color-dangerSoft);
+}
+
+.alert--info {
+  background: var(--color-primarySoft);
+}
+
+.alert__icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-dangerText);
+}
+
+.alert--info .alert__icon {
+  color: var(--color-primary);
+}
+
+.alert__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alert__title {
+  font-weight: var(--font-weight-bold);
+}
+
+.alert__hint,
+.alert__code {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.alert__code {
+  color: var(--color-textMuted);
+}
+
+/* ---------- Form fields ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.field__unit {
+  font-weight: var(--font-weight-regular);
+  color: var(--color-textMuted);
+}
+
+.field__hint,
+.field__error {
+  font-size: var(--font-size-sm);
+  color: var(--color-textMuted);
+}
+
+.field__error {
+  color: var(--color-dangerText);
+}
+
+.input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--color-borderStrong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 0;
+  border-color: var(--color-primary);
+}
+
+.field--error .input {
+  border-color: var(--color-danger);
+}
+
+.input::placeholder {
+  color: var(--color-textMuted);
+}
+
+/* ---------- Phones and narrow windows ---------- */
+
+@media (max-width: 960px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace__side {
+    position: static;
+  }
+
+  /* The next-step button stays reachable: a fixed bar at the bottom of the screen. */
+  .summary__cta {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    padding: 12px var(--space-md);
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .shell {
+    padding-bottom: 96px;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar__inner,
+  .shell {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+
+  .topnav__text {
+    display: none;
+  }
+
+  /* Only the current step keeps its name; the others show their number. */
+  .stepper {
+    padding: 12px var(--space-md);
+  }
+
+  .stepper__step:not(.stepper__step--current) .stepper__label {
+    display: none;
+  }
+
+  .stepper__step:not(:last-child)::after {
+    margin: 0 var(--space-xs);
+  }
+
+  .stepper__item {
+    gap: var(--space-sm);
+    padding: 0;
+  }
+
+  .stepper__dot {
+    width: 28px;
+    height: 28px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

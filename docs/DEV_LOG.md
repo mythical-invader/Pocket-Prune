@@ -5,6 +5,47 @@ problems, next step.
 
 ---
 
+## 11 Nov 2026 — Huzaifah — WP-07 Website foundation
+
+**Built:** `theme.js` + CSS variables, base styles, 13 reusable components (incl. the
+`CompressionLadder` signature and `JobSummary`), the app layout with the pipeline rail, React
+Router pages (Catalog, Profiles, Job Setup, placeholders for History / Downloads / Help / 404),
+`services/api.js`, `JobDraftContext`, `useLoad`, `format.js`. Also `PRODUCT.md` (product record
+used by the design tool) and the design-tool config in `.impeccable/`.
+
+**Decisions and why**
+
+- **Plain CSS + CSS variables, no UI kit.** Easiest to read, nothing new to learn, and `theme.js`
+  can be reused as-is in React Native later. Libraries added: `react-router-dom` (pages),
+  `axios` (API calls), `lucide-react` (icons), `@fontsource-variable/inter` (font from our own
+  files, no Google request).
+- **Layout = "Pipeline rail"**, picked by Huzaifah from three layout sketches generated with the
+  impeccable design skill: a five-step rail (Model → Device → Preflight → Run → Results) on every
+  job page, a "Your job" summary on the right. On phones the rail shows numbers plus the current
+  step's name, and the summary moves under the content.
+- **Extra theme shades** (`primarySoft`, `primaryHover`, `successText`, …): the CLAUDE.md green and
+  amber are too light for small text on pale badges (fail WCAG AA), so badges use darker text
+  shades of the same colours.
+- **Estimated sizes before a job runs** from bits per weight (F16 16, Q8_0 8.5, Q5_K_M 5.7,
+  Q4_K_M 4.9), always shown with "≈" and "Sizes are estimates until a job runs".
+- **Job draft in `sessionStorage`** so a page refresh doesn't lose the chosen model and device.
+- **Preflight / Start buttons are visible but disabled** with a note, rather than hidden, so the
+  flow is demonstrable now; WP-08 and WP-10 switch them on.
+- The pages were checked against a throwaway stand-in API (not committed) because `/api/catalog`
+  and `/api/profiles` arrive in WP-05.
+
+**Problems:** React 19's lint rule forbids resetting state inside an effect → added the small
+`useLoad` hook. Profile card buttons wrapped at desktop width → Edit/Delete became icon buttons
+with labels for screen readers. An empty "Free disk" field passed validation → fixed.
+
+**Known drift (for a later polish PR):** a few sizes sit off the CLAUDE.md §9 scale — 12px text
+on badges, ladder hints and card notes; some 14px / 12px / 6px / 10px gaps. `DESIGN.md` records
+the intended scale, not these values.
+
+**Next step:** WP-05 (catalog + profiles API) so these pages show real data.
+
+---
+
 ## 11 Nov 2026 — Huzaifah — WP-03 Backend core
 
 **Built:** `settings.js` (all settings in one place), `db.js`, the five Mongoose models (User,

@@ -11,6 +11,7 @@ before starting the work package that needs it — and use it to prepare for the
 4. Language models, GGUF and llama.cpp — _added in WP-02 (Sibghatullah)_
 5. Quantization levels: F16, Q8_0, Q5_K_M, Q4_K_M — _WP-02_
 6. [REST APIs, Express, MongoDB and Mongoose (WP-03)](#6-rest-apis-express-mongodb-and-mongoose-wp-03)
+   6b. [React pages, components and the theme (WP-07)](#6b-react-pages-components-and-the-theme-wp-07)
 7. Preflight checks — _WP-08_
 8. Background workers and polling — _WP-11 / WP-12_
 9. Benchmarking: tokens per second and peak RAM — _WP-14_
@@ -117,3 +118,34 @@ and the code can be looked up on the Help page.
 **Testing with an in-memory database.** `mongodb-memory-server` starts a real MongoDB in memory
 for the tests and throws it away afterwards, so tests are fast, repeatable and never touch the
 shared Atlas data.
+
+## 6b. React pages, components and the theme (WP-07)
+
+**Component** = a function that returns what to show. `Button`, `Card`, `Badge` are tiny
+components; a page (`CatalogPage`) is a big component made of small ones. Props are its inputs:
+
+```jsx
+<Button variant="secondary" icon={Plus} onClick={openNew}>
+  Add device
+</Button>
+```
+
+**State** (`useState`) is data that, when it changes, redraws the component — e.g. the form values
+on the Profiles page. **Effects** (`useEffect`) run after drawing — we use one (inside `useLoad`)
+to fetch the catalog when the page opens.
+
+**Context** shares state between pages without passing props through every level. The job draft
+(chosen model, device, levels) lives in `JobDraftContext`, so the Catalog page can set the model
+and the "Your job" card on every page can show it.
+
+**React Router** maps addresses to pages: `/catalog` → `CatalogPage`. `<Link to="/profiles">`
+changes page without reloading the browser.
+
+**Design tokens.** Instead of writing `#2F5DE1` in fifty places, every colour and size has a name
+in `theme.js` (`colors.primary`). CSS reads them as variables (`var(--color-primary)`). Change the
+token once and the whole site follows — and the mobile app reads the same file.
+
+**Estimated sizes.** A weight in F16 takes 16 bits. Q4_K_M stores about 4.9 bits per weight on
+average, so the file is roughly 4.9 / 16 ≈ 31 % of F16. Small models keep some parts at higher
+precision, so real files are a little bigger — that's why the site writes "≈" until a job measures
+the real size.
