@@ -38,6 +38,10 @@ used by the design tool) and the design-tool config in `.impeccable/`.
 `useLoad` hook. Profile card buttons wrapped at desktop width → Edit/Delete became icon buttons
 with labels for screen readers. An empty "Free disk" field passed validation → fixed.
 
+**Known drift (for a later polish PR):** a few sizes sit off the CLAUDE.md §9 scale — 12px text
+on badges, ladder hints and card notes; some 14px / 12px / 6px / 10px gaps. `DESIGN.md` records
+the intended scale, not these values.
+
 **Next step:** WP-05 (catalog + profiles API) so these pages show real data.
 
 ---
