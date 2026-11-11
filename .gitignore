@@ -24,3 +24,6 @@ Thumbs.db
 
 # Local AI-assistant settings
 .claude/
+
+# Design-tool runtime cache (PRODUCT.md, .impeccable/config.json and surfaces/ ARE committed)
+.impeccable/hook.cache.json

@@ -1,0 +1,324 @@
+/* pages.css — styles that belong to one page (catalog grid, profile cards, job setup).
+   Shared pieces live in components/components.css. Owner: Huzaifah. */
+
+/* ---------- "Your job" summary ---------- */
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.summary__list {
+  margin: 0;
+}
+
+.summary__row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: var(--space-sm);
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.summary__row dt {
+  color: var(--color-textMuted);
+  font-size: var(--font-size-sm);
+  padding-top: 1px;
+}
+
+.summary__row dd {
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.summary__sub {
+  display: block;
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-sm);
+  color: var(--color-textMuted);
+}
+
+.summary__empty {
+  font-weight: var(--font-weight-regular);
+  color: var(--color-textMuted);
+}
+
+.summary__note {
+  font-size: var(--font-size-sm);
+  color: var(--color-textMuted);
+}
+
+/* ---------- Catalog ---------- */
+
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-md);
+}
+
+.model-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.model-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.model-card__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.model-card__repo {
+  font-size: var(--font-size-sm);
+  color: var(--color-textMuted);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.meta div {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.meta dt {
+  color: var(--color-textMuted);
+}
+
+.meta dd {
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+}
+
+.model-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-top: auto;
+}
+
+.model-card__estimate {
+  font-size: 12px;
+  color: var(--color-textMuted);
+}
+
+/* ---------- Profiles ---------- */
+
+.profile-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-card__priority {
+  font-size: var(--font-size-sm);
+}
+
+.profile-card__priority span {
+  color: var(--color-textMuted);
+  margin-right: var(--space-xs);
+}
+
+.profile-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-top: auto;
+}
+
+.profile-card__tools {
+  display: flex;
+  gap: 2px;
+}
+
+/* Icon-only buttons stay a comfortable square tap target. */
+.profile-card__tools .btn {
+  width: 34px;
+  padding: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.form-grid__wide {
+  grid-column: 1 / -1;
+}
+
+.form-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+/* Radio cards: preferences and levels. */
+.choice-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-borderStrong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.choice:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--color-primarySoft);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.choice:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.choice__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.choice__size {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.choice:has(input:checked) .choice__size {
+  color: var(--color-primaryHover);
+}
+
+.choice__hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-textMuted);
+}
+
+/* ---------- Job setup ---------- */
+
+.section-title {
+  margin-bottom: var(--space-xs);
+}
+
+.section-intro {
+  color: var(--color-textMuted);
+  margin-bottom: var(--space-md);
+  max-width: 68ch;
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--space-md);
+  padding: 0;
+  list-style: none;
+}
+
+.checklist li > svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-textMuted);
+}
+
+.checklist li:first-child {
+  border-top: 0;
+}
+
+.checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-primary);
+}
+
+.submit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+@media (max-width: 720px) {
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .model-grid,
+  .profile-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

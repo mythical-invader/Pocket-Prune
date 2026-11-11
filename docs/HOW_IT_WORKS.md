@@ -96,3 +96,48 @@ cached afterwards).
   validation errors, unknown routes and bad JSON.
 - `models.test.js` — schemas accept good data and reject bad data (unknown preference, no level,
   F16 requested, unknown level).
+
+## WP-07 — Website foundation
+
+### Styling choice: plain CSS + CSS variables
+
+No UI kit. `theme/theme.js` holds every colour, font size, spacing and radius; `theme/applyTheme.js`
+copies it into CSS variables (`--color-primary`, `--space-md`, …) when the site starts, and the CSS
+files only use those variables. Why: it is the simplest thing a classmate can read, it adds no
+library to learn, and the same `theme.js` object can be used directly in React Native
+`StyleSheet`s later, so the app looks the same.
+
+### Layout: the pipeline rail
+
+Every job page shows the five steps of a compression job across the top — **Model → Device →
+Preflight → Run → Results** — so the user always knows where they are. The step content is on
+the left; a **"Your job"** card on the right keeps the choices made so far and the button to the
+next step. History, Downloads and Help sit in the top bar.
+
+| File                               | What it does                                                                                                                                                                                                    |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `theme/theme.js`                   | The single source of colours, fonts, spacing, radius (CLAUDE.md §9 plus a few extra shades for selected items and readable badge text).                                                                         |
+| `theme/applyTheme.js`              | Turns `theme.js` into CSS variables on `<html>`.                                                                                                                                                                |
+| `index.css`                        | Base styles: font, headings, focus ring, text selection colour, reduced motion.                                                                                                                                 |
+| `main.jsx`                         | Loads the Inter font from our own files, applies the theme, renders `App`.                                                                                                                                      |
+| `App.jsx`                          | The pages and their addresses (React Router): `/catalog`, `/profiles`, `/job/new`, `/history`, `/downloads`, `/help`.                                                                                           |
+| `components/AppLayout.jsx`         | Top bar + pipeline rail around every page. `PIPELINE_STEPS` lists the steps.                                                                                                                                    |
+| `components/JobSummary.jsx`        | The "Your job" card.                                                                                                                                                                                            |
+| `components/CompressionLadder.jsx` | PocketPrune's signature picture: one bar per level, length ∝ file size.                                                                                                                                         |
+| `components/*.jsx`                 | Small reusable pieces: `Button`, `Card`, `Badge`, `StatusBadge`, `ProgressBar`, `StageStepper`, `PageHeader`, `EmptyState`, `ErrorAlert`, `Loader`, `Field`. The mobile app will copy the same names and props. |
+| `components/components.css`        | Styles for those components and the layout, including the phone layout (`@media (max-width: 720px)`).                                                                                                           |
+| `context/JobDraftContext.jsx`      | Remembers the chosen model, device and levels while moving between steps (kept in `sessionStorage`, so a refresh keeps them).                                                                                   |
+| `services/api.js`                  | The only file that calls the backend: one function per endpoint; every failure becomes `{ code, message, hint }`.                                                                                               |
+| `utils/useLoad.js`                 | Loads data when a page opens, with `reload()` for the "Try again" button.                                                                                                                                       |
+| `utils/format.js`                  | `formatMb`, `formatParams`, … and `estimateSizeMb` (expected size per level from bits per weight).                                                                                                              |
+| `pages/CatalogPage.jsx`            | Step 1: model cards with badges (Demo, Needs token), parameters, licence, F16 size and the ladder; **Select** stores the model.                                                                                 |
+| `pages/ProfilesPage.jsx`           | Step 2: device cards; add / edit / delete; **Use this computer's values** fills the form from `/api/system/host-profile`; the form works in GB and sends MB.                                                    |
+| `pages/JobSetupPage.jsx`           | Step 3: level choices with estimated sizes, expected-files ladder, the preflight checklist, licence checkbox. Run preflight / Start compression stay disabled until WP-08 / WP-10.                              |
+| `pages/PlaceholderPage.jsx`        | History, Downloads, Help and "page not found" until their WPs are built.                                                                                                                                        |
+
+### What needs the next WPs
+
+- The catalog and profile lists call `/api/catalog` and `/api/profiles`, which arrive in **WP-05**.
+  Until then the pages show the standard error card (`E-NOTFOUND-01`, with "Try again").
+- **WP-08** makes "Run preflight" work and shows real pass/fail per check; **WP-10** enables
+  "Start compression".
