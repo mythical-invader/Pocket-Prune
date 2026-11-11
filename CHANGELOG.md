@@ -7,6 +7,15 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-07: website foundation — theme tokens as CSS variables, reusable components (Button, Card,
+  Badge, StatusBadge, ProgressBar, StageStepper, PageHeader, EmptyState, ErrorAlert, Loader,
+  Field, CompressionLadder, JobSummary), pipeline-rail layout, Catalog, Profiles and Job Setup
+  pages, API service, job draft context.
+
+### Fixed
+
+- API reads `API_PORT` instead of `PORT`, so it never takes the website's port (#40).
+
 - WP-03: settings and MongoDB connection, Mongoose models (User, CatalogModel, DeviceProfile, Job,
   JobEvent), error codes with the shared `{ code, message, hint }` error handler, temporary
   demo-user `protect`, `GET /api/system/health`, `GET /api/system/host-profile`, tests on an
