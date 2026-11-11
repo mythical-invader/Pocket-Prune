@@ -56,3 +56,43 @@ A plain-English walkthrough of the code, file by file. Each work package adds it
   a bar per phase, each member's share, the next deadline and who is waiting on whom.
 - `.github/workflows/ci.yml` runs on every push and pull request: install, lint, backend tests,
   website build. A red cross on the PR means something is broken.
+
+## WP-03 — Backend core
+
+What happens when a request arrives:
+
+```
+request ─▶ express.json() ─▶ morgan (log) ─▶ route ─▶ protect (who?) ─▶ controller ─▶ JSON reply
+                                                 │                         │
+                                                 └──── any error ──────────┴──▶ errorHandler ─▶ { code, message, hint }
+```
+
+| File                              | What it does                                                                                                                                                                                                                                       |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config/settings.js`              | Loads the root `.env` once and exports `settings` — every setting with its default. Other files import `settings` instead of reading `process.env`.                                                                                                |
+| `config/db.js`                    | `connectDB(uri)` connects Mongoose to MongoDB (Atlas or local); `isDBConnected()` is used by the health check.                                                                                                                                     |
+| `server.js`                       | Connects to the database first; if that fails it prints a clear message and stops. Then starts listening.                                                                                                                                          |
+| `models/User.js`                  | Account: email (unique, lower-case), `passwordHash`, role. The hash is removed from every JSON reply.                                                                                                                                              |
+| `models/CatalogModel.js`          | A Hugging Face model we allow, with its pinned `revision` (commit hash), size, licence, demo/active flags.                                                                                                                                         |
+| `models/DeviceProfile.js`         | A user's target device: RAM, free disk, threads, preference (quality/speed/smallest/balanced).                                                                                                                                                     |
+| `models/Job.js`                   | One compression request and everything it produces. Also exports `JOB_STATUSES` and `QUANT_LEVELS` so other files use the same lists. Variants (files), their metrics and the recommendation are stored _inside_ the job.                          |
+| `models/JobEvent.js`              | One log line of a job (stage, info/warn/error, message).                                                                                                                                                                                           |
+| `utils/errors.js`                 | The table of error codes (HTTP status, message, hint) and `appError(code)` to throw one.                                                                                                                                                           |
+| `middleware/errorHandler.js`      | `notFound` for unknown `/api` addresses; `errorHandler` turns any error — ours, Mongoose validation, bad id, bad JSON, duplicate key, or a crash — into `{ code, message, hint }`. Crashes are logged in the terminal but never shown to the user. |
+| `middleware/authMiddleware.js`    | `protect` sets `req.user`. For now it always uses the demo user (created on first use). WP-21 swaps in the real login check without touching any route.                                                                                            |
+| `utils/systemInfo.js`             | Reads RAM (`os`), threads and free disk (`fs.statfs`) — works on Windows and Linux.                                                                                                                                                                |
+| `controllers/systemController.js` | `getHealth` and `getHostProfileHandler`.                                                                                                                                                                                                           |
+| `routes/systemRoutes.js`          | `/api/system/health` (public) and `/api/system/host-profile` (protected).                                                                                                                                                                          |
+
+### Tests
+
+`npm test` starts **one in-memory MongoDB** (`tests/helpers/globalSetup.js`, using
+mongodb-memory-server) and gives every test file its own empty database (`tests/helpers/testDb.js`).
+So tests never touch Atlas and need no setup. The first run downloads a MongoDB binary (~100 MB,
+cached afterwards).
+
+- `system.test.js` — health, host profile, demo user created once.
+- `errors.test.js` — every code has a message/hint; the handler's output for our errors, crashes,
+  validation errors, unknown routes and bad JSON.
+- `models.test.js` — schemas accept good data and reject bad data (unknown preference, no level,
+  F16 requested, unknown level).
