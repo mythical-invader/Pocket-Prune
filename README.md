@@ -1,8 +1,5 @@
 # PocketPrune — Edge LLM Compression & Deployment Toolkit
 
-BSCS Final Year Project, Lahore Garrison University.
-**Team:** Huzaifah Saleem · Sibghatullah — **Supervisor:** Ms. Hafsa Tahir — **Co-supervisor:** Ms. Unaisa Batool
-
 PocketPrune takes a small open-source language model from Hugging Face and, in the background,
 checks your machine, downloads the model, converts it to GGUF with llama.cpp, quantizes it to
 **Q5_K_M** and **Q4_K_M**, smoke-tests each file, measures size, speed, peak RAM and perplexity,
