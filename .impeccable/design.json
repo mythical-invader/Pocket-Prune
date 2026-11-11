@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T00:00:00Z",
+  "title": "Design System: PocketPrune",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Pipeline Blue", "canonical": "#2F5DE1", "tonalRamp": ["#0F1F4D", "#173078", "#2448B8", "#2F5DE1", "#5C80E8", "#8EA8EF", "#C3D2F7", "#EAF0FD"] },
+      "primary-hover": { "role": "primary", "displayName": "Pressed Blue", "canonical": "#2448B8" },
+      "primary-soft": { "role": "primary", "displayName": "Selection Wash", "canonical": "#EAF0FD" },
+      "primary-text": { "role": "neutral", "displayName": "On Blue", "canonical": "#FFFFFF" },
+      "background": { "role": "neutral", "displayName": "Cool Paper", "canonical": "#F7F8FA", "tonalRamp": ["#1B1F24", "#3A424D", "#5F6B7A", "#8A94A6", "#C9CFD8", "#E3E6EB", "#F7F8FA", "#FFFFFF"] },
+      "surface": { "role": "neutral", "displayName": "White Card", "canonical": "#FFFFFF" },
+      "border": { "role": "neutral", "displayName": "Hairline Grey", "canonical": "#E3E6EB" },
+      "border-strong": { "role": "neutral", "displayName": "Edge Grey", "canonical": "#C9CFD8" },
+      "text": { "role": "neutral", "displayName": "Ink", "canonical": "#1B1F24" },
+      "text-muted": { "role": "neutral", "displayName": "Slate", "canonical": "#5F6B7A" },
+      "ladder-baseline": { "role": "neutral", "displayName": "Baseline Grey", "canonical": "#8A94A6" },
+      "success": { "role": "status", "displayName": "Done Green", "canonical": "#1E9E5A", "tonalRamp": ["#0A3A20", "#13703F", "#1E9E5A", "#45B67A", "#7FCFA2", "#B5E4C9", "#D6F0E1", "#E7F5EE"] },
+      "success-text": { "role": "status", "displayName": "Done Green Text", "canonical": "#13703F" },
+      "success-soft": { "role": "status", "displayName": "Done Green Wash", "canonical": "#E7F5EE" },
+      "warning": { "role": "status", "displayName": "Caution Amber", "canonical": "#C98A00", "tonalRamp": ["#3D2900", "#7A5300", "#A87300", "#C98A00", "#DDAA3D", "#EBC87F", "#F5E2B5", "#FBF3E0"] },
+      "warning-text": { "role": "status", "displayName": "Caution Amber Text", "canonical": "#7A5300" },
+      "warning-soft": { "role": "status", "displayName": "Caution Amber Wash", "canonical": "#FBF3E0" },
+      "danger": { "role": "status", "displayName": "Failure Red", "canonical": "#D2393C", "tonalRamp": ["#4A1213", "#A82A2D", "#D2393C", "#DE6466", "#E99293", "#F2BCBD", "#F8DADA", "#FCEBEB"] },
+      "danger-text": { "role": "status", "displayName": "Failure Red Text", "canonical": "#A82A2D" },
+      "danger-soft": { "role": "status", "displayName": "Failure Red Wash", "canonical": "#FCEBEB" }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "One page title per screen (h1)." },
+      "title": { "displayName": "Title", "purpose": "Card titles, section titles, summary heading, brand name (h2)." },
+      "body": { "displayName": "Body", "purpose": "Default text and buttons (buttons at 600)." },
+      "label": { "displayName": "Label", "purpose": "Field labels, ladder levels and values, meta rows, hints, small buttons." }
+    },
+    "shadows": [
+      { "name": "card-hairline", "value": "0 1px 2px rgba(27, 31, 36, 0.04)", "purpose": "Resting cards; barely visible." },
+      { "name": "selection-ring", "value": "0 0 0 1px var(--color-primary)", "purpose": "With a blue border, a 2px outline on selected cards and checked choices." }
+    ],
+    "motion": [
+      { "name": "bar-ease", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Ladder bar width (0.5s) and progress fill (0.4s)." },
+      { "name": "button-color", "value": "0.15s ease-out", "purpose": "Button background and border colour changes." }
+    ],
+    "breakpoints": [
+      { "name": "workspace-stack", "value": "960px" },
+      { "name": "phone", "value": "720px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single forward action of a step.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg>Next: check device</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: 1px solid transparent; border-radius: 10px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background-color 0.15s ease-out, border-color 0.15s ease-out; } .ds-btn-primary { background: #2F5DE1; color: #FFFFFF; } .ds-btn-primary:hover { background: #2448B8; } .ds-btn:focus-visible { outline: 2px solid #2F5DE1; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Select on a card and other non-forward actions.",
+      "html": "<button class=\"ds-btn-secondary\">Select</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; background: #FFFFFF; border: 1px solid #C9CFD8; border-radius: 10px; color: #1B1F24; font-family: 'Inter Variable', Inter, system-ui, sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color 0.15s ease-out; } .ds-btn-secondary:hover { border-color: #2F5DE1; color: #2F5DE1; } .ds-btn-secondary:focus-visible { outline: 2px solid #2F5DE1; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled number or text input with unit and hint.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">RAM <span class=\"ds-field-unit\">(GB)</span></span><input class=\"ds-input\" value=\"16\"><span class=\"ds-field-hint\">How much memory the device has.</span></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; color: #1B1F24; } .ds-field-label { font-size: 13px; font-weight: 600; } .ds-field-unit { font-weight: 400; color: #5F6B7A; } .ds-field-hint { font-size: 13px; color: #5F6B7A; } .ds-input { min-height: 42px; padding: 0 12px; border: 1px solid #C9CFD8; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 15px; font-variant-numeric: tabular-nums; } .ds-input:focus-visible { outline: 2px solid #2F5DE1; outline-offset: 0; border-color: #2F5DE1; }"
+    },
+    {
+      "name": "Top Navigation",
+      "kind": "nav",
+      "description": "Top bar links with icon and label; active link on blue wash.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link ds-active\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M3 12a9 9 0 1 0 3-6.7L3 8\"/><path d=\"M3 3v5h5\"/><path d=\"M12 7v5l4 2\"/></svg>History</a><a class=\"ds-nav-link\" href=\"#\">Downloads</a><a class=\"ds-nav-link\" href=\"#\">Help</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 4px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; } .ds-nav-link { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; color: #5F6B7A; text-decoration: none; font-size: 15px; } .ds-nav-link:hover { color: #1B1F24; background: #F7F8FA; } .ds-nav-link.ds-active { color: #2F5DE1; background: #EAF0FD; font-weight: 600; } .ds-nav-link:focus-visible { outline: 2px solid #2F5DE1; outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Pill showing status or a property; soft background with dark text.",
+      "html": "<span class=\"ds-badge ds-badge-success\">Completed</span> <span class=\"ds-badge ds-badge-info\">Downloading</span> <span class=\"ds-badge ds-badge-neutral\">Queued</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; font-size: 13px; font-weight: 600; line-height: 1.6; } .ds-badge-success { background: #E7F5EE; color: #13703F; } .ds-badge-info { background: #EAF0FD; color: #2448B8; } .ds-badge-neutral { background: #F7F8FA; color: #5F6B7A; box-shadow: inset 0 0 0 1px #E3E6EB; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "White container on the cool-paper page; selected state is a blue 2px outline.",
+      "html": "<div class=\"ds-card ds-card-selected\"><h2 class=\"ds-card-title\">SmolLM2 135M Instruct</h2><p class=\"ds-card-sub\">HuggingFaceTB/SmolLM2-135M-Instruct</p></div>",
+      "css": ".ds-card { background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 16px; padding: 20px; box-shadow: 0 1px 2px rgba(27, 31, 36, 0.04); font-family: 'Inter Variable', Inter, system-ui, sans-serif; color: #1B1F24; } .ds-card-selected { border-color: #2F5DE1; box-shadow: 0 0 0 1px #2F5DE1; } .ds-card-title { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.3; } .ds-card-sub { margin: 2px 0 0; font-size: 13px; color: #5F6B7A; }"
+    },
+    {
+      "name": "Choice Card",
+      "kind": "custom",
+      "refersTo": "choice-selected",
+      "description": "Radio card for preferences and quantization levels.",
+      "html": "<div class=\"ds-choices\"><label class=\"ds-choice ds-checked\"><span class=\"ds-choice-title\">Q4_K_M <span class=\"ds-choice-size\">≈ 83 MB</span></span><span class=\"ds-choice-hint\">Smallest, a little less accurate</span></label><label class=\"ds-choice\"><span class=\"ds-choice-title\">Q5_K_M <span class=\"ds-choice-size\">≈ 96 MB</span></span><span class=\"ds-choice-hint\">Balanced</span></label></div>",
+      "css": ".ds-choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; color: #1B1F24; } .ds-choice { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid #C9CFD8; border-radius: 10px; background: #FFFFFF; cursor: pointer; } .ds-choice.ds-checked { border-color: #2F5DE1; background: #EAF0FD; box-shadow: 0 0 0 1px #2F5DE1; } .ds-choice-title { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 15px; } .ds-choice-size { font-size: 13px; } .ds-checked .ds-choice-size { color: #2448B8; } .ds-choice-hint { font-size: 13px; color: #5F6B7A; }"
+    },
+    {
+      "name": "Pipeline Rail",
+      "kind": "nav",
+      "description": "Five numbered steps; tick only when truly done, blue connector only into reached steps.",
+      "html": "<ol class=\"ds-rail\"><li class=\"ds-step ds-current ds-line-done\"><span class=\"ds-dot\">1</span><span class=\"ds-label\">Model</span></li><li class=\"ds-step ds-done\"><span class=\"ds-dot\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg></span><span class=\"ds-label\">Device</span></li><li class=\"ds-step\"><span class=\"ds-dot\">3</span><span class=\"ds-label\">Preflight</span></li></ol>",
+      "css": ".ds-rail { display: flex; margin: 0; padding: 14px 20px; list-style: none; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 16px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; color: #5F6B7A; } .ds-step { display: flex; align-items: center; gap: 12px; flex: 1; } .ds-step:last-child { flex: 0 0 auto; } .ds-step:not(:last-child)::after { content: ''; flex: 1; height: 2px; margin: 0 16px; background: #E3E6EB; border-radius: 1px; } .ds-step.ds-line-done::after { background: #2F5DE1; } .ds-dot { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #C9CFD8; background: #FFFFFF; font-size: 13px; font-weight: 600; } .ds-done .ds-dot { border-color: #2F5DE1; color: #2F5DE1; } .ds-current .ds-dot { border-color: #2F5DE1; background: #2F5DE1; color: #FFFFFF; } .ds-current .ds-label { color: #1B1F24; font-weight: 600; }"
+    },
+    {
+      "name": "Compression Ladder",
+      "kind": "custom",
+      "description": "Signature: F16 baseline bar in grey, quantized levels in blue, proportional to size; ≈ while estimated.",
+      "html": "<dl class=\"ds-ladder\"><dt>F16</dt><dd><span class=\"ds-bar ds-base\" style=\"width:100%\"></span></dd><dd class=\"ds-val\">≈ 270 MB</dd><dt>Q5_K_M</dt><dd><span class=\"ds-bar\" style=\"width:36%\"></span></dd><dd class=\"ds-val\">≈ 96 MB</dd><dt>Q4_K_M</dt><dd><span class=\"ds-bar\" style=\"width:31%\"></span></dd><dd class=\"ds-val\">≈ 83 MB</dd></dl>",
+      "css": ".ds-ladder { display: grid; grid-template-columns: auto minmax(60px, 1fr) auto; gap: 8px 12px; align-items: center; margin: 0; font-family: 'Inter Variable', Inter, system-ui, sans-serif; font-size: 13px; color: #1B1F24; } .ds-ladder dt { font-weight: 600; } .ds-ladder dd { margin: 0; } .ds-bar { display: block; min-width: 3px; height: 10px; border-radius: 5px; background: #2F5DE1; transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1); } .ds-bar.ds-base { background: #8A94A6; } .ds-val { text-align: right; font-variant-numeric: tabular-nums; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Job Is the Journey",
+    "overview": "PocketPrune is a calm, light working tool. A cool off-white page holds white cards with thin grey borders, and one blue does all the pointing: the step you are on, the thing you picked, the button that moves you forward. Everything else is grey text on white. Every job screen sits under a five-step pipeline rail (Model, Device, Preflight, Run, Results), so you always know where you are in the compression job. It is not a sidebar dashboard.\n\nThe tokens live in one file, `frontend/src/theme/theme.js`, which a future React Native app copies unchanged. `applyTheme.js` turns them into CSS variables (`--color-*`, `--font-*`, `--space-*`, `--radius-*`). That is why the system is deliberately plain: no blur, no complex gradients, no information shown only on hover, minimal motion. Anything that would not port to a phone app does not belong here. Base palette, type sizes, spacing and radii are fixed by CLAUDE.md §9; the extra shades exist only to pass contrast.\n\nThe one picture with personality is the compression ladder: grey baseline bar for F16, blue bars for the quantized levels, so you can see how much each level shrinks a model.",
+    "keyCharacteristics": [
+      "One accent (blue), used for current step, selection and the primary action only.",
+      "Flat white cards on a cool grey page; 1px borders do the separating.",
+      "Four type sizes (13/15/18/24), two weights (400/600), Inter only.",
+      "Persistent pipeline rail plus a 340px \"Your job\" summary.",
+      "Built to port: everything is a token, stacked cards, no hover-only content."
+    ],
+    "rules": [
+      { "name": "The One Blue Rule", "body": "Blue means \"here, chosen, or go\". Never use it for decoration, headings or big fills.", "section": "colors" },
+      { "name": "The Green Means Done Rule", "body": "Green appears only for success (completed, quick-to-demo, passed checks). It is never a second accent.", "section": "colors" },
+      { "name": "The Soft-Pair Rule", "body": "Every pale `*-soft` background is paired with its dark `*-text` shade, never with the bright status colour.", "section": "colors" },
+      { "name": "The Two Weights Rule", "body": "Only 400 and 600. Emphasis is 600; muted is colour, not a lighter weight.", "section": "typography" },
+      { "name": "The Numbers Line Up Rule", "body": "Sizes, counts and inputs use tabular figures (`.num`, inputs) so columns of MB values align.", "section": "typography" },
+      { "name": "The Always Know Where You Are Rule", "body": "Every job screen shows the pipeline rail and the job summary. The next-step button is always reachable, on phones as a fixed bottom bar.", "section": "layout" },
+      { "name": "The No-Lift Rule", "body": "Nothing floats. No blur, no large shadows, no glass, no gradients. These do not port to the app.", "section": "elevation" },
+      { "name": "The Honest Tick Rule", "body": "A tick, a blue connector or a green badge is only shown for something that is actually true.", "section": "components" },
+      { "name": "The Shared Scale Rule", "body": "Ladders that sit side by side use one scale, or the comparison lies.", "section": "components" }
+    ],
+    "dos": [
+      "**Do** take every colour, size, space and radius from `theme.js` through its CSS variables; never hard-code a hex in a component.",
+      "**Do** keep blue for the current step, the selection and the single primary action.",
+      "**Do** pair every `*-soft` background with its `*-text` colour.",
+      "**Do** put the compression ladder wherever a model's sizes are shown, F16 grey, quantized blue, \"≈\" when estimated.",
+      "**Do** make every grid collapse to one column under 720px and keep the next-step button reachable as a fixed bottom bar under 960px.",
+      "**Do** keep motion to short ease-outs on bar widths and button colours, and respect reduced motion.",
+      "**Do** use lucide line icons at 18px in buttons and nav, always next to a text label or an aria-label."
+    ],
+    "donts": [
+      "**Don't** use blur, glass, complex gradients or large shadows; they do not port to React Native.",
+      "**Don't** put information only in a hover state or tooltip; phones have no hover.",
+      "**Don't** add a third font weight, a second font family, or new type sizes.",
+      "**Don't** use green or blue as decoration; they carry meaning (done, here/go).",
+      "**Don't** mark a step done, or colour its connector blue, before it is really reached.",
+      "**Don't** replace the pipeline rail with a sidebar dashboard layout."
+    ]
+  }
+}
