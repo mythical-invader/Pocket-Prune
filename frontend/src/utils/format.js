@@ -8,10 +8,10 @@ export function formatMb(mb) {
   return `${Math.round(mb)} MB`;
 }
 
-// 0.135 → "135 M", 1.5 → "1.5 B" (parameters)
+// 0.135 → "135 M", 1.544 → "1.5 B", 3.821 → "3.8 B" (parameters)
 export function formatParams(billion) {
   if (billion < 1) return `${Math.round(billion * 1000)} M`;
-  return `${billion} B`;
+  return `${Math.round(billion * 10) / 10} B`;
 }
 
 export function formatTps(tps) {

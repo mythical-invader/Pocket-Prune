@@ -4,6 +4,8 @@
 import express from 'express';
 import morgan from 'morgan';
 import systemRoutes from './routes/systemRoutes.js';
+import catalogRoutes from './routes/catalogRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -16,6 +18,8 @@ app.get('/api', (req, res) => {
   res.json({ name: 'PocketPrune API', status: 'ok' });
 });
 app.use('/api/system', systemRoutes);
+app.use('/api/catalog', catalogRoutes);
+app.use('/api/profiles', profileRoutes);
 
 // These two must stay last: unknown /api addresses, then the shared error format.
 app.use('/api', notFound);

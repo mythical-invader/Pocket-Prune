@@ -7,6 +7,9 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-05: catalog API (`GET /api/catalog`, `/api/catalog/:id`), device profiles API (CRUD, own data
+  only), `npm run seed` with 8 models pinned to Hugging Face commits, catalog rules (4 B limit).
+
 - WP-07: website foundation — theme tokens as CSS variables, reusable components (Button, Card,
   Badge, StatusBadge, ProgressBar, StageStepper, PageHeader, EmptyState, ErrorAlert, Loader,
   Field, CompressionLadder, JobSummary), pipeline-rail layout, Catalog, Profiles and Job Setup

@@ -5,6 +5,32 @@ problems, next step.
 
 ---
 
+## 11 Nov 2026 — Huzaifah — WP-05 Catalog and profiles API
+
+**Built:** `seedData.js` (8 catalog models with pinned commit hashes), `catalogService.js`
+(catalog rules), a repeatable `seed.js`, catalog and profile controllers + routes, 13 new tests,
+`API.md` for both. The WP-07 pages now show real data.
+
+**Decisions and why**
+
+- **Revisions and parameter counts from the Hugging Face API** (`/api/models/<repo>`, fields
+  `sha` and `safetensors.total`), looked up on 11 Nov 2026, because WP-02 (Sibghatullah's hand
+  trial) is not merged yet. He confirms or updates them in WP-02 / WP-09.
+- **F16 size = parameters × 2 bytes**, in MiB (what the site calls MB).
+- **Seed upserts by `hfRepoId`** — running it twice is safe, and an admin's on/off switch is kept.
+- **Catalog rules in a service** (`checkCatalogEntry`) so the seed now and the admin page later
+  (WP-25) use the same 4 B limit and commit-hash check.
+- **Own data only already now**: every profile query filters by `req.user._id`; another user's
+  profile answers 404. When login arrives (WP-21) this keeps working unchanged.
+- No admin user in the seed yet: an admin needs a real password hash, which comes with login (WP-21).
+- Small frontend fix found with real data: parameters now show as "1.2 B" instead of "1.236 B".
+
+**Problems:** none.
+
+**Next step:** WP-08 Preflight (needs WP-05 + WP-07, both done after this merges).
+
+---
+
 ## 11 Nov 2026 — Huzaifah — WP-07 Website foundation
 
 **Built:** `theme.js` + CSS variables, base styles, 13 reusable components (incl. the
