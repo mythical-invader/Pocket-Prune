@@ -141,3 +141,20 @@ next step. History, Downloads and Help sit in the top bar.
   Until then the pages show the standard error card (`E-NOTFOUND-01`, with "Try again").
 - **WP-08** makes "Run preflight" work and shows real pass/fail per check; **WP-10** enables
   "Start compression".
+
+## WP-05 — Catalog and profiles API
+
+| File                                                 | What it does                                                                                                                                                                                                        |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/seedData.js`                                | The 8 catalog models (3 demo, 4 standard incl. the gated Llama 3.2, 1 stretch) with their **pinned commit hash**, parameter count, licence and F16 size (= parameters × 2 bytes).                                   |
+| `backend/services/catalogService.js`                 | `checkCatalogEntry()` — the catalog rules: `owner/model` id, a full 40-character commit hash, and at most `MAX_PARAMS_BILLION` (4 B) parameters.                                                                    |
+| `backend/seed.js`                                    | `npm run seed`: checks each entry, then **upserts** it by `hfRepoId` (safe to run again; it never duplicates and keeps an admin's on/off switch), and creates the demo user.                                        |
+| `controllers/catalogController.js`                   | `listCatalog` (active models, demo first, then smallest) and `getCatalogModel` (`E-CAT-01` when missing or switched off).                                                                                           |
+| `controllers/profileController.js`                   | List / read / create / update / delete device profiles. Every query includes `user: req.user._id`, so another user's profile is simply "not found". Only the five editable fields are copied from the request body. |
+| `routes/catalogRoutes.js`, `routes/profileRoutes.js` | `/api/catalog…` and `/api/profiles…`, all behind `protect`.                                                                                                                                                         |
+
+Validation lives in the Mongoose schema (`models/DeviceProfile.js`); a failed save turns into
+`400 E-INPUT-01` with the field names, which the website shows under each field.
+
+Tests: `catalog.test.js` (ordering, inactive hidden, `E-CAT-01`, seed rules) and
+`profiles.test.js` (CRUD, validation, ignored `user` field, other user's profile → 404).

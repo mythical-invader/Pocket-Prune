@@ -12,6 +12,7 @@ before starting the work package that needs it — and use it to prepare for the
 5. Quantization levels: F16, Q8_0, Q5_K_M, Q4_K_M — _WP-02_
 6. [REST APIs, Express, MongoDB and Mongoose (WP-03)](#6-rest-apis-express-mongodb-and-mongoose-wp-03)
    6b. [React pages, components and the theme (WP-07)](#6b-react-pages-components-and-the-theme-wp-07)
+   6c. [Pinned revisions and the catalog (WP-05)](#6c-pinned-revisions-and-the-catalog-wp-05)
 7. Preflight checks — _WP-08_
 8. Background workers and polling — _WP-11 / WP-12_
 9. Benchmarking: tokens per second and peak RAM — _WP-14_
@@ -149,3 +150,27 @@ token once and the whole site follows — and the mobile app reads the same file
 average, so the file is roughly 4.9 / 16 ≈ 31 % of F16. Small models keep some parts at higher
 precision, so real files are a little bigger — that's why the site writes "≈" until a job measures
 the real size.
+
+## 6c. Pinned revisions and the catalog (WP-05)
+
+A Hugging Face model is a Git repository. Its owner can push new weights at any time, so
+"download `Qwen/Qwen2.5-0.5B-Instruct`" might give different files next month — and different
+benchmark numbers. A **revision** is one exact commit, e.g.
+`7ae557604adf67be50417f59c2c2f167def9a775`. Downloading at that revision always gives the same
+bytes, so results can be repeated (REQ-2).
+
+We found each hash with the public API: `https://huggingface.co/api/models/<repo>` → the `sha`
+field, plus `safetensors.total` for the parameter count.
+
+**F16 size** = parameters × 2 bytes, because F16 stores each weight in 16 bits = 2 bytes.
+135 M parameters × 2 = 270 MB ≈ 257 MiB (what the site shows as MB).
+
+**Why only ≤ 4 B parameters?** A 4 B model is ~8 GB in F16; converting needs about 1.2 × that in
+RAM and ~3 × on disk. Bigger models would not fit a normal student laptop (REQ-3).
+
+**Upsert** = "update if it exists, insert if not". `npm run seed` uses it so running the seed twice
+never creates duplicates.
+
+**Own data only.** The profile queries always filter by `user: req.user._id`. If you ask for
+someone else's profile id, the query finds nothing and the API answers 404, so it doesn't even
+reveal that the profile exists.

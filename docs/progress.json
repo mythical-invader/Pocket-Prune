@@ -14,9 +14,9 @@
     { "id": "WP-02", "title": "llama.cpp setup + first hand compression", "owner": "S", "weight": 4, "phase": 1, "week": "1", "needs": ["WP-00"], "status": "not-started", "pr": null },
     { "id": "WP-03", "title": "Backend core", "owner": "H", "weight": 3, "phase": 1, "week": "1–2", "needs": ["WP-01"], "status": "merged", "pr": 39 },
     { "id": "WP-04", "title": "Command runner", "owner": "S", "weight": 3, "phase": 1, "week": "2", "needs": ["WP-01", "WP-02"], "status": "not-started", "pr": null },
-    { "id": "WP-05", "title": "Catalog + profiles API", "owner": "H", "weight": 3, "phase": 1, "week": "2", "needs": ["WP-03"], "status": "not-started", "pr": null },
+    { "id": "WP-05", "title": "Catalog + profiles API", "owner": "H", "weight": 3, "phase": 1, "week": "2", "needs": ["WP-03"], "status": "in-review", "pr": null },
     { "id": "WP-06", "title": "CLI pipeline + fake pipeline", "owner": "S", "weight": 5, "phase": 1, "week": "2–3", "needs": ["WP-04"], "status": "not-started", "pr": null },
-    { "id": "WP-07", "title": "Website foundation", "owner": "H", "weight": 3, "phase": 1, "week": "2–3", "needs": ["WP-01"], "status": "in-review", "pr": null },
+    { "id": "WP-07", "title": "Website foundation", "owner": "H", "weight": 3, "phase": 1, "week": "2–3", "needs": ["WP-01"], "status": "merged", "pr": 41 },
 
     { "id": "WP-08", "title": "Preflight", "owner": "H", "weight": 3, "phase": 2, "week": "3", "needs": ["WP-05", "WP-07"], "status": "not-started", "pr": null },
     { "id": "WP-09", "title": "Catalog trials", "owner": "S", "weight": 2, "phase": 2, "week": "3", "needs": ["WP-06"], "status": "not-started", "pr": null },

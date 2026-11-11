@@ -78,8 +78,80 @@ This server's hardware. The Profiles page uses it for "Use this computer's value
 
 `freeDiskMb` is measured on the drive that holds `DATA_DIR` (model files).
 
+### `GET /api/catalog` — user
+
+Active catalog models, demo models first, then smallest first. Fill it with `npm run seed`.
+
+```json
+[
+  {
+    "_id": "6af4a0…",
+    "hfRepoId": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "displayName": "SmolLM2 135M Instruct",
+    "paramsBillion": 0.135,
+    "license": "Apache-2.0",
+    "gated": false,
+    "isActive": true,
+    "isDemo": true,
+    "f16SizeMb": 257,
+    "createdAt": "…",
+    "updatedAt": "…"
+  }
+]
+```
+
+### `GET /api/catalog/:id` — user
+
+One active model. Unknown, switched-off or malformed id → `404 E-CAT-01`.
+
+### `GET /api/profiles` — user
+
+The current user's device profiles, oldest first.
+
+```json
+[
+  {
+    "_id": "6af4ac…",
+    "user": "6af4a0…",
+    "name": "My laptop",
+    "ramMb": 16384,
+    "freeDiskMb": 102400,
+    "cpuThreads": 8,
+    "preference": "balanced"
+  }
+]
+```
+
+### `POST /api/profiles` — user → `201`
+
+```json
+{
+  "name": "My laptop",
+  "ramMb": 16384,
+  "freeDiskMb": 102400,
+  "cpuThreads": 8,
+  "preference": "speed"
+}
+```
+
+| Field        | Rule                                                   |
+| ------------ | ------------------------------------------------------ |
+| `name`       | required, up to 60 characters                          |
+| `ramMb`      | required, ≥ 256                                        |
+| `freeDiskMb` | required, ≥ 0                                          |
+| `cpuThreads` | required, ≥ 1                                          |
+| `preference` | `quality`, `speed`, `smallest` or `balanced` (default) |
+
+Invalid values → `400 E-INPUT-01` with `details` per field. A `user` field in the body is ignored.
+
+### `GET /api/profiles/:id`, `PUT /api/profiles/:id`, `DELETE /api/profiles/:id` — user
+
+Read, update (same body and rules as POST) or delete one of **your own** profiles. DELETE answers
+`{ "deleted": true }`. Another user's profile, or an unknown id → `404 E-NOTFOUND-01`.
+
 ## Planned endpoints
 
-Filled in as each WP lands (see `CLAUDE.md` §6): `/api/catalog` and `/api/profiles` (WP-05),
-`/api/jobs/preflight` (WP-08), `/api/jobs` (WP-10), results (WP-15), downloads (WP-17),
-recommendation and export (WP-19), auth (WP-21), admin (WP-25).
+Filled in as each WP lands (see `CLAUDE.md` §6): `/api/jobs/preflight` (WP-08), `/api/jobs`
+(WP-10), results (WP-15), downloads (WP-17), recommendation and export (WP-19), auth (WP-21),
+admin (WP-25).
