@@ -10,7 +10,7 @@ before starting the work package that needs it — and use it to prepare for the
 3. [Branches, pull requests and CI (WP-00 / WP-01)](#3-branches-pull-requests-and-ci-wp-00--wp-01)
 4. Language models, GGUF and llama.cpp — _added in WP-02 (Sibghatullah)_
 5. Quantization levels: F16, Q8_0, Q5_K_M, Q4_K_M — _WP-02_
-6. REST APIs, Express and Mongoose — _WP-03_
+6. [REST APIs, Express, MongoDB and Mongoose (WP-03)](#6-rest-apis-express-mongodb-and-mongoose-wp-03)
 7. Preflight checks — _WP-08_
 8. Background workers and polling — _WP-11 / WP-12_
 9. Benchmarking: tokens per second and peak RAM — _WP-14_
@@ -77,3 +77,43 @@ const port = process.env.PORT || 8000; // use 8000 if PORT is not set
   `feat(api): add catalog routes (#6)`. Writing `Closes #6` in the PR closes the issue on merge.
 
 Full step-by-step commands: [GIT_GUIDE.md](GIT_GUIDE.md).
+
+## 6. REST APIs, Express, MongoDB and Mongoose (WP-03)
+
+**REST API.** The website and the app never touch the database. They send HTTP requests to
+addresses like `GET /api/system/health` and get JSON back. `GET` reads, `POST` creates, `PUT`
+updates, `DELETE` removes. The **status code** says how it went: `200` OK, `201` created,
+`202` accepted (job queued), `400` your input is wrong, `401` not logged in, `404` not found,
+`409` conflict (e.g. not enough disk), `429` too many, `500` server bug.
+
+**Express** turns a request into a call to our function:
+
+```js
+router.get('/health', getHealth); // GET /api/system/health → getHealth(req, res)
+```
+
+**Middleware** is a function that runs _before_ the route, and can stop the request or add
+something to it. `protect` adds `req.user`; if it fails, it calls `next(err)` and Express jumps
+straight to the **error handler** — one place that formats every error the same way.
+
+**MongoDB** stores **documents** (JSON-like objects) in **collections** (`users`, `jobs`, …).
+There are no tables or joins; a job can hold its files and metrics inside itself.
+
+**Mongoose** adds a **schema** on top: which fields exist, their types, which are required, which
+values are allowed. Wrong data is rejected _before_ it reaches the database:
+
+```js
+preference: { type: String, enum: ['quality', 'speed', 'smallest', 'balanced'] }
+// saving preference: 'fastest' → ValidationError → our handler replies 400 E-INPUT-01
+```
+
+`ref: 'User'` stores just the other document's id; `.populate()` can fetch it later.
+`timestamps: true` adds `createdAt` and `updatedAt` automatically.
+
+**Why error codes?** "Something went wrong" helps nobody. `E-DISK-01 — Not enough free disk
+space. Free some space or choose fewer levels.` tells the user what failed, why, and what to do —
+and the code can be looked up on the Help page.
+
+**Testing with an in-memory database.** `mongodb-memory-server` starts a real MongoDB in memory
+for the tests and throws it away afterwards, so tests are fast, repeatable and never touch the
+shared Atlas data.

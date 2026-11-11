@@ -1,15 +1,17 @@
-// server.js — entry point of the API: loads settings from the root .env and starts listening.
+// server.js — entry point of the API: connects to MongoDB, then starts listening.
 // SRS: Section 3 (software interfaces – REST API). Owner: Huzaifah.
-import path from 'node:path';
-import dotenv from 'dotenv';
+import { settings } from './config/settings.js';
+import { connectDB } from './config/db.js';
+import app from './app.js';
 
-// One .env file in the repo root is shared by the API, the worker and the scripts.
-dotenv.config({ path: path.join(import.meta.dirname, '..', '.env'), quiet: true });
+try {
+  await connectDB(settings.mongoUri);
+} catch (err) {
+  console.error(`Could not connect to MongoDB (${err.message}).`);
+  console.error('Check MONGO_URI in the root .env file — see README "Install".');
+  process.exit(1);
+}
 
-// Import the app after dotenv so every file sees the settings.
-const { default: app } = await import('./app.js');
-
-const port = process.env.PORT || 8000;
-app.listen(port, () => {
-  console.log(`PocketPrune API running on http://localhost:${port}/api`);
+app.listen(settings.port, () => {
+  console.log(`PocketPrune API running on http://localhost:${settings.port}/api`);
 });
