@@ -1,0 +1,12 @@
+# Keep line endings the same on Windows (web machine) and WSL2 (model machine).
+* text=auto eol=lf
+
+# Bash scripts must use LF or they fail inside WSL2/Ubuntu.
+*.sh text eol=lf
+
+# Binary files — never touch their bytes.
+*.docx binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.gguf binary
