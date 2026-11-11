@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Secrets — never commit real settings
+.env
+.env.local
+
+# Model files, downloads, artifacts (can be many GB)
+data/
+*.gguf
+*.safetensors
+
+# Build output
+dist/
+build/
+coverage/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
