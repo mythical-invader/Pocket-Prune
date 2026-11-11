@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-11T17:22:40.573Z",
+        "reason": "Brand commitment: CLAUDE.md section 9 pins Inter, system-ui as the single font for web and the React Native app"
+      }
+    ]
+  }
+}
