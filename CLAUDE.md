@@ -22,7 +22,9 @@ The students have **no prior experience with model compression**. Keep the work 
 
 **Rule 2 — Teach as you go.** Before a work package that introduces a new idea (GGUF, quantization levels, perplexity, benchmarking, recommendation rules, JWT, polling…), explain it in simple words in chat and add it to `docs/LEARNING_NOTES.md`. After finishing, explain what was built so the owner can present it in the viva.
 
-**Rule 3 — GitHub history is graded (~20 marks).** Work happens in small, real steps by both teammates: feature branch → pull request → review by the other member → merge into `main`. **Guide the user through every Git step** (Section 11). Never push to `main`, never merge your own PR, and never build several work packages and push them together.
+**Rule 3 — GitHub history is graded (~20 marks), and it must stay simple.** Each member has a personal branch (`huzaifah`, `sibghatullah`). A WP is built on a small WP branch → PR into the personal branch → when ready, PR personal branch → `main`, reviewed by the other member (Section 11). **2–3 short commits per WP** with plain captions like `WP-08: add preflight checks`. Never push to `main` directly, and never build several work packages in one PR.
+
+**Rule 5 — Secrets stay local.** Anything secret (MongoDB Atlas string, HF token, JWT secret, passwords, API keys) goes **only** into the local `.env` file, which is git-ignored. Never write real secrets into code, docs, `.env.example`, commit messages, PR text or issues.
 
 **Rule 4 — Document as you go.** Anyone opening the project must be able to see what was done, how it works and what's left (Section 10).
 
@@ -351,45 +353,57 @@ At the end of every session, tell the user in 5–10 simple lines what was built
 7. Allow **"Create a merge commit"** so branches stay visible in history.
 Write this in `docs/GIT_GUIDE.md`.
 
-### 11.2 Pacing — a history that tells the real story
-- **One WP = one branch = one PR**, built in **one or a few sessions**, then reviewed and merged **before** starting a WP that depends on it.
-- **Never generate future WPs early** or bundle several WPs into one push. If the user asks to "do everything", explain why and do the next WP only.
-- **Both teammates contribute every phase**: WPs alternate between Huzaifah and Sibghatullah (Section 12), each on their own machine. The reviewer leaves at least one real comment or approval note on every PR.
-- Follow the roadmap weeks: in the **sprint to 40 % (weeks 1–4)** each person opens about 3 PRs per week; after the mid-term, about 1 PR per person per week, so the history keeps growing steadily over the semester.
-- Inside a WP, commit locally at each working step (usually 4–10 commits), then **push once** at the end. A draft PR halfway is fine for early feedback.
-- After Phase 4, batch small fixes into one fix PR every few days (`fix/frontend-polish-wk21`); only blocking bugs get an immediate PR.
-- Tag a release at each milestone: `v0.1.0-M1`, `v0.2.0-M2`, `v0.3.0-M3`, `v0.4.0-M4`, `v1.0.0` (and `v1.1.0-mobile` if the app is released separately).
+### 11.2 Branches — simple and per person (agreed 12 Nov 2026)
+
+```text
+main                 ← finished, reviewed work only
+├── huzaifah         ← Huzaifah's branch
+│   └── wp08-preflight, wp10-jobs-api …   (one small branch per WP)
+└── sibghatullah     ← Sibghatullah's branch
+    └── wp02-llamacpp-setup, wp04-command-runner …
+```
+
+- **One WP = one small branch** off your personal branch, named `wpNN-short-name` (e.g. `wp02-llamacpp-setup`). The long names in the Section 12 tables are only descriptions.
+- WP branch → **PR into your personal branch** (you may merge this one yourself).
+- Personal branch → **PR into `main`**, reviewed by the other member, merged with **Create a merge commit**. Do this after each WP (or a couple of small ones) so the other person can build on it. A WP counts as `merged` in `progress.json` only when it is on `main`.
+- **2–3 commits per WP**, plain captions: `WP-02: build llama.cpp`, `WP-02: hand compression notes`. No `feat(area):` prefixes, no long bodies.
+- **Never generate future WPs early.** If the user asks to "do everything", do the next WP only.
+- The reviewer leaves at least one real comment or approval note on every PR into `main`.
+- Tag a release at each milestone: `v0.1.0-M1`, `v0.2.0-M2`, `v0.3.0-M3`, `v0.4.0-M4`, `v1.0.0`.
+- No AI attribution lines (`Co-Authored-By`, "Generated with …") in commits, PRs or docs.
 
 ### 11.3 Show these Git boxes to the user every time
+(Example for Sibghatullah; Huzaifah uses `huzaifah`.)
 
-**▶ START of a WP**
+**▶ START of a WP** — update your branch from `main`, then branch off it
 ```bash
-git checkout main
+git checkout sibghatullah
 git pull
-git checkout -b feat/wp06-cli-pipeline      # branch name from Section 12
+git merge origin/main
+git checkout -b wp02-llamacpp-setup
 ```
-Remind: "Mark issue #__ as In progress."
 
-**▶ CHECKPOINT (a part works, tests pass)** — with a suggested message:
+**▶ COMMIT** (a part works, tests pass) — 2–3 per WP
 ```bash
 git add .
-git status          # no .env, data/, model files
-git commit -m "feat(worker): add F16 conversion stage (#6)"
+git status          # check: no .env, data/, model files
+git commit -m "WP-02: build llama.cpp"
 ```
-Format: `type(area): what changed (#issue)` — `feat`, `fix`, `test`, `docs`, `chore`, `refactor`, `style`.
 
 **▶ END of a WP**
 ```bash
 npm test
-git push -u origin feat/wp06-cli-pipeline
+git push -u origin wp02-llamacpp-setup
 ```
-Open the PR (GitHub "Compare & pull request" or `gh pr create --base main`), fill the template, `Closes #__`, reviewer = the other member, label + milestone. Then: "Ask <other member> to review and merge with **Create a merge commit** — don't merge it yourself."
+1. Open a PR **wp02-llamacpp-setup → sibghatullah**, merge it.
+2. Open a PR **sibghatullah → main** (title `WP-02: llama.cpp setup`, body: what, how tested, `Closes #__`). Ask the other member to review and merge.
 
 **▶ AFTER merge**
 ```bash
-git checkout main
+git checkout sibghatullah
 git pull
-git branch -d feat/wp06-cli-pipeline
+git merge origin/main
+git branch -d wp02-llamacpp-setup
 ```
 
 **▶ MILESTONE** (after its last PR merges)
@@ -554,6 +568,6 @@ mobile/
 
 **Start:** check which machine you're on (2.1) → read this file, `docs/PROJECT_STATUS.md` and the last `docs/DEV_LOG.md` entry → run `npm run progress` and tell the user the current % and days left to the next target → check the WP's **Needs** (12.2) → check Git identity, `git status`, `git branch` → confirm the WP with the user → if it introduces a new concept, explain it first → show the **START** box.
 
-**During:** small steps; run tests; show a **CHECKPOINT** box with a commit message after each working step; if something gets complicated, stop and suggest a simpler way.
+**During:** small steps; run tests; show a **COMMIT** box with a short caption at the 2–3 natural checkpoints of the WP; if something gets complicated, stop and suggest a simpler way. Secrets only in `.env` (Rule 5).
 
 **End:** update the docs (Section 10) → if the WP is finished, show the **END** box; if not, say what's left (no push yet) → explain in simple words what was built → set the WP status in `progress.json`, run `npm run progress`, and tell the user the new %, what it unblocks for the other member, and a short message they can send to them (12.2) → name the next WP for each member.
