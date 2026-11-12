@@ -5,6 +5,17 @@ problems, next step.
 
 ---
 
+## 12 Nov 2026 — Huzaifah — Simpler Git workflow
+
+- `main` history squashed to one commit per finished WP (7 commits) so it is easy to read.
+- New personal branches `huzaifah` and `sibghatullah`: WP branch → PR into your branch → PR into
+  `main` reviewed by the other member.
+- 2–3 short commits per WP with plain captions (`WP-08: add preflight checks`).
+- Secrets only in the local `.env`, never on GitHub. Rules written into `CLAUDE.md` (Rule 3,
+  Rule 5, Section 11) and `docs/GIT_GUIDE.md`; shorter PR template.
+
+---
+
 ## 11 Nov 2026 — Huzaifah — WP-05 Catalog and profiles API
 
 **Built:** `seedData.js` (8 catalog models with pinned commit hashes), `catalogService.js`
