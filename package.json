@@ -17,7 +17,8 @@
     "build": "npm run build --prefix frontend",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "progress": "node scripts/progress.js"
+    "progress": "node scripts/progress.js",
+    "setup:llamacpp": "node scripts/setup-llamacpp.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

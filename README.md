@@ -15,10 +15,10 @@ llama.cpp (pinned release) · Vitest + supertest · GitHub Actions.
 
 ## Which machine runs what
 
-| Machine       | Who          | OS                                       | Runs                                                                               |
-| ------------- | ------------ | ---------------------------------------- | ---------------------------------------------------------------------------------- |
-| Model machine | Sibghatullah | Ubuntu 22.04 via WSL2 (or native Ubuntu) | llama.cpp, the worker, real compressions and benchmarks; API + website when needed |
-| Web machine   | Huzaifah     | Windows                                  | API + website (no llama.cpp or WSL2 needed)                                        |
+| Machine       | Who          | OS                            | Runs                                                                               |
+| ------------- | ------------ | ----------------------------- | ---------------------------------------------------------------------------------- |
+| Model machine | Sibghatullah | Windows 11 (Linux also works) | llama.cpp, the worker, real compressions and benchmarks; API + website when needed |
+| Web machine   | Huzaifah     | Windows                       | API + website (no llama.cpp or WSL2 needed)                                        |
 
 Both use one shared **MongoDB Atlas M0** database during development (same `MONGO_URI`).
 
@@ -37,20 +37,21 @@ copy .env.example .env
 
 Open `.env` and set `MONGO_URI` to the shared Atlas connection string (ask your teammate).
 
-### Ubuntu / WSL2 (model machine)
+### llama.cpp (model machine)
+
+Needs **Python 3.12** (Windows: the `py` launcher) as well. Then, after the steps above:
 
 ```bash
-# Inside Ubuntu (WSL2). Install Node 22 via nvm:
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-nvm install 22
-git clone https://github.com/mythical-invader/Pocket-Prune.git
-cd Pocket-Prune
-npm run install-all
-cp .env.example .env
+# In .env set LLAMA_CPP_DIR to a folder without spaces, e.g. D:/llama.cpp
+npm run setup:llamacpp
 ```
 
-Keep the repo inside the Linux file system (e.g. `~/Pocket-Prune`), not under `/mnt/c/...` — it is
-much faster. llama.cpp setup (`scripts/build-llamacpp.sh`) arrives in WP-02.
+This downloads llama.cpp **b12376** (the official Windows CPU build; on Linux it builds the same tag
+with CMake) and creates a Python venv for the converter. It takes a few minutes and about 2 GB.
+Running it again does nothing if that tag is already installed.
+
+Tip (Windows): add the repo's `data` folder to Windows Defender's exclusions — it otherwise scans
+every multi-hundred-MB model file as it is written.
 
 ## Run it
 
@@ -87,7 +88,7 @@ data/       Model files and downloads — git-ignored, created at run time
 
 ## Pinned tool versions
 
-| Tool      | Version                                          |
-| --------- | ------------------------------------------------ |
-| Node.js   | 22 LTS (Node 20 is end-of-life since April 2026) |
-| llama.cpp | _release tag recorded in WP-02_                  |
+| Tool      | Version                                                               |
+| --------- | --------------------------------------------------------------------- |
+| Node.js   | 22 LTS (Node 20 is end-of-life since April 2026)                      |
+| llama.cpp | **b12376** (`LLAMA_CPP_REF`), installed with `npm run setup:llamacpp` |
