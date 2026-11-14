@@ -11,7 +11,7 @@
   "wps": [
     { "id": "WP-00", "title": "GitHub setup + shared Atlas database", "owner": "Both", "weight": 1, "phase": 1, "week": "1", "needs": [], "status": "in-progress", "pr": null },
     { "id": "WP-01", "title": "Project setup", "owner": "H", "weight": 3, "phase": 1, "week": "1", "needs": ["WP-00"], "status": "merged", "pr": 38 },
-    { "id": "WP-02", "title": "llama.cpp setup + first hand compression", "owner": "S", "weight": 4, "phase": 1, "week": "1", "needs": ["WP-00"], "status": "not-started", "pr": null },
+    { "id": "WP-02", "title": "llama.cpp setup + first hand compression", "owner": "S", "weight": 4, "phase": 1, "week": "1", "needs": ["WP-00"], "status": "in-progress", "pr": null },
     { "id": "WP-03", "title": "Backend core", "owner": "H", "weight": 3, "phase": 1, "week": "1–2", "needs": ["WP-01"], "status": "merged", "pr": 39 },
     { "id": "WP-04", "title": "Command runner", "owner": "S", "weight": 3, "phase": 1, "week": "2", "needs": ["WP-01", "WP-02"], "status": "not-started", "pr": null },
     { "id": "WP-05", "title": "Catalog + profiles API", "owner": "H", "weight": 3, "phase": 1, "week": "2", "needs": ["WP-03"], "status": "merged", "pr": 42 },
