@@ -7,6 +7,9 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-11: background worker (`npm run dev:worker`) — picks the oldest queued job atomically, runs the
+  real or fake pipeline, heartbeat every 10 s, cancel between stages, stuck jobs → `E-WORKER-01`.
+
 - WP-10: jobs API — `POST /api/jobs` (202, preflight again, 2-job limit), `GET /api/jobs`,
   `GET /api/jobs/:id` (status, queue position, latest 50 log lines); "Start compression" on Job Setup.
 
