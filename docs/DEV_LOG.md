@@ -5,6 +5,17 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Huzaifah — Polish fixes (while WP-11 is in progress)
+
+- `progress.json` / `PROJECT_STATUS.md`: WP-10 marked merged (#52) → project at 33 %.
+- Website CSS: the leftover off-scale sizes from WP-07 now use theme tokens — 12px text →
+  `--font-size-sm` (13px); 12/14px gaps and paddings → `--space-md` (16px); 6/10px → `--space-sm`
+  (8px); 2px → `--space-xs` (4px); empty-state 40px → `--space-xl`. Kept on purpose: the 20px card
+  padding (recorded in `DESIGN.md`) and the 1–3px nudges that line icons up with text.
+- No behaviour change; build and lint pass.
+
+---
+
 ## 15 Nov 2026 — Huzaifah — WP-10 Jobs API
 
 **Built:** `POST /api/jobs` (202 `{ jobId }`), `GET /api/jobs`, `GET /api/jobs/:id` (status, stage,
