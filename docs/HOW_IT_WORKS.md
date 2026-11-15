@@ -231,3 +231,26 @@ API and the worker agree on what "installed" means. With `FAKE_PIPELINE=true` it
 
 Tests: `backend/tests/preflight.test.js` — one test per check, plus the endpoint (all pass, every
 failure listed at once, bad model id, someone else's profile, the 2-job limit).
+
+## WP-10 — Jobs API
+
+The website never runs a compression itself. It **creates a job** in MongoDB and walks away;
+the worker (WP-11) picks the oldest `QUEUED` job and runs it.
+
+```
+Job Setup ──POST /api/jobs──▶ preflight again ──▶ Job { status: QUEUED } ──▶ worker picks it up
+                                                         │
+Progress page ◀──GET /api/jobs/:id (status, %, log)──────┘  (worker updates status + JobEvents)
+```
+
+| File                                   | What it does                                                                                                                                                                                                                                                                  |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/controllers/jobController.js` | `createJob` runs preflight again (so nobody can skip it), saves the job and a first log line, answers `202 { jobId }`. `listJobs` lists your jobs. `getJob` returns one job with its latest 50 log lines and its queue position. Every query filters by `user: req.user._id`. |
+| `backend/routes/jobRoutes.js`          | `POST /api/jobs/preflight`, `POST /api/jobs`, `GET /api/jobs`, `GET /api/jobs/:id`.                                                                                                                                                                                           |
+| `frontend/src/pages/JobSetupPage.jsx`  | After a passed preflight, **Start compression** creates the job and shows "waiting in the queue (position N)" with the job ID.                                                                                                                                                |
+
+The API does **not** set `fake` or `demoMode` on the job: the worker decides which pipeline to
+run (its own `.env`), so it writes those when it finishes.
+
+Tests: `backend/tests/jobs.test.js` — 202 within 1 s, the preflight gate (first code + every
+failed check), the 2-job limit (429), list order, queue position, 50 log lines, other user's job → 404.
