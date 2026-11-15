@@ -158,7 +158,7 @@ pocketprune/
 └── data/                      # ⛔ git-ignored: models/, artifacts/, wikitext/
 ```
 
-Root scripts: `npm run install-all`, `npm run dev` (API + website — works on Windows), `npm run dev:worker` (the worker), `npm run dev:all` (all three, model machine), `npm run seed`, `npm test`, `npm run build`, `npm run progress`.
+Root scripts: `npm run install-all`, `npm run dev` (API + website — works on Windows), `npm run dev:worker` (the worker), `npm run dev:all` (all three, model machine), `npm run seed`, `npm test`, `npm run build`, `npm run progress`, `npm run pipeline` (CLI pipeline, `--fake` for the fake one), `npm run setup:llamacpp`.
 
 ---
 
