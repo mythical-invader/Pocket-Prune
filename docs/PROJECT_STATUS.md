@@ -51,6 +51,7 @@ Status values: `not-started` · `in-progress` · `in-review` · `merged`. Weight
 
 - **Sibghatullah:** WP-11 worker (unblocked once WP-10 is on `main`) — pick the oldest `QUEUED` job and run the pipeline with `dbReporter`.
 - **Huzaifah:** WP-12 Job Progress page (needs WP-10 + WP-11).
+- **Phase 3 (after the mid-term):** follow [EVALUATION_PLAN.md](EVALUATION_PLAN.md) — extra measured checks E1–E6 inside WP-15/16/18/20.
 
 ## Known issues
 
