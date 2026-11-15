@@ -6,8 +6,10 @@
 //   4. checks the cancel flag between stages,
 //   5. saves the result: COMPLETED with the variants, FAILED with an error code, or CANCELLED.
 // Jobs left "running" by a crashed worker (heartbeat older than 60 s) become FAILED (E-WORKER-01).
+// Every job that does not finish (failed, cancelled, crashed) has its files deleted (WP-13).
 // Start it with: npm run dev:worker   (needs MongoDB; real jobs also need llama.cpp)
-// SRS: REQ-11 – REQ-16, REQ-26. Owner: Sibghatullah (WP-11).
+// SRS: REQ-11 – REQ-16, REQ-26. Owner: Sibghatullah (WP-11, clean-up WP-13).
+import fs from 'node:fs';
 import path from 'node:path';
 import { settings } from '../config/settings.js';
 import { connectDB, disconnectDB } from '../config/db.js';
@@ -15,7 +17,7 @@ import Job from '../models/Job.js';
 import JobEvent from '../models/JobEvent.js';
 import '../models/CatalogModel.js'; // registers the model, so job.populate('model') works
 import { appError } from '../utils/errors.js';
-import { runPipeline as realPipeline } from './pipeline.js';
+import { jobDir, runPipeline as realPipeline } from './pipeline.js';
 import { runPipeline as fakePipeline } from './fakePipeline.js';
 import { dbReporter } from './reporter.js';
 
@@ -126,7 +128,15 @@ export function cancellableReporter(job) {
   };
 }
 
+// Delete data/artifacts/<jobId>/ — the half-made files of a job that did not finish (WP-13).
+// The real pipeline already does this itself; doing it here too also covers the fake pipeline
+// and jobs whose worker crashed. Safe to call when the folder doesn't exist.
+export function removeJobFiles(jobId) {
+  fs.rmSync(jobDir(jobId), { recursive: true, force: true });
+}
+
 async function failJob(jobId, err) {
+  removeJobFiles(jobId); // a stopped job leaves no junk (also for a crashed worker's job)
   // Errors from our code have a code (E-HF-01…); anything unexpected becomes E-SERVER-01.
   const code = err.code && err.code.startsWith('E-') ? err.code : 'E-SERVER-01';
   await Job.updateOne(
@@ -149,6 +159,7 @@ async function failJob(jobId, err) {
 }
 
 async function cancelJob(jobId) {
+  removeJobFiles(jobId);
   await Job.updateOne(
     { _id: jobId },
     { status: 'CANCELLED', stage: 'Cancelled by the user', finishedAt: new Date() }
@@ -178,6 +189,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main() {
   await connectDB(settings.mongoUri);
+  // Scratch files of tools that were killed last time (TMP/TEMP point here, see runCommand.js).
+  fs.rmSync(path.join(settings.dataDir, 'tmp'), { recursive: true, force: true });
   console.log(
     `PocketPrune worker started — ${settings.fakePipeline ? 'FAKE pipeline' : `llama.cpp ${settings.llamaCppRef}`}. Waiting for jobs…`
   );

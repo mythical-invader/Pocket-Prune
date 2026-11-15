@@ -53,6 +53,22 @@ describe('runCommand', () => {
     expect(Date.now() - started).toBeLessThan(5000);
   });
 
+  it('on a timeout also stops the programs the tool started (process tree)', async () => {
+    // Like hf.exe → python.exe: the "tool" starts a child that would write a file after 1.5 s.
+    // On Windows the child is "detached" (not tied to the tool), so stopping only the tool
+    // would leave it running; on Linux children are never tied to their parent anyway.
+    const marker = path.join(tmpData, 'grandchild-was-here.txt');
+    const grandchild = `setTimeout(() => require('fs').writeFileSync(${JSON.stringify(marker)}, 'x'), 1500)`;
+    const detached = process.platform === 'win32';
+    const tool = `require('child_process').spawn(process.execPath, ['-e', ${JSON.stringify(grandchild)}], { stdio: 'ignore', detached: ${detached} }); setTimeout(() => {}, 10000)`;
+
+    await expect(runCommand(node, script(tool), { timeoutMs: 500 })).rejects.toMatchObject({
+      code: 'E-TIME-01',
+    });
+    await new Promise((resolve) => setTimeout(resolve, 2500)); // longer than the grandchild's 1.5 s
+    expect(fs.existsSync(marker)).toBe(false);
+  });
+
   it('gives every tool a temp folder inside the data folder (never the system temp on C:)', async () => {
     const result = await runCommand(
       node,
