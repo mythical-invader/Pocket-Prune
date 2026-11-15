@@ -7,6 +7,9 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-15: Results — `GET /api/jobs/:id/results` (every file vs F16 in %, size estimate vs real) and the
+  Results page with the `MetricsTable` comparison.
+
 - WP-12: Job Progress page (`/jobs/:id`) — refreshes every 2 s: stage stepper, progress bar, elapsed
   time, queue position, log panel, error with fix and code, "FAKE DATA" badge, files made;
   `errorHint` in `GET /api/jobs/:id`.
