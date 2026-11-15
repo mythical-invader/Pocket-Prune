@@ -492,6 +492,14 @@ a.stepper__item:hover .stepper__label {
   color: var(--color-primary);
 }
 
+.alert--success {
+  background: var(--color-successSoft);
+}
+
+.alert--success .alert__icon {
+  color: var(--color-successText);
+}
+
 .alert__body {
   flex: 1;
   display: flex;

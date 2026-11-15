@@ -1,12 +1,12 @@
 // JobSetupPage.jsx — step 3 "Preflight": choose the quantization levels (with expected sizes),
 // accept the licence, and run the preflight checks on the server. Each check shows passed or
-// failed with its reason, fix and error code. Starting the job arrives in WP-10.
-// SRS: REQ-6 – REQ-10. Owner: Huzaifah.
+// failed with its reason, fix and error code; when it passes, "Start compression" creates the job.
+// SRS: REQ-6 – REQ-10. Owner: Huzaifah (WP-07, WP-08, WP-10).
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { CheckCircle2, Circle, ListChecks, Play, XCircle } from 'lucide-react';
 import { useJobDraft } from '../context/JobDraftContext.jsx';
-import { runPreflight } from '../services/api.js';
+import { createJob, getJob, runPreflight } from '../services/api.js';
 import { estimateSizeMb, formatMb, LEVEL_HINTS } from '../utils/format.js';
 import PageHeader from '../components/PageHeader.jsx';
 import Card from '../components/Card.jsx';
@@ -37,6 +37,8 @@ export default function JobSetupPage() {
   const [result, setResult] = useState(null); // { passed, checks } from the server
   const [running, setRunning] = useState(false);
   const [error, setError] = useState(null);
+  const [starting, setStarting] = useState(false);
+  const [createdJob, setCreatedJob] = useState(null); // the job just started, with queue position
   const { model, profile, levels } = draft;
 
   if (!model || !profile) {
@@ -64,22 +66,38 @@ export default function JobSetupPage() {
     setResult(null);
   }
 
+  const jobRequest = {
+    modelId: model._id,
+    profileId: profile._id,
+    levels,
+    licenseAccepted: licenceAccepted,
+  };
+
   async function preflight() {
     setRunning(true);
     setError(null);
+    setCreatedJob(null);
     try {
-      setResult(
-        await runPreflight({
-          modelId: model._id,
-          profileId: profile._id,
-          levels,
-          licenseAccepted: licenceAccepted,
-        })
-      );
+      setResult(await runPreflight(jobRequest));
     } catch (err) {
       setError(err);
     } finally {
       setRunning(false);
+    }
+  }
+
+  // Create the job (the server runs preflight again), then read its queue position.
+  async function start() {
+    setStarting(true);
+    setError(null);
+    try {
+      const { jobId } = await createJob(jobRequest);
+      setCreatedJob(await getJob(jobId));
+      setResult(null); // a new job needs a fresh preflight
+    } catch (err) {
+      setError(err);
+    } finally {
+      setStarting(false);
     }
   }
 
@@ -194,10 +212,27 @@ export default function JobSetupPage() {
           </ul>
 
           <div className="submit-row">
-            <Button icon={Play} disabled>
+            <Button icon={Play} disabled={!result?.passed} loading={starting} onClick={start}>
               Start compression
             </Button>
           </div>
+
+          {createdJob && (
+            <div className="alert alert--success section-gap" role="status">
+              <CheckCircle2 size={20} className="alert__icon" aria-hidden />
+              <div className="alert__body">
+                <p className="alert__title">
+                  Job started — waiting in the queue
+                  {createdJob.queuePosition ? ` (position ${createdJob.queuePosition})` : ''}.
+                </p>
+                <p className="alert__hint">
+                  The worker picks it up and compresses {createdJob.model.displayName} to{' '}
+                  {createdJob.quantLevels.join(' and ')}. You can leave this page.
+                </p>
+                <p className="alert__code num">Job ID {createdJob._id}</p>
+              </div>
+            </div>
+          )}
         </Card>
       </section>
 
@@ -205,9 +240,11 @@ export default function JobSetupPage() {
         <JobSummary
           footer={
             <p className="summary__note">
-              {result?.passed
-                ? 'Preflight passed. Starting the job is the next feature being added.'
-                : 'Run preflight to check that this job can finish on this machine.'}
+              {createdJob
+                ? 'Job started. Run preflight again to start another one.'
+                : result?.passed
+                  ? 'Preflight passed. You can start the compression.'
+                  : 'Run preflight, then start the compression.'}
             </p>
           }
         />

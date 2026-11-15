@@ -7,6 +7,9 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-10: jobs API — `POST /api/jobs` (202, preflight again, 2-job limit), `GET /api/jobs`,
+  `GET /api/jobs/:id` (status, queue position, latest 50 log lines); "Start compression" on Job Setup.
+
 - WP-08: preflight — `POST /api/jobs/preflight` with 9 checks (catalog, levels, profile, disk, RAM,
   licence, HF token, llama.cpp, 2-job limit) and the live checklist on the Job Setup page.
 

@@ -192,7 +192,64 @@ Check ids, in order: `model` (E-CAT-01), `levels` (E-LVL-01), `profile` (E-NOTFO
 when `FAKE_PIPELINE=true`), `jobs` (E-LIMIT-01). `disk` and `ram` are left out when the model or
 levels are invalid.
 
+### `POST /api/jobs` — user → `202`
+
+Same body as preflight. Preflight runs again on the server; if it passes, a job is saved with
+status `QUEUED` and the worker picks it up later.
+
+```json
+{ "jobId": "6af9ad572fed54075071f4b8" }
+```
+
+If preflight fails, the answer is the **first** failed check's error (e.g. `400 E-LIC-01`,
+`409 E-DISK-01`, `429 E-LIMIT-01`), with `details` listing every failed check:
+
+```json
+{
+  "code": "E-LVL-01",
+  "message": "Unsupported quantization level.",
+  "hint": "Choose Q5_K_M, Q4_K_M or Q8_0.",
+  "details": { "levels": "E-LVL-01: …", "licence": "E-LIC-01: Licence not accepted." }
+}
+```
+
+### `GET /api/jobs` — user
+
+Your jobs, newest first (up to 100), with `model.displayName`, `model.hfRepoId` and `profile.name`.
+`variants` and `recommendation` are left out to keep the list small.
+
+### `GET /api/jobs/:id` — user
+
+One of your jobs with its model and profile, plus:
+
+- `queuePosition` — `1` = next to run (only while `QUEUED`, otherwise `null`)
+- `events` — the latest 50 log lines, oldest first: `{ stage, level, message, createdAt }`
+
+```json
+{
+  "_id": "6af9ad57…",
+  "status": "QUEUED",
+  "stage": "Waiting in queue",
+  "progressPct": 0,
+  "quantLevels": ["Q5_K_M", "Q4_K_M"],
+  "model": {
+    "displayName": "SmolLM2 135M Instruct",
+    "hfRepoId": "HuggingFaceTB/SmolLM2-135M-Instruct"
+  },
+  "queuePosition": 1,
+  "events": [
+    {
+      "stage": "QUEUED",
+      "level": "info",
+      "message": "Job created: Q5_K_M, Q4_K_M. Waiting for the worker."
+    }
+  ]
+}
+```
+
+Someone else's job, an unknown or a malformed id → `404 E-NOTFOUND-01`.
+
 ## Planned endpoints
 
-Filled in as each WP lands (see `CLAUDE.md` §6): `/api/jobs` (WP-10), results (WP-15), downloads
-(WP-17), recommendation and export (WP-19), auth (WP-21), admin (WP-25).
+Filled in as each WP lands (see `CLAUDE.md` §6): cancel / retry (WP-22), results (WP-15),
+downloads (WP-17), recommendation and export (WP-19), auth (WP-21), admin (WP-25).

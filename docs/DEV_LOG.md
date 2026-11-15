@@ -5,6 +5,31 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Huzaifah — WP-10 Jobs API
+
+**Built:** `POST /api/jobs` (202 `{ jobId }`), `GET /api/jobs`, `GET /api/jobs/:id` (status, stage,
+%, queue position, latest 50 log lines), the **Start compression** button on Job Setup, 8 new
+tests (86 total). Shared Atlas `MONGO_URI` now in my local `.env`.
+
+**Decisions and why**
+
+- **Preflight runs again when the job is created**, so the checks can't be skipped by calling the
+  API directly. A failed check answers with the first failure's code and `details` listing all.
+- **The API doesn't set `fake` / `demoMode`**: the worker runs on another laptop with its own
+  `.env`, so it records which pipeline it actually used.
+- **Queue position counts everyone's queued jobs**, because there is one worker for all users.
+- **50 log lines** per `GET /api/jobs/:id` (CLAUDE.md §6). The SRS (REQ-26) says 200; 50 keeps the
+  2-second refresh light — revisit on the Progress page if more are needed.
+- Job list leaves out `variants` / `recommendation` to keep it small.
+
+**Problems:** Node on Windows can't resolve `mongodb+srv://` (same as on the model machine), so my
+`.env` uses the standard `mongodb://host1,host2,host3/pocketprune?tls=true&authSource=admin&replicaSet=…`
+form. Live test: created one real job in Atlas from the website (queue position 1), then deleted it.
+
+**Next step:** Sibghatullah WP-11 worker; then WP-12 Job Progress page.
+
+---
+
 ## 15 Nov 2026 — Huzaifah — WP-08 Preflight
 
 **Built:** `services/preflightService.js` (9 checks, one small function each),
