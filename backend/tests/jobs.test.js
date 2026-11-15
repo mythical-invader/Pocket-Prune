@@ -149,4 +149,20 @@ describe('GET /api/jobs and /api/jobs/:id', () => {
     }
     expect((await request(app).get('/api/jobs')).body).toEqual([]);
   });
+
+  it('adds the how-to-fix hint for a failed job (and none for a running one)', async () => {
+    const body = await setup();
+    const { body: created } = await request(app).post('/api/jobs').send(body);
+
+    expect((await request(app).get(`/api/jobs/${created.jobId}`)).body.errorHint).toBeNull();
+
+    await Job.updateOne(
+      { _id: created.jobId },
+      { status: 'FAILED', errorCode: 'E-HF-01', errorMessage: 'Gated model.' }
+    );
+    const res = await request(app).get(`/api/jobs/${created.jobId}`);
+
+    expect(res.body).toMatchObject({ status: 'FAILED', errorCode: 'E-HF-01', queuePosition: null });
+    expect(res.body.errorHint).toMatch(/HF_TOKEN/);
+  });
 });
