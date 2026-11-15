@@ -172,3 +172,20 @@ Tests: `catalog.test.js` (ordering, inactive hidden, `E-CAT-01`, seed rules) and
 | `data/wikitext/wiki.test.raw` | WikiText-2 test text for perplexity (SHA-256 `173c87a5…dd08`; WP-09's `fetch-wikitext.js` will download it automatically).                                                                                                                                                           |
 
 The commands themselves are explained step by step in [LEARNING_NOTES §5](LEARNING_NOTES.md#5-quantization-levels-and-the-hand-compression-wp-02). From WP-04 on, Node runs them through `runCommand.js`.
+
+## WP-04 — Command runner
+
+| File                           | What it does                                                                                                                                                                                                                                |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/utils/runCommand.js`  | `runCommand(program, args, { timeoutMs, onLine, env, cwd })` starts a program without a shell, sends each output line to `onLine`, and resolves `{ code, stdout, lines, durationSec }`. Too slow → `E-TIME-01`; cannot start → `E-TOOL-01`. |
+| `backend/worker/llamacpp.js`   | Builds the llama.cpp commands: `convertToF16`, `quantize` (`E-LVL-01` / `E-QNT-01`), `smokeTest` (returns `{ passed, output }`), `checkInstalled` (pinned tag), `toolPath` / `pythonPath` (adds `.exe` / `Scripts\` on Windows).            |
+| `backend/worker/downloader.js` | `downloadModel(repo, revision)` runs `hf download` into `data/models/<owner>__<name>`, reuses a finished download of the same revision, and maps failures to `E-HF-01` / `E-HF-02`.                                                         |
+
+What the pipeline (WP-06) will do with these:
+
+```js
+const { dir } = await downloadModel(model.hfRepoId, model.revision, { onLine });
+await convertToF16(dir, f16File, { onLine });
+await quantize(f16File, q4File, 'Q4_K_M', { onLine });
+const { passed } = await smokeTest(q4File, { onLine });
+```

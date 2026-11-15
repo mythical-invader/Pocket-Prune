@@ -10,6 +10,7 @@ before starting the work package that needs it — and use it to prepare for the
 3. [Branches, pull requests and CI (WP-00 / WP-01)](#3-branches-pull-requests-and-ci-wp-00--wp-01)
 4. [Language models, GGUF and llama.cpp (WP-02)](#4-language-models-gguf-and-llamacpp-wp-02)
 5. [Quantization levels and the hand compression (WP-02)](#5-quantization-levels-and-the-hand-compression-wp-02)
+   5b. [Running programs from Node: spawn, timeouts, mocking (WP-04)](#5b-running-programs-from-node-spawn-timeouts-mocking-wp-04)
 6. [REST APIs, Express, MongoDB and Mongoose (WP-03)](#6-rest-apis-express-mongodb-and-mongoose-wp-03)
    6b. [React pages, components and the theme (WP-07)](#6b-react-pages-components-and-the-theme-wp-07)
    6c. [Pinned revisions and the catalog (WP-05)](#6c-pinned-revisions-and-the-catalog-wp-05)
@@ -196,6 +197,53 @@ What this teaches us (good viva points):
 **Perplexity** in one line: how "surprised" the model is by real text. Lower = better. 18.9 means
 the model is, on average, as unsure as picking among ~19 equally likely next tokens. (Full notes in
 WP-16.)
+
+## 5b. Running programs from Node: spawn, timeouts, mocking (WP-04)
+
+In WP-02 we typed the llama.cpp commands by hand. WP-04 lets **Node run them for us**, which is
+what the worker will do for every job.
+
+**Child process.** A program started by another program. Node's `spawn(program, args)` starts
+`llama-quantize.exe` as a child, and Node can read everything it prints while it runs.
+
+**Why no shell.** A shell (cmd / bash) reads one long text line and splits it into a program and
+arguments itself. If a model name contained `; del *`, a shell would run that as a second command
+— this is called **command injection**. We give `spawn` an **array** of arguments and no shell,
+so every argument is passed exactly as written and nothing extra can ever run:
+
+```js
+runCommand(toolPath('llama-quantize'), [f16File, outFile, 'Q4_K_M']); // array, no shell
+```
+
+A test proves it: the argument `model; echo hacked & del x` arrives at the program as plain text.
+
+**Streams and lines.** A running program prints in small pieces (chunks). `runCommand` joins
+them, cuts them into lines and calls `onLine(line)` for each — later each line becomes a job log
+entry on the Progress page. Only the last 200 lines are kept in memory.
+
+**Timeout.** Every command gets a time limit from `.env` (convert 30 min, quantize 20, smoke 2…).
+If it is still running when the timer fires, `runCommand` stops it and reports `E-TIME-01`, so a
+stuck tool can never block the worker forever.
+
+**Exit code.** When a program finishes it returns a number: `0` = success, anything else = error.
+`runCommand` just reports it; `llamacpp.js` decides what it means (`E-CONV-01`, `E-QNT-01`, or
+"smoke test failed").
+
+**Adapter.** `llamacpp.js` is the only file that knows llama.cpp's flags. If a new llama.cpp
+version renames a flag, we change one file — the pipeline doesn't care.
+
+**Secrets in the environment, not the arguments.** The Hugging Face token is passed as the
+environment variable `HF_TOKEN`. Arguments are written to the job log; environment variables are
+not, so the token never leaks into a log or the database.
+
+**Mocking.** CI has no llama.cpp and no internet. So in tests we replace `runCommand` with a fake
+(`vi.mock`) that returns whatever we choose (`{ code: 1 }` = "the tool failed"). Then we check
+two things: that the **right command** was built, and that our code **reacts correctly** to each
+result. `runCommand` itself is tested with tiny real Node scripts instead.
+
+**Reuse.** After a complete download, `downloader.js` writes a small file
+`.pocketprune-revision` with the commit hash. Next time, if that file says the same revision, the
+download is skipped (seconds instead of minutes).
 
 ## 6. REST APIs, Express, MongoDB and Mongoose (WP-03)
 
