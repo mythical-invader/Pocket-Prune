@@ -1,8 +1,8 @@
 // llamacpp.js — the ONLY file that knows how llama.cpp commands look (the "LlamaCppAdapter").
 // Each function builds one command as an argument array and runs it with runCommand.
 // If a future llama.cpp renames a flag, only this file changes.
-// SRS: REQ-9 (pinned binaries present), REQ-12 (convert + quantize), REQ-13 (smoke test).
-// Owner: Sibghatullah (WP-04).
+// SRS: REQ-9 (pinned binaries present), REQ-12 (convert + quantize), REQ-13 (smoke test),
+// REQ-17 (benchmark). Owner: Sibghatullah (WP-04, benchmark WP-14).
 import fs from 'node:fs';
 import path from 'node:path';
 import { settings } from '../config/settings.js';
@@ -61,6 +61,36 @@ export async function quantize(f16File, outFile, level, { onLine } = {}) {
   if (result.code !== 0)
     throw appError('E-QNT-01', { message: `Quantization to ${level} failed.` });
   return { durationSec: result.durationSec };
+}
+
+// Speed test of one file with llama-bench (WP-14): read a prompt (pp) and write tokens (tg),
+// each repeated `runs` times, CPU only. Returns llama-bench's JSON: one entry per test, with the
+// average speed (avg_ts), its spread (stddev_ts) and every run (samples_ts) in tokens/s.
+// Demo mode uses a shorter test (CLAUDE.md §7.4).
+export async function benchmark(file, { onLine, onSpawn, runs = 3 } = {}) {
+  const sizes = settings.demoMode ? { prompt: 128, gen: 32 } : { prompt: 512, gen: 128 };
+  const args = [
+    '-m', file,
+    '-p', String(sizes.prompt), // prompt test: read this many tokens
+    '-n', String(sizes.gen), // generation test: write this many tokens
+    '-r', String(runs), // repeat each test, so we can see how stable the numbers are
+    '-ngl', '0', // CPU only, so results are comparable
+    '-o', 'json',
+  ]; // prettier-ignore
+  if (settings.benchThreads > 0) args.push('-t', String(settings.benchThreads));
+
+  const result = await runCommand(toolPath('llama-bench'), args, {
+    // stdout is the JSON answer — only stderr (loading messages) goes to the job log
+    onLine: (line, stream) => stream === 'stderr' && onLine?.(line),
+    onSpawn,
+    timeoutMs: minutes(settings.timeoutsMin.bench),
+  });
+  if (result.code !== 0) throw appError('E-BENCH-01');
+  try {
+    return { tests: JSON.parse(result.stdout), sizes, durationSec: result.durationSec };
+  } catch {
+    throw appError('E-BENCH-01', { message: 'llama-bench did not print valid JSON.' });
+  }
 }
 
 // Load a file and let it write 32 tokens. Valid = exits normally in time and prints text.

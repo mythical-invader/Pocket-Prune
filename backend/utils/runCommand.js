@@ -34,7 +34,8 @@ export function killTree(child) {
 }
 
 export function runCommand(program, args, options = {}) {
-  const { cwd, env, timeoutMs = 60_000, onLine = () => {} } = options;
+  // onSpawn(child) is called once the program has started — e.g. to watch its memory (WP-14).
+  const { cwd, env, timeoutMs = 60_000, onLine = () => {}, onSpawn = () => {} } = options;
   const started = Date.now();
   const tmpDir = path.join(settings.dataDir, 'tmp');
   fs.mkdirSync(tmpDir, { recursive: true });
@@ -49,6 +50,7 @@ export function runCommand(program, args, options = {}) {
       // Linux/macOS: own process group, so a timeout can stop the tool AND what it started.
       detached: !isWindows,
     });
+    child.once('spawn', () => onSpawn(child));
 
     const lines = []; // last lines of stdout + stderr together, for the log
     let stdout = ''; // full normal output (e.g. the text a smoke test generated)
