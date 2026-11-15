@@ -31,6 +31,15 @@ describe('convertToF16', () => {
     expect(result.durationSec).toBe(1.5);
   });
 
+  it('writes a fixed model name, so the file does not depend on the folder name', async () => {
+    runCommand.mockResolvedValue(ok());
+    await convertToF16('models/m', 'o.gguf', { modelName: 'SmolLM2-135M-Instruct' });
+    expect(runCommand.mock.calls[0][1].slice(-2)).toEqual([
+      '--model-name',
+      'SmolLM2-135M-Instruct',
+    ]);
+  });
+
   it('throws E-CONV-01 when the converter fails', async () => {
     runCommand.mockResolvedValue(ok({ code: 1 }));
     await expect(convertToF16('m', 'o')).rejects.toMatchObject({ code: 'E-CONV-01' });

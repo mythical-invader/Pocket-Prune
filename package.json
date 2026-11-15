@@ -18,7 +18,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "progress": "node scripts/progress.js",
-    "setup:llamacpp": "node scripts/setup-llamacpp.js"
+    "setup:llamacpp": "node scripts/setup-llamacpp.js",
+    "pipeline": "npm run pipeline --prefix backend --"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

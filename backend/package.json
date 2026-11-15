@@ -13,7 +13,8 @@
     "dev": "nodemon server.js",
     "worker": "node worker/worker.js",
     "seed": "node seed.js",
-    "test": "cross-env NODE_ENV=test vitest run"
+    "test": "cross-env NODE_ENV=test vitest run",
+    "pipeline": "node cli.js"
   },
   "dependencies": {
     "dotenv": "^18.0.10",

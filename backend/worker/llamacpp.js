@@ -37,9 +37,12 @@ export function checkInstalled() {
 }
 
 // safetensors folder → one F16 GGUF file.
-export async function convertToF16(modelDir, outFile, { onLine } = {}) {
+// modelName is written into the file. Without it the converter uses the FOLDER name, so the same
+// model downloaded into another folder would give a different SHA-256 (found in WP-06).
+export async function convertToF16(modelDir, outFile, { onLine, modelName } = {}) {
   const script = path.join(settings.llamaCppDir, 'src', 'convert_hf_to_gguf.py');
   const args = [script, modelDir, '--outfile', outFile, '--outtype', 'f16'];
+  if (modelName) args.push('--model-name', modelName);
   const result = await runCommand(pythonPath(), args, {
     onLine,
     timeoutMs: minutes(settings.timeoutsMin.convert),
