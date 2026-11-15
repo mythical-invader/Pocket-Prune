@@ -39,5 +39,6 @@ export const runPreflight = (body) => api.post('/jobs/preflight', body).then((r)
 export const createJob = (body) => api.post('/jobs', body).then((r) => r.data); // → { jobId }
 export const getJobs = () => api.get('/jobs').then((r) => r.data);
 export const getJob = (id) => api.get(`/jobs/${id}`).then((r) => r.data); // + queuePosition, events
+export const getResults = (id) => api.get(`/jobs/${id}/results`).then((r) => r.data); // WP-15
 
 export default api;

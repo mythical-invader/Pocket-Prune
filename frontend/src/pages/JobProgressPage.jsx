@@ -5,7 +5,7 @@
 // SRS: REQ-26. Owner: Huzaifah (WP-12).
 import { useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { CheckCircle2, Clock, FlaskConical, SearchX } from 'lucide-react';
+import { BarChart3, CheckCircle2, Clock, FlaskConical, SearchX } from 'lucide-react';
 import { getJob } from '../services/api.js';
 import { usePolling } from '../utils/usePolling.js';
 import { formatDuration, formatMb, formatTime } from '../utils/format.js';
@@ -187,9 +187,14 @@ export default function JobProgressPage() {
 
       {job.status === 'COMPLETED' && (
         <Card>
-          <h2 className="section-title">Files made</h2>
+          <div className="form-head">
+            <h2 className="section-title">Files made</h2>
+            <Link to={`/jobs/${job._id}/results`}>
+              <Button icon={BarChart3}>See results</Button>
+            </Link>
+          </div>
           <p className="section-intro">
-            Speed, memory and quality are measured in the next steps (Results).
+            The Results page compares every file with F16: size, speed, memory and quality.
           </p>
           <table className="files-table">
             <thead>

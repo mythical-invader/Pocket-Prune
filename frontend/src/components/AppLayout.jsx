@@ -6,7 +6,7 @@ import { Download, HelpCircle, History, Layers } from 'lucide-react';
 import StageStepper from './StageStepper.jsx';
 import { useJobDraft } from '../context/JobDraftContext.jsx';
 
-// The five steps of a compression job. Run = /jobs/:id (WP-12); Results gets its page in WP-15.
+// The five steps of a compression job. Run = /jobs/:id (WP-12), Results = /jobs/:id/results (WP-15).
 export const PIPELINE_STEPS = [
   { key: 'model', label: 'Model', to: '/catalog' },
   { key: 'device', label: 'Device', to: '/profiles' },
@@ -17,6 +17,7 @@ export const PIPELINE_STEPS = [
 
 // Which rail step a page belongs to (-1 = not a job page, so no rail).
 function stepForPath(pathname) {
+  if (pathname.startsWith('/jobs/') && pathname.endsWith('/results')) return 4; // Results
   if (pathname.startsWith('/jobs/')) return 3; // Run
   return PIPELINE_STEPS.findIndex((step) => step.to === pathname);
 }
@@ -36,11 +37,18 @@ export default function AppLayout() {
     model: !!draft.model,
     device: !!draft.profile,
     preflight: !!draft.lastJobId, // a job was started, so preflight passed
+    run: stepIndex === 4, // on the Results page the job has finished
   };
   const steps = PIPELINE_STEPS.map((step) => ({
     ...step,
     // "Run" links to the latest job started from this browser.
-    to: step.key === 'run' && draft.lastJobId ? `/jobs/${draft.lastJobId}` : step.to,
+    to: !draft.lastJobId
+      ? step.to
+      : step.key === 'run'
+        ? `/jobs/${draft.lastJobId}`
+        : step.key === 'results'
+          ? `/jobs/${draft.lastJobId}/results`
+          : step.to,
     done: doneByStep[step.key] ?? false,
   }));
 

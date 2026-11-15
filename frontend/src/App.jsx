@@ -8,6 +8,7 @@ import CatalogPage from './pages/CatalogPage.jsx';
 import ProfilesPage from './pages/ProfilesPage.jsx';
 import JobSetupPage from './pages/JobSetupPage.jsx';
 import JobProgressPage from './pages/JobProgressPage.jsx';
+import ResultsPage from './pages/ResultsPage.jsx';
 import PlaceholderPage from './pages/PlaceholderPage.jsx';
 import './pages/pages.css';
 
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/profiles" element={<ProfilesPage />} />
             <Route path="/job/new" element={<JobSetupPage />} />
             <Route path="/jobs/:id" element={<JobProgressPage />} />
+            <Route path="/jobs/:id/results" element={<ResultsPage />} />
             <Route
               path="/history"
               element={
