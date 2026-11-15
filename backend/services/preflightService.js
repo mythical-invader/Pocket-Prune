@@ -12,9 +12,8 @@ import { settings, ROOT_DIR } from '../config/settings.js';
 import { getFreeDiskMb } from '../utils/systemInfo.js';
 import { checkInstalled } from '../worker/llamacpp.js';
 import { appError } from '../utils/errors.js';
+import { estimateSizeMb } from '../utils/sizeEstimate.js';
 
-// Bits each level stores per weight (F16 = 16). Used to estimate file sizes before a job runs.
-const BITS_PER_WEIGHT = { Q8_0: 8.5, Q5_K_M: 5.7, Q4_K_M: 4.9 };
 const ACTIVE_STATUSES = ['QUEUED', 'DOWNLOADING', 'CONVERTING', 'QUANTIZING', 'VALIDATING',
   'BENCHMARKING', 'EVALUATING', 'RECOMMENDING']; // prettier-ignore
 
@@ -56,7 +55,7 @@ export function checkProfile(profile) {
 // REQ-7: free disk ≥ 3 × F16 + all quantized files + 2 GB reserve.
 // 3 × F16 = the downloaded weights + the F16 GGUF + working room while converting.
 export function estimateDiskNeedMb(f16SizeMb, levels) {
-  const quantized = levels.reduce((sum, l) => sum + (f16SizeMb * BITS_PER_WEIGHT[l]) / 16, 0);
+  const quantized = levels.reduce((sum, l) => sum + estimateSizeMb(f16SizeMb, l), 0);
   return Math.ceil(3 * f16SizeMb + quantized + settings.diskReserveMb);
 }
 
