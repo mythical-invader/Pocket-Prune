@@ -5,6 +5,51 @@ problems, next step.
 
 ---
 
+## 14 Nov 2026 — Sibghatullah — WP-02 llama.cpp setup + first hand compression
+
+**Built**
+
+- `scripts/setup-llamacpp.js` + `npm run setup:llamacpp`: installs llama.cpp **b12376** into
+  `LLAMA_CPP_DIR` (source for the converter, the official Windows CPU build, a Python 3.12 venv with
+  the converter's packages and `hf`). Safe to run again. On Linux it builds the same tag with CMake.
+- Compressed `HuggingFaceTB/SmolLM2-135M-Instruct` by hand: download → F16 → Q5_K_M + Q4_K_M →
+  smoke test (all 3 pass). Also measured speed, peak RAM and perplexity for WP-06's fake pipeline.
+- Docs: LEARNING_NOTES §4–5 (every command explained + results), `catalog-trials.md`, README
+  install + pinned tag, `.env.example` (`LLAMA_CPP_DIR`, `LLAMA_CPP_REF=b12376`), CLAUDE.md.
+
+**Files touched:** `scripts/setup-llamacpp.js`, `package.json`, `.env.example`, `README.md`,
+`CLAUDE.md`, `docs/LEARNING_NOTES.md`, `docs/catalog-trials.md`, `docs/progress.json`,
+`docs/PROJECT_STATUS.md`, `docs/HOW_IT_WORKS.md`, `docs/DEV_LOG.md`.
+
+**Decisions and why**
+
+- **Model machine = native Windows 11, not WSL2.** llama.cpp publishes a ready-made Windows CPU
+  build (nothing to compile), both teammates are on Windows, and CPU speed is practically the same.
+  The Node code must be cross-platform anyway. Cost: Docker (WP-26) will need WSL2 later; the SRS
+  operating-environment paragraph now says "Windows 11 (64-bit)" (`docs/PocketPrune_SRS.docx`).
+- **Setup script in Node instead of `build-llamacpp.sh`**, so it runs on Windows and Linux.
+- **Pinned b12376** (latest release on 14 Nov 2026). llama.cpp releases several times a day; the tag
+  is in `.env` and `LLAMA_CPP_DIR/VERSION`.
+- **Smoke test uses `llama-completion`, not `llama-cli`**: in b12376 `llama-cli` is chat-only.
+  `llama-completion ... -no-cnv` writes 32 tokens and exits (WP-04 must use it).
+- **Python 3.12 for the venv** (`py -3.12`): the safest version for torch/numpy wheels.
+- `LLAMA_CPP_DIR` must have **no spaces** (`D:/llama.cpp`); the repo path has spaces, but tools
+  get paths as separate arguments, so that is fine.
+- The pinned SmolLM2-135M revision `12fd25f7…` in `seedData.js` is **correct** (it downloaded at
+  exactly that commit).
+
+**Results (i7-14700HX, 20 threads):** F16 258 MiB / Q5_K_M 107 MiB / Q4_K_M 101 MiB; generation
+105 / 191 / 199 tok/s; perplexity 18.92 / 19.57 / 19.87. Details in LEARNING_NOTES §5.
+
+**Problems:** none blocking. Files are only ~2.5× smaller (big vocabulary table kept at higher
+precision in a tiny model) — explained in the notes. Peak RAM on Windows is measured with the
+process's peak working set; `pidusage` on Windows must be checked in WP-14.
+
+**Next step:** Huzaifah reviews WP-02 (`sibghatullah` → `main`). Then WP-04 (command runner).
+Still open from WP-00: shared Atlas `MONGO_URI` in both `.env` files.
+
+---
+
 ## 12 Nov 2026 — Huzaifah — Simpler Git workflow
 
 - `main` history squashed to one commit per finished WP (7 commits) so it is easy to read.

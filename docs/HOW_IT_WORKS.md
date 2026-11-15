@@ -158,3 +158,17 @@ Validation lives in the Mongoose schema (`models/DeviceProfile.js`); a failed sa
 
 Tests: `catalog.test.js` (ordering, inactive hidden, `E-CAT-01`, seed rules) and
 `profiles.test.js` (CRUD, validation, ignored `user` field, other user's profile → 404).
+
+## WP-02 — llama.cpp setup
+
+| Path                          | What it does                                                                                                                                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `scripts/setup-llamacpp.js`   | `npm run setup:llamacpp`. Reads `LLAMA_CPP_DIR` and `LLAMA_CPP_REF` from `.env`, downloads that llama.cpp tag (source + Windows CPU build, or a CMake build on Linux), creates the Python venv, checks `--version`, writes `VERSION`. Skips everything if `VERSION` already matches. |
+| `LLAMA_CPP_DIR/bin`           | The llama.cpp programs: `llama-quantize`, `llama-completion`, `llama-bench`, `llama-perplexity`, …                                                                                                                                                                                   |
+| `LLAMA_CPP_DIR/src`           | llama.cpp source at the same tag — we only use `convert_hf_to_gguf.py` (and its `gguf-py` library) from it.                                                                                                                                                                          |
+| `LLAMA_CPP_DIR/venv`          | Private Python with the converter's packages and the `hf` download tool.                                                                                                                                                                                                             |
+| `data/models/<model>`         | Downloaded safetensors snapshot (git-ignored; deleted after conversion once the pipeline exists).                                                                                                                                                                                    |
+| `data/artifacts/*.gguf`       | The F16 and quantized GGUF files (git-ignored).                                                                                                                                                                                                                                      |
+| `data/wikitext/wiki.test.raw` | WikiText-2 test text for perplexity (SHA-256 `173c87a5…dd08`; WP-09's `fetch-wikitext.js` will download it automatically).                                                                                                                                                           |
+
+The commands themselves are explained step by step in [LEARNING_NOTES §5](LEARNING_NOTES.md#5-quantization-levels-and-the-hand-compression-wp-02). From WP-04 on, Node runs them through `runCommand.js`.

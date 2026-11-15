@@ -69,11 +69,11 @@ If it's wrong, stop and help fix it before any commit.
 ### 2.1 Machines — who needs what
 | Machine | Who | Operating system | Runs |
 | --- | --- | --- | --- |
-| **Model machine** (also the reference machine for all measurements in the SRS) | Sibghatullah | **Ubuntu 22.04 via WSL2** on Windows 11 (or native Ubuntu) | llama.cpp, the worker, real compressions and benchmarks; also the API + website when needed |
-| **Web machine** | Huzaifah | **Plain Windows is fine** — no WSL2 or llama.cpp needed | Node.js, the Express API, the React website, later the Expo app |
+| **Model machine** (also the reference machine for all measurements in the SRS) | Sibghatullah | **Windows 11** (native; decided 14 Nov 2026 — Linux also works) | llama.cpp, the worker, real compressions and benchmarks; also the API + website when needed |
+| **Web machine** | Huzaifah | **Windows** — no llama.cpp needed | Node.js, the Express API, the React website, later the Expo app |
 
 - **Shared development database:** one free **MongoDB Atlas M0** cluster. Both laptops put the same `MONGO_URI` in their `.env`. A job created from Huzaifah's website is stored in Atlas; when Sibghatullah's worker is running, it picks the job up and writes real results back, which then appear on Huzaifah's website. (GGUF files stay on the model machine, so test file downloads there.) Either member can still use a local MongoDB when working alone.
-- **Cross-platform rule:** everything Huzaifah runs must work on Windows — npm scripts use `concurrently`/`cross-env` (no bash commands), file paths use `path.join`, no Linux-only tools in the API or website. Bash scripts (`build-llamacpp.sh`) are for the model machine only.
+- **Cross-platform rule:** everything Huzaifah runs must work on Windows — npm scripts use `concurrently`/`cross-env` (no bash commands), file paths use `path.join`, no Linux-only tools in the API or website. Setup scripts are Node (`scripts/setup-llamacpp.js`), not bash, so they run on Windows and Linux.
 - **Final demo:** everything runs on the model machine (or the optional hosted server).
 
 ---
@@ -88,14 +88,14 @@ If it's wrong, stop and help fix it before any commit.
 | Auth | **bcryptjs** + **jsonwebtoken**, **express-rate-limit** on login | |
 | Logging | **morgan** | |
 | Background jobs | A **separate Node process** `backend/worker/worker.js` that picks the oldest `QUEUED` job from MongoDB | No Redis needed |
-| Model tools | **llama.cpp** built from source at one pinned release tag | |
+| Model tools | **llama.cpp** at one pinned release tag (**b12376**): official Windows CPU build; built from source on Linux | `npm run setup:llamacpp` |
 | Python (tool only) | Python venv inside the llama.cpp folder — runs `convert_hf_to_gguf.py` and `hf download` | We write no Python |
 | Process RAM | **pidusage** | |
 | Dev tools | **nodemon**, **concurrently**, **cross-env**, **dotenv** | Scripts must run on Windows and Linux |
 | Tests | **Vitest** + **supertest** + **mongodb-memory-server** | |
 | Lint/format | ESLint + Prettier | |
 | CI | GitHub Actions | |
-| Operating systems | Model machine: Ubuntu 22.04 / WSL2. Web machine: Windows | See 2.1 |
+| Operating systems | Both machines: Windows 11 (code stays cross-platform; CI runs on Linux) | See 2.1 |
 | Mobile (later) | **Expo** (React Native, JavaScript) | Section 13 |
 
 ---
@@ -121,7 +121,7 @@ pocketprune/
 │   ├── catalog-trials.md      # Manual model test results
 │   └── release-notes/         # One file per milestone
 │
-├── scripts/                   # build-llamacpp.sh, fetch-wikitext.js, validate-catalog.js, regression.js,
+├── scripts/                   # setup-llamacpp.js, fetch-wikitext.js, validate-catalog.js, regression.js,
 │                              #   progress.js — prints % done, per phase, per person, and who is waiting on whom
 │
 ├── backend/
@@ -220,9 +220,9 @@ Keep `docs/API.md` in sync. **Before the login WP:** `protect` sets `req.user` t
 llama.cpp commands are built **only** in `worker/llamacpp.js` and run via `utils/runCommand.js` with `spawn(command, argsArray)` — **never** `shell: true` or string concatenation. Every command has a timeout; output lines become `JobEvent`s. Use `-ngl 0` (CPU only) so results are comparable. Check flags with `--help` of the pinned build; record the tag in `README.md`.
 ```bash
 hf download <repo> --revision <commit> --include "*.safetensors" "*.json" "tokenizer*" --local-dir <dir>
-<venv>/bin/python convert_hf_to_gguf.py <dir> --outfile <name>-F16.gguf --outtype f16
+<venv>/Scripts/python.exe convert_hf_to_gguf.py <dir> --outfile <name>-F16.gguf --outtype f16   # <venv>/bin/python on Linux
 llama-quantize <name>-F16.gguf <name>-Q4_K_M.gguf Q4_K_M
-llama-cli -m <file> -p "<fixed prompt>" -n 32 --seed 42 --temp 0 -ngl 0 -no-cnv      # smoke test
+llama-completion -m <file> -p "<fixed prompt>" -n 32 --seed 42 --temp 0 -ngl 0 -no-cnv   # smoke test (llama-cli is chat-only in b12376)
 llama-bench -m <file> -p 512 -n 128 -r 3 -t <threads> -ngl 0 -o json
 llama-perplexity -m <file> -f data/wikitext/wiki.test.raw -c 512 --chunks 100 -t <threads> -ngl 0
 ```
@@ -472,7 +472,7 @@ H = Huzaifah, S = Sibghatullah. Week 1 = 9 Nov 2026. **%** = weight. **Needs** =
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | WP-00 | 1 | 1 | Both | — | — | GitHub setup (11.1); agree on machines (2.1); shared MongoDB Atlas database | Both can open PRs and reach Atlas |
 | WP-01 | 1 | 3 | H | WP-00 | `chore/wp01-project-setup` | Folders, root scripts (`dev`, `dev:worker`, `dev:all`, `progress`), skeletons that start, `.env.example`, README (Windows + WSL2), all `docs/` files incl. `progress.json` + `scripts/progress.js`, `.github/` files, CI | `npm run dev` and `npm run progress` work on Windows; CI green |
-| WP-02 | 1 | 4 | S | WP-00 | `chore/wp02-llamacpp-setup` | Model machine (WSL2 + Ubuntu), `build-llamacpp.sh` (pinned tag + venv), compress SmolLM2-135M **by hand**, every command explained in `LEARNING_NOTES.md` | A hand-made Q4_K_M file generates text |
+| WP-02 | 1 | 4 | S | WP-00 | `chore/wp02-llamacpp-setup` | Model machine (Windows 11), `setup-llamacpp.js` (pinned tag + venv), compress SmolLM2-135M **by hand**, every command explained in `LEARNING_NOTES.md` | A hand-made Q4_K_M file generates text |
 | WP-03 | 1–2 | 3 | H | WP-01 | `feat/wp03-backend-core` | `db.js`, `settings.js`, Mongoose models, `errors.js`, `errorHandler.js`, demo-user `protect`, health + host-profile, first tests | Tests pass |
 | WP-04 | 2 | 3 | S | WP-01, WP-02 | `feat/wp04-command-runner` | `runCommand.js`, `llamacpp.js`, `downloader.js`, mocked tests | Each command runs from Node |
 | WP-05 | 2 | 3 | H | WP-03 | `feat/wp05-catalog-profiles-api` | Catalog + profile API, `seed.js` with demo models (revisions from WP-02), tests, `docs/API.md` | `/api/catalog`, `/api/profiles` tested |
