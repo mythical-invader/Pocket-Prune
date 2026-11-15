@@ -500,3 +500,31 @@
     display: none;
   }
 }
+
+/* ---------- Results (WP-15) ---------- */
+
+.rec {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+}
+
+.rec__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-primary);
+}
+
+.rec__choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-size-lg);
+}
+
+.rec__rule {
+  font-size: var(--font-size-sm);
+  color: var(--color-textMuted);
+}

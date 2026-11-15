@@ -20,6 +20,9 @@ before starting the work package that needs it — and use it to prepare for the
 8. [Background workers, heartbeats and cancelling (WP-11)](#8-background-workers-heartbeats-and-cancelling-wp-11)
    8b. [Polling: how the progress page stays live (WP-12)](#8b-polling-how-the-progress-page-stays-live-wp-12)
    8c. [Failing cleanly: process trees, disk reserve, clean-up, regression tests (WP-13)](#8c-failing-cleanly-process-trees-disk-reserve-clean-up-regression-tests-wp-13)
+
+   8d. [Comparing with F16: "change vs baseline" (WP-15)](#8d-comparing-with-f16-change-vs-baseline-wp-15)
+
 9. Benchmarking: tokens per second and peak RAM — _WP-14_
 10. Perplexity — _WP-16_
 11. The recommendation rules — _WP-18_
@@ -561,3 +564,28 @@ file size with the sizes measured before — same model, same revision, same lla
 must be identical. It also starts one job with a 1-second time limit and checks it stops with
 E-TIME-01 and leaves no files. Results go to `docs/regression-M2.md`. Run it after any change to
 the pipeline or a llama.cpp upgrade.
+
+### 8d. Comparing with F16: "change vs baseline" (WP-15)
+
+**F16** is the uncompressed file — the baseline. Every other file is compared with it:
+
+> change % = (file − F16) ÷ F16 × 100
+
+Example (SmolLM2-135M, WP-02 hand trial): Q4_K_M is 100.6 MB, F16 258.3 MB →
+(100.6 − 258.3) ÷ 258.3 × 100 = **−61.1 %** (61 % smaller).
+
+**Is a change good or bad?** It depends on the number:
+
+| Number                   | Good direction | Q4_K_M vs F16 (example)          |
+| ------------------------ | -------------- | -------------------------------- |
+| Size                     | lower          | −61.1 % ✔                        |
+| Generation speed (tok/s) | higher         | +89.5 % ✔                        |
+| Peak RAM                 | lower          | −32.1 % ✔                        |
+| Perplexity               | lower          | +5.0 % ✘ (a little quality lost) |
+
+That last line is the whole trade-off of quantization: much smaller and faster, slightly worse
+quality. The Results page colours good changes green and bad ones red.
+
+**Estimate vs real (evaluation E1):** before a job the site guesses each size from "bits per
+weight". The Results table shows that guess under the real size, e.g. "est. 79 MB (−21.2 %)" — the
+guess was 21 % too small for this tiny model.

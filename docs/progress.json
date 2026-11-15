@@ -26,7 +26,7 @@
     { "id": "WP-13", "title": "Pipeline hardening", "owner": "S", "weight": 2, "phase": 2, "week": "4", "needs": ["WP-11"], "status": "merged", "pr": 61 },
 
     { "id": "WP-14", "title": "Benchmarking", "owner": "S", "weight": 4, "phase": 3, "week": "5–6", "needs": ["WP-13"], "status": "not-started", "pr": null },
-    { "id": "WP-15", "title": "Results table", "owner": "H", "weight": 3, "phase": 3, "week": "5–6", "needs": ["WP-12"], "status": "not-started", "pr": null },
+    { "id": "WP-15", "title": "Results table", "owner": "H", "weight": 3, "phase": 3, "week": "5–6", "needs": ["WP-12"], "status": "in-review", "pr": null },
     { "id": "WP-16", "title": "Perplexity + demo mode + task accuracy (E2)", "owner": "S", "weight": 3, "phase": 3, "week": "7", "needs": ["WP-14"], "status": "not-started", "pr": null },
     { "id": "WP-17", "title": "Charts + downloads", "owner": "H", "weight": 3, "phase": 3, "week": "7", "needs": ["WP-15"], "status": "not-started", "pr": null },
     { "id": "WP-18", "title": "Recommender + baseline comparison (E3)", "owner": "S", "weight": 4, "phase": 3, "week": "8–9", "needs": ["WP-16"], "status": "not-started", "pr": null },

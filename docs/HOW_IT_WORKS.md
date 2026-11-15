@@ -298,3 +298,21 @@ status, its log lines and whether files exist). A stage the pipeline doesn't run
 | `backend/worker/worker.js`     | `removeJobFiles()` on every FAILED / CANCELLED job and every recovered (crashed) job — also covers the fake pipeline; empties `data/tmp` at start.                                                                                                                         |
 | `scripts/regression.js`        | `npm run regression`: real pipeline on the 3 demo models, sizes compared with earlier measurements (±1 %), plus a 1-second-limit stop test; writes `docs/regression-M2.md`.                                                                                                |
 | Tests                          | +14: process tree, clean-up on failure / cancel / E-VAL-01, disk reserve before and during a job, snapshot kept for demo models, download resume, worker clean-up.                                                                                                         |
+
+## WP-15 — Results table
+
+```
+Progress page (job COMPLETED) ──"See results"──▶ /jobs/:id/results ──▶ GET /api/jobs/:id/results
+```
+
+| File                                       | What it does                                                                                                                                                                                                                                                                     |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/utils/sizeEstimate.js`            | `estimateSizeMb(f16SizeMb, level)` from bits per weight — now shared by preflight and results.                                                                                                                                                                                   |
+| `backend/services/resultsService.js`       | Plain functions, no database: `pctChange`, `compareVariant` (every metric vs F16 + estimate vs real size), `buildResults` (rows F16 first, which metrics were measured, recommendation if any). `METRICS` lists each number with its unit and whether lower or higher is better. |
+| `backend/controllers/resultController.js`  | `GET /api/jobs/:id/results` — own jobs only, and only when `COMPLETED` (otherwise a clear 404 "not finished").                                                                                                                                                                   |
+| `frontend/src/components/MetricsTable.jsx` | The comparison table (the mobile app copies it): one row per file, one column per measured number, change vs F16 in green/red, "est." under the size. Scrolls sideways inside its card on phones.                                                                                |
+| `frontend/src/pages/ResultsPage.jsx`       | Results page: FAKE DATA / Demo badges, recommendation (when the job has one), the table, a note listing what wasn't measured, and the settings (model, revision, llama.cpp, finished).                                                                                           |
+
+Only measured columns appear: a real job before WP-14/16 shows Size and Smoke test; fake jobs (and
+later real ones) show all five numbers. The recommendation block is basic for now; WP-19 adds the
+full card, the profile dropdown and export.

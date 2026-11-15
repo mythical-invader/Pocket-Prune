@@ -5,6 +5,34 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Huzaifah — WP-15 Results table
+
+**Built:** `utils/sizeEstimate.js` (shared by preflight + results), `services/resultsService.js`,
+`controllers/resultController.js` + `GET /api/jobs/:id/results`, the `MetricsTable` component, the
+Results page (`/jobs/:id/results`), a "See results" button on finished jobs, the rail's Results
+step. 8 new tests (106 total).
+
+**Decisions and why**
+
+- **Change vs F16 is computed on the server** (plain functions, unit-tested), so the website and
+  the mobile app show the same numbers.
+- **Each metric knows whether lower or higher is better**, so the table can colour changes green or
+  red without special cases.
+- **Only measured columns appear.** Real jobs before WP-14/16 have sizes and smoke tests only; the
+  page lists what wasn't measured instead of showing empty columns of dashes.
+- **E1 is visible on the site:** the size estimate from before the job is shown under the real
+  size, with its error (−21 % for SmolLM2-135M Q4_K_M).
+- **Results only for COMPLETED jobs** (404 with a clear message otherwise).
+- A basic recommendation block shows when a job has one (fake jobs do); WP-19 builds the full card.
+
+**Live test:** on my local MongoDB: the fake job shows all five metrics and their changes; a
+sizes-only job shows Size + Smoke test with the "not measured" note; an unfinished job shows
+"No results yet"; at phone width the table scrolls inside its card.
+
+**Next step:** WP-17 charts + downloads (needs WP-15 merged).
+
+---
+
 ## 15 Nov 2026 — Sibghatullah — Phase 2 complete (M2, 40 %)
 
 - WP-13 merged (#61) after merging WP-12 from `main` (doc conflicts kept both sides; LEARNING_NOTES

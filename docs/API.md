@@ -254,7 +254,41 @@ or `CANCELLED`.
 
 Someone else's job, an unknown or a malformed id → `404 E-NOTFOUND-01`.
 
+### `GET /api/jobs/:id/results` — user
+
+The comparison of a **completed** job (own jobs only). Not finished → `404 E-NOTFOUND-01` "No
+results yet: the job has not finished."
+
+```json
+{
+  "status": "COMPLETED",
+  "model": { "displayName": "SmolLM2 135M Instruct", "hfRepoId": "…", "revision": "12fd25f…" },
+  "profile": { "name": "My laptop", "preference": "balanced" },
+  "fake": false,
+  "demoMode": false,
+  "llamaCppRef": "b12376",
+  "metrics": [{ "key": "fileSizeMb", "label": "Size", "unit": "MB", "better": "lower" }],
+  "measured": ["fileSizeMb", "tpsPrompt", "tpsGen", "peakRamMb", "perplexity"],
+  "rows": [
+    {
+      "level": "Q4_K_M",
+      "values": { "fileSizeMb": 100.6, "tpsGen": 199, "perplexity": 19.87 },
+      "vsF16": { "fileSizeMb": -61.1, "tpsGen": 89.5, "perplexity": 5 },
+      "estimatedSizeMb": 79.3,
+      "estimateErrorPct": -21.2,
+      "smokePassed": true,
+      "sha256": "…"
+    }
+  ],
+  "recommendation": null
+}
+```
+
+- `rows`: F16 first; `vsF16` = (value − F16) ÷ F16 × 100, `null` for F16 itself or a missing number.
+- `measured`: which metrics exist for this job (before WP-14/16 a real job has only `fileSizeMb`).
+- `estimatedSizeMb` / `estimateErrorPct`: the size predicted before the job and how far off it was (E1).
+
 ## Planned endpoints
 
-Filled in as each WP lands (see `CLAUDE.md` §6): cancel / retry (WP-22), results (WP-15),
+Filled in as each WP lands (see `CLAUDE.md` §6): cancel / retry (WP-22),
 downloads (WP-17), recommendation and export (WP-19), auth (WP-21), admin (WP-25).
