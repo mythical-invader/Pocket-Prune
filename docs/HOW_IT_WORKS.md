@@ -206,3 +206,13 @@ How the worker (WP-11) will use it:
 const result = await runPipeline(job, dbReporter(job)); // or fakePipeline when FAKE_PIPELINE=true
 job.variants = result.variants; // then status COMPLETED (or FAILED with the error code)
 ```
+
+## WP-09 — Catalog trials
+
+| File                          | What it does                                                                                                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/validate-catalog.js` | `npm run validate:catalog`: for each model in `seedData.js`, asks the Hugging Face API (no download) whether the pinned commit exists, has safetensors, is ≤ 4 B, and has the right `gated` flag. |
+| `scripts/fetch-wikitext.js`   | `npm run fetch:wikitext`: downloads WikiText-2 `wiki.test.raw` to `data/wikitext/` and checks its SHA-256, so perplexity (WP-16) is always measured on identical text.                            |
+| `backend/utils/runCommand.js` | Now also points `TMP`/`TEMP`/`TMPDIR` of every tool to `data/tmp`, so no scratch files go to C:.                                                                                                  |
+| `backend/seedData.js`         | Measured F16 sizes (used by preflight); revisions confirmed.                                                                                                                                      |
+| `docs/catalog-trials.md`      | Result of compressing every catalog model with the CLI: sizes, smoke tests, works / doesn't.                                                                                                      |

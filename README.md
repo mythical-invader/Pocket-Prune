@@ -67,6 +67,8 @@ every multi-hundred-MB model file as it is written.
 | `npm run progress`                | Project % done, per phase and per person, and who is waiting on whom                                                          |
 | `npm run pipeline`                | Run the compression pipeline in the terminal (`-- --model <repo> --levels Q5_K_M,Q4_K_M`; add `--fake` for the fake pipeline) |
 | `npm run setup:llamacpp`          | Install the pinned llama.cpp (model machine)                                                                                  |
+| `npm run validate:catalog`        | Check every catalog model on Hugging Face (revision, safetensors, ≤ 4 B, gated) — no download                                 |
+| `npm run fetch:wikitext`          | Download + verify the WikiText-2 test text used for perplexity                                                                |
 
 Open http://localhost:5173 — the page should say **API: connected**.
 

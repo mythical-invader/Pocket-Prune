@@ -5,6 +5,40 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Sibghatullah — WP-09 Catalog trials
+
+**Built**
+
+- `scripts/validate-catalog.js` (`npm run validate:catalog`): asks the Hugging Face API about every
+  seed model **without downloading it** — pinned revision exists, has `.safetensors`, real
+  parameter count ≤ 4 B and within 3 % of `paramsBillion`, `gated` flag correct. Result: 8/8 OK.
+- `scripts/fetch-wikitext.js` (`npm run fetch:wikitext`): downloads WikiText-2 `wiki.test.raw`
+  into `data/wikitext/` and checks its SHA-256 (the one measured in WP-02). Safe to run again.
+- `backend/utils/runCommand.js`: every tool gets `TMP`/`TEMP`/`TMPDIR` = `data/tmp`, so no
+  temporary files land on C: (+1 test, 64 in total).
+- `backend/cli.js`: uses `checkCatalogEntry()` (same 4 B / full-commit rules as `seed.js`).
+- `backend/seedData.js`: measured F16 sizes; note that the revisions are confirmed.
+- `docs/catalog-trials.md`: every catalog model marked works / doesn't.
+
+**Trials** (CLI, Q5_K_M + Q4_K_M, one model after another, ~1 h in total): SmolLM2-360M,
+Qwen2.5-0.5B, TinyLlama-1.1B, Qwen2.5-1.5B, SmolLM2-1.7B and Phi-3.5-mini all made 3 files that
+pass the smoke test (142 s … 1566 s per model). Llama-3.2-1B stopped at download with `E-HF-01`
+(gated, no token) — the expected, friendly error. Nothing new was written to C:.
+
+**Decisions and why**
+
+- **Validate through the HF API, not by downloading**: checking 8 models takes seconds instead of
+  ~20 GB of downloads, so it can be re-run any time (later: the catalog validation job, WP-24).
+- **Real parameter count from safetensors metadata**, not from the model name ("1.7B" is rounded).
+- **Measured F16 sizes in the seed**: preflight (WP-08) uses `f16SizeMb` for the disk/RAM checks,
+  so real numbers make those checks honest.
+- **Llama-3.2 stays in the catalog as optional** (gated) — it works once a token is set.
+
+**Next step:** commit, PR `sibghatullah` → `main` (closes the WP-09 issue). Then WP-11 (worker)
+once Huzaifah's WP-10 is merged; meanwhile WP-00 (Atlas `MONGO_URI`).
+
+---
+
 ## 15 Nov 2026 — Sibghatullah — WP-06 CLI pipeline + fake pipeline
 
 **Built**
