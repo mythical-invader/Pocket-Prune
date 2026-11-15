@@ -5,6 +5,18 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Sibghatullah — Phase 2 complete (M2, 40 %)
+
+- WP-13 merged (#61) after merging WP-12 from `main` (doc conflicts kept both sides; LEARNING_NOTES
+  WP-12 polling = 8b, WP-13 = 8c). Every Phase 2 WP is on `main` → **40 %**, the mid-term target,
+  22 days early.
+- `docs/release-notes/M2.md` for the tag `v0.2.0-M2`.
+
+**Next step:** rehearse the mid-term demo on both laptops (Atlas + the worker on the model machine).
+Phase 3: WP-14 (S) and WP-15 (H) are ready.
+
+---
+
 ## 15 Nov 2026 — Sibghatullah — WP-13 Pipeline hardening
 
 **Built**

@@ -5,6 +5,11 @@ All notable changes, grouped by release. Format based on
 
 ## [Unreleased]
 
+## [0.2.0-M2] — 2026-11-15
+
+Phase 2 complete: a real compression job from the website, end to end (40 %). See
+[docs/release-notes/M2.md](docs/release-notes/M2.md).
+
 ### Added
 
 - WP-13: pipeline hardening — timeouts stop the whole process tree, 2 GB disk reserve checked
