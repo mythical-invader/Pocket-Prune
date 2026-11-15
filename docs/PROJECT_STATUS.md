@@ -53,6 +53,7 @@ Status values: `not-started` · `in-progress` · `in-review` · `merged`. Weight
 
 - **Sibghatullah:** WP-11 PR into `main`, then WP-13 (time limits, clean-up, 2 GB disk reserve, `regression.js`).
 - **Huzaifah:** WP-12 Job Progress page (needs WP-11 on `main`). Until then, run `npm run dev:worker` with `FAKE_PIPELINE=true` against a **local** MongoDB to see jobs move.
+- **Phase 3 (after the mid-term):** follow [EVALUATION_PLAN.md](EVALUATION_PLAN.md) — extra measured checks E1–E6 inside WP-15/16/18/20.
 
 ## Known issues
 

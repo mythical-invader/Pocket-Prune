@@ -66,6 +66,34 @@ match what the project really runs on.
 
 ---
 
+## 15 Nov 2026 — Huzaifah — Evaluation plan for Phase 3
+
+To make the project clearly FYP-level, we add **measured evidence** rather than more features:
+[`EVALUATION_PLAN.md`](EVALUATION_PLAN.md). Six items (E1–E6) slot into existing Phase 3 WPs —
+no new WPs, no weight changes, nothing before the mid-term:
+
+- **E1** size estimates vs real files (WP-20 report, WP-15 site). Already visible in
+  `catalog-trials.md`: the Q4_K_M estimate is 21 % too small for SmolLM2-135M, about right for 1.7B.
+- **E2** HellaSwag task accuracy next to perplexity (WP-16).
+- **E3** recommender vs "always Q4" and "largest that fits" (WP-18 tests, WP-20 report).
+- **E4** the same benchmark on both laptops (WP-20).
+- **E5** Q4_K_M with an importance matrix (could-have, WP-16); **E6** compare outputs (could-have).
+
+Updated: `CLAUDE.md` (WP-15/16/18/20 rows + could-have list), `progress.json` titles, GitHub issues.
+
+---
+
+## 15 Nov 2026 — Huzaifah — Polish fixes (while WP-11 is in progress)
+
+- `progress.json` / `PROJECT_STATUS.md`: WP-10 marked merged (#52) → project at 33 %.
+- Website CSS: the leftover off-scale sizes from WP-07 now use theme tokens — 12px text →
+  `--font-size-sm` (13px); 12/14px gaps and paddings → `--space-md` (16px); 6/10px → `--space-sm`
+  (8px); 2px → `--space-xs` (4px); empty-state 40px → `--space-xl`. Kept on purpose: the 20px card
+  padding (recorded in `DESIGN.md`) and the 1–3px nudges that line icons up with text.
+- No behaviour change; build and lint pass.
+
+---
+
 ## 15 Nov 2026 — Huzaifah — WP-10 Jobs API
 
 **Built:** `POST /api/jobs` (202 `{ jobId }`), `GET /api/jobs`, `GET /api/jobs/:id` (status, stage,
