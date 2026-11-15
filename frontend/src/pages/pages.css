@@ -290,6 +290,56 @@
   border-top: 0;
 }
 
+/* After a preflight run: green tick or red cross, text in normal colour. */
+.checklist li.is-ok,
+.checklist li.is-bad {
+  color: var(--color-text);
+}
+
+.checklist li.is-ok > svg {
+  color: var(--color-success);
+}
+
+.checklist li.is-bad > svg {
+  color: var(--color-danger);
+}
+
+.checklist__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checklist__label {
+  font-weight: var(--font-weight-bold);
+}
+
+.checklist__message,
+.checklist__hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-textMuted);
+}
+
+.checklist li.is-bad .checklist__message {
+  color: var(--color-dangerText);
+}
+
+.preflight-summary {
+  font-weight: var(--font-weight-bold);
+}
+
+.preflight-summary.is-ok {
+  color: var(--color-successText);
+}
+
+.preflight-summary.is-bad {
+  color: var(--color-dangerText);
+}
+
+.section-gap {
+  margin-top: var(--space-md);
+}
+
 .checkbox {
   display: flex;
   align-items: flex-start;
