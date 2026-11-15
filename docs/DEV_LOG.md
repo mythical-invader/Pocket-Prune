@@ -5,6 +5,27 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Sibghatullah — WP-00 shared Atlas database · Phase 1 complete (M1)
+
+**Done**
+
+- Shared **MongoDB Atlas M0** connection string put in the local `.env` (`MONGO_URI`, database
+  `pocketprune`) — git-ignored, never in code, docs or commits.
+- `npm run seed` on Atlas: 8 catalog models + the demo user.
+- WP-00 and WP-09 marked `merged` in `progress.json`; Phase 1 = 25/25 %, project 27 %.
+- `docs/release-notes/M1.md` for the `v0.1.0-M1` tag.
+
+**Problem and fix:** Atlas gives a short `mongodb+srv://` string; Node needs a special DNS lookup
+(SRV record) for it. On the model machine Node sends that lookup to `127.0.0.1` and gets
+`ECONNREFUSED`, although Windows DNS works. Fix without code changes: use the **standard
+`mongodb://host1,host2,host3/pocketprune?tls=true&authSource=admin&replicaSet=…`** form of the same
+string (hosts and replica set come from the cluster's public DNS records). Ping OK.
+
+**Next step:** Huzaifah puts the same `MONGO_URI` in his `.env` (sent privately) and checks his IP
+in Atlas → Network Access. Tag `v0.1.0-M1`. Phase 2: WP-08 (H) → WP-10 (H) → WP-11 (S).
+
+---
+
 ## 15 Nov 2026 — Sibghatullah — WP-09 Catalog trials
 
 **Built**

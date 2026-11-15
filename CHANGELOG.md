@@ -5,7 +5,13 @@ All notable changes, grouped by release. Format based on
 
 ## [Unreleased]
 
+## [0.1.0-M1] — 2026-11-15
+
+Phase 1 complete: setup + first compression. See [docs/release-notes/M1.md](docs/release-notes/M1.md).
+
 ### Added
+
+- WP-00: shared MongoDB Atlas database (seeded with the catalog and demo user).
 
 - WP-09: `npm run validate:catalog` (checks every catalog model on Hugging Face), `npm run fetch:wikitext`
   (WikiText-2 with SHA-256 check), tool temp files kept in `data/tmp`, measured F16 sizes in the
