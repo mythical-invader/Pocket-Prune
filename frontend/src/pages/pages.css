@@ -17,7 +17,7 @@
   display: grid;
   grid-template-columns: 72px 1fr;
   gap: var(--space-sm);
-  padding: 10px 0;
+  padding: var(--space-sm) 0;
   border-top: 1px solid var(--color-border);
 }
 
@@ -68,7 +68,7 @@
 .model-card__head {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-xs);
 }
 
 .model-card__title {
@@ -115,7 +115,7 @@
 }
 
 .model-card__estimate {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-textMuted);
 }
 
@@ -130,7 +130,7 @@
 .profile-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 .profile-card__priority {
@@ -152,7 +152,7 @@
 
 .profile-card__tools {
   display: flex;
-  gap: 2px;
+  gap: var(--space-xs);
 }
 
 /* Icon-only buttons stay a comfortable square tap target. */
@@ -199,8 +199,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 12px 14px;
+  gap: var(--space-xs);
+  padding: var(--space-md);
   border: 1px solid var(--color-borderStrong);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -280,8 +280,8 @@
 .checklist li {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
   border-top: 1px solid var(--color-border);
   color: var(--color-textMuted);
 }
@@ -307,7 +307,7 @@
 .checklist__text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-xs);
 }
 
 .checklist__label {
@@ -343,14 +343,14 @@
 .checkbox {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-md);
   cursor: pointer;
 }
 
 .checkbox input {
   width: 18px;
   height: 18px;
-  margin-top: 2px;
+  margin-top: var(--space-xs);
   accent-color: var(--color-primary);
 }
 
