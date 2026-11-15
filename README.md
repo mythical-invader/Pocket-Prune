@@ -55,20 +55,21 @@ every multi-hundred-MB model file as it is written.
 
 ## Run it
 
-| Command                           | What it starts                                                                                                                |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`                     | API (http://localhost:8000/api) + website (http://localhost:5173) — works on Windows                                          |
-| `npm run dev:worker`              | The background worker (model machine)                                                                                         |
-| `npm run dev:all`                 | API + website + worker together (model machine)                                                                               |
-| `npm run seed`                    | Fill the database with catalog models and demo users (from WP-05)                                                             |
-| `npm test`                        | Backend tests                                                                                                                 |
-| `npm run build`                   | Production build of the website                                                                                               |
-| `npm run lint` / `npm run format` | Check / fix code style                                                                                                        |
-| `npm run progress`                | Project % done, per phase and per person, and who is waiting on whom                                                          |
-| `npm run pipeline`                | Run the compression pipeline in the terminal (`-- --model <repo> --levels Q5_K_M,Q4_K_M`; add `--fake` for the fake pipeline) |
-| `npm run setup:llamacpp`          | Install the pinned llama.cpp (model machine)                                                                                  |
-| `npm run validate:catalog`        | Check every catalog model on Hugging Face (revision, safetensors, ≤ 4 B, gated) — no download                                 |
-| `npm run fetch:wikitext`          | Download + verify the WikiText-2 test text used for perplexity                                                                |
+| Command                           | What it starts                                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                     | API (http://localhost:8000/api) + website (http://localhost:5173) — works on Windows                                                  |
+| `npm run dev:worker`              | The background worker (model machine)                                                                                                 |
+| `npm run dev:all`                 | API + website + worker together (model machine)                                                                                       |
+| `npm run seed`                    | Fill the database with catalog models and demo users (from WP-05)                                                                     |
+| `npm test`                        | Backend tests                                                                                                                         |
+| `npm run build`                   | Production build of the website                                                                                                       |
+| `npm run lint` / `npm run format` | Check / fix code style                                                                                                                |
+| `npm run progress`                | Project % done, per phase and per person, and who is waiting on whom                                                                  |
+| `npm run pipeline`                | Run the compression pipeline in the terminal (`-- --model <repo> --levels Q5_K_M,Q4_K_M`; add `--fake` for the fake pipeline)         |
+| `npm run setup:llamacpp`          | Install the pinned llama.cpp (model machine)                                                                                          |
+| `npm run validate:catalog`        | Check every catalog model on Hugging Face (revision, safetensors, ≤ 4 B, gated) — no download                                         |
+| `npm run fetch:wikitext`          | Download + verify the WikiText-2 test text used for perplexity                                                                        |
+| `npm run regression`              | Re-run the real pipeline on the demo models, compare sizes with earlier runs, test that a stopped job leaves no files (model machine) |
 
 Open http://localhost:5173 — the page should say **API: connected**.
 

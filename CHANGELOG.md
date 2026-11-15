@@ -7,6 +7,10 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-13: pipeline hardening — timeouts stop the whole process tree, 2 GB disk reserve checked
+  before each heavy step (E-DISK-01), unfinished jobs leave no files, downloads deleted after
+  conversion (demo models kept), `npm run regression` + `docs/regression-M2.md`.
+
 - WP-11: background worker (`npm run dev:worker`) — picks the oldest queued job atomically, runs the
   real or fake pipeline, heartbeat every 10 s, cancel between stages, stuck jobs → `E-WORKER-01`.
 
