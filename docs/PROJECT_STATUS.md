@@ -3,39 +3,40 @@
 > Updated at the end of every session. Run `npm run progress` and paste its summary here.
 
 ```
-PocketPrune progress: 38 % merged (in progress: 2 %)
-Phase 1 ████████████████████ 25/25 %   Phase 2 █████████████████░░░ 13/15 %
-Huzaifah: 20.5 %  ·  Sibghatullah: 17.5 %
-Next checkpoint: Mid-term demo (40 %) on 2026-12-07 (22 days) — 2 % to go: WP-13
-In progress: WP-13 (S) · ready to start: WP-15 (H)
+PocketPrune progress: 40 % merged
+Phase 1 ████████████████████ 25/25 %   Phase 2 ████████████████████ 15/15 %
+Huzaifah: 20.5 %  ·  Sibghatullah: 19.5 %
+Next checkpoint: Phase 3 (M3) on 2027-01-17 (63 days) — 22 % to go: WP-14 – WP-20
+Ready to start: WP-14 (S), WP-15 (H)
 ```
 
+**Phase 2 complete — 40 %, the mid-term target — milestone `v0.2.0-M2`** ([release notes](release-notes/M2.md)).
 **Phase 1 complete — milestone `v0.1.0-M1`** ([release notes](release-notes/M1.md)).
 
-_Last updated: 15 Nov 2026 — Sibghatullah (WP-13; WP-12 merged)._
+_Last updated: 15 Nov 2026 — Sibghatullah (WP-13 merged, milestone M2)._
 
 ## Work packages
 
 Status values: `not-started` · `in-progress` · `in-review` · `merged`. Weights and dependencies live in
 [progress.json](progress.json).
 
-| WP                           | Title                                    | Owner | Status      | Branch / PR    | Notes                                                                                                                                                         |
-| ---------------------------- | ---------------------------------------- | ----- | ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| WP-00                        | GitHub setup + shared Atlas database     | Both  | merged      | —              | Repo, labels, milestones, issues, collaborator; Atlas M0 shared + seeded; `main` protected (public repo)                                                      |
-| WP-01                        | Project setup                            | H     | merged      | #38            | Skeletons, scripts, docs, CI                                                                                                                                  |
-| WP-02                        | llama.cpp setup + first hand compression | S     | merged      | #44            | Windows 11, llama.cpp b12376; SmolLM2-135M compressed by hand (3/3 smoke tests pass); revision OK                                                             |
-| WP-03                        | Backend core                             | H     | merged      | #39            | Models, errors, health, host profile                                                                                                                          |
-| WP-04                        | Command runner                           | S     | merged      | #45            | runCommand, llamacpp, downloader + 22 tests; real run on SmolLM2-135M passes                                                                                  |
-| WP-05                        | Catalog + profiles API                   | H     | merged      | #42            | Catalog, profiles CRUD, seed with pinned revisions                                                                                                            |
-| WP-06                        | CLI pipeline + fake pipeline             | S     | merged      | #46            | pipeline.js + cli.js + fakePipeline.js; CLI makes 3 valid, reproducible files                                                                                 |
-| WP-07                        | Website foundation                       | H     | merged      | #41            | Pipeline-rail layout, theme, components, Catalog/Profiles/Job Setup                                                                                           |
-| WP-09                        | Catalog trials                           | S     | merged      | #47            | 7/8 models compress + pass smoke tests; Llama-3.2 needs HF token; validate-catalog 8/8 OK                                                                     |
-| WP-08                        | Preflight                                | H     | merged      | #50            | 9 checks on the server, live checklist on Job Setup                                                                                                           |
-| WP-10                        | Jobs API                                 | H     | merged      | #52            | Create (202, preflight again), list, status + 50 log lines + queue position, 2-job limit                                                                      |
-| WP-11                        | Worker                                   | S     | merged      | #58            | Picks the oldest QUEUED job, heartbeat, cancel between stages, recovery (E-WORKER-01); a real website-API job compressed SmolLM2-135M in 35 s                 |
-| WP-12                        | Job Progress page                        | H     | merged      | #60            | Live page polling every 2 s: stages, bar, elapsed, queue position, log, error with fix, FAKE DATA badge, files made                                           |
-| WP-13                        | Pipeline hardening                       | S     | in-progress | `sibghatullah` | Process-tree timeouts, 2 GB disk reserve, no junk after fail/cancel/crash, downloads deleted after conversion; `npm run regression` PASS on the 3 demo models |
-| WP-14 – WP-32, WP-M1 – WP-M4 | see [progress.json](progress.json)       |       | not-started |                | Phases 2–5                                                                                                                                                    |
+| WP                           | Title                                    | Owner | Status      | Branch / PR | Notes                                                                                                                                                         |
+| ---------------------------- | ---------------------------------------- | ----- | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WP-00                        | GitHub setup + shared Atlas database     | Both  | merged      | —           | Repo, labels, milestones, issues, collaborator; Atlas M0 shared + seeded; `main` protected (public repo)                                                      |
+| WP-01                        | Project setup                            | H     | merged      | #38         | Skeletons, scripts, docs, CI                                                                                                                                  |
+| WP-02                        | llama.cpp setup + first hand compression | S     | merged      | #44         | Windows 11, llama.cpp b12376; SmolLM2-135M compressed by hand (3/3 smoke tests pass); revision OK                                                             |
+| WP-03                        | Backend core                             | H     | merged      | #39         | Models, errors, health, host profile                                                                                                                          |
+| WP-04                        | Command runner                           | S     | merged      | #45         | runCommand, llamacpp, downloader + 22 tests; real run on SmolLM2-135M passes                                                                                  |
+| WP-05                        | Catalog + profiles API                   | H     | merged      | #42         | Catalog, profiles CRUD, seed with pinned revisions                                                                                                            |
+| WP-06                        | CLI pipeline + fake pipeline             | S     | merged      | #46         | pipeline.js + cli.js + fakePipeline.js; CLI makes 3 valid, reproducible files                                                                                 |
+| WP-07                        | Website foundation                       | H     | merged      | #41         | Pipeline-rail layout, theme, components, Catalog/Profiles/Job Setup                                                                                           |
+| WP-09                        | Catalog trials                           | S     | merged      | #47         | 7/8 models compress + pass smoke tests; Llama-3.2 needs HF token; validate-catalog 8/8 OK                                                                     |
+| WP-08                        | Preflight                                | H     | merged      | #50         | 9 checks on the server, live checklist on Job Setup                                                                                                           |
+| WP-10                        | Jobs API                                 | H     | merged      | #52         | Create (202, preflight again), list, status + 50 log lines + queue position, 2-job limit                                                                      |
+| WP-11                        | Worker                                   | S     | merged      | #58         | Picks the oldest QUEUED job, heartbeat, cancel between stages, recovery (E-WORKER-01); a real website-API job compressed SmolLM2-135M in 35 s                 |
+| WP-12                        | Job Progress page                        | H     | merged      | #60         | Live page polling every 2 s: stages, bar, elapsed, queue position, log, error with fix, FAKE DATA badge, files made                                           |
+| WP-13                        | Pipeline hardening                       | S     | merged      | #61         | Process-tree timeouts, 2 GB disk reserve, no junk after fail/cancel/crash, downloads deleted after conversion; `npm run regression` PASS on the 3 demo models |
+| WP-14 – WP-32, WP-M1 – WP-M4 | see [progress.json](progress.json)       |       | not-started |             | Phases 2–5                                                                                                                                                    |
 
 ## What works now
 
@@ -48,15 +49,15 @@ Status values: `not-started` · `in-progress` · `in-review` · `merged`. Weight
 - API: `/api/catalog`, `/api/catalog/:id`, `/api/profiles` (CRUD, own data only), `/api/system/health`, `/api/system/host-profile`, `POST /api/jobs/preflight`, `POST /api/jobs` (202), `GET /api/jobs`, `GET /api/jobs/:id`. Every error comes back as `{ code, message, hint }`.
 - **Job Progress page** (WP-12): after **Start compression** the site opens `/jobs/:id`, which updates every 2 s — stage stepper (unreached stages stay grey, a failed stage shows a red cross), progress bar, elapsed time, queue position, the latest log lines, the error with its fix and code, a **FAKE DATA** badge for fake jobs, and the files made when it finishes.
 - **Worker** (WP-11): `npm run dev:worker` takes queued jobs from the database and runs the real pipeline (or the fake one with `FAKE_PIPELINE=true`); status, stage, % and log lines appear through `GET /api/jobs/:id`.
-- **Pipeline hardening** (WP-13, on `sibghatullah`): a timed-out tool is stopped with everything it started; jobs stop with E-DISK-01 before free disk drops below 2 GB; failed, cancelled and crashed jobs leave no files; `npm run regression` checks the demo models ([regression-M2.md](regression-M2.md)).
+- **Pipeline hardening** (WP-13): a timed-out tool is stopped with everything it started; jobs stop with E-DISK-01 before free disk drops below 2 GB; failed, cancelled and crashed jobs leave no files; `npm run regression` checks the demo models ([regression-M2.md](regression-M2.md)).
 - Both laptops use the shared **MongoDB Atlas** database (`MONGO_URI` in each local `.env`).
 - `npm run install-all`, then `npm run dev` starts the API (port 8000) and the website (port 5173) on Windows.
 - `npm test` (112 tests, in-memory MongoDB, no llama.cpp needed), `npm run build`, `npm run lint`, `npm run progress`; CI on every PR.
 
 ## What's next
 
-- **Sibghatullah:** WP-13 PR into `main` → **Phase 2 complete (40 %)**, tag `v0.2.0-M2`. After the mid-term: WP-14 (benchmarking).
-- **Huzaifah:** WP-12 is merged, so the mid-term demo path is complete on the website; next is WP-15 (Results table) in Phase 3.
+- **Sibghatullah:** WP-14 Benchmarking (llama-bench: speed, peak RAM, 3 runs) — ready now, planned after the mid-term.
+- **Huzaifah:** WP-15 Results table — ready now, planned after the mid-term.
 - **Both, before 7 Dec:** rehearse the demo — SmolLM2-135M on the website → preflight → start → live progress while the real worker compresses it → two valid files.
 - **Phase 3 (after the mid-term):** follow [EVALUATION_PLAN.md](EVALUATION_PLAN.md) — extra measured checks E1–E6 inside WP-15/16/18/20.
 
