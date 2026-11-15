@@ -372,3 +372,131 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- Job progress (WP-12) ---------- */
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.fake-note {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-warningSoft);
+  color: var(--color-warningText);
+  font-size: var(--font-size-sm);
+}
+
+.progress-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* The job stepper has 9 stages: drop its own frame inside the card and keep it compact. */
+.progress-card .stepper {
+  padding: 0;
+  border: 0;
+  overflow-x: auto;
+}
+
+.progress-card .stepper__step:not(:last-child)::after {
+  margin: 0 var(--space-xs);
+  min-width: var(--space-sm);
+}
+
+.progress-card .stepper__item {
+  gap: var(--space-sm);
+}
+
+.progress-card .stepper__label {
+  font-size: var(--font-size-sm);
+}
+
+/* Files made */
+.files-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.files-table th,
+.files-table td {
+  padding: var(--space-sm) var(--space-sm) var(--space-sm) 0;
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.files-table thead th {
+  border-top: 0;
+  color: var(--color-textMuted);
+  font-weight: var(--font-weight-regular);
+}
+
+.files-table .is-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-successText);
+  font-weight: var(--font-weight-bold);
+}
+
+.files-table .is-bad {
+  color: var(--color-dangerText);
+  font-weight: var(--font-weight-bold);
+}
+
+.files-table__hash {
+  color: var(--color-textMuted);
+}
+
+/* Log panel: tool output is real text from programs, so a monospace font fits here. */
+.log {
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  list-style: none;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: var(--font-size-sm);
+}
+
+.log__line {
+  display: grid;
+  grid-template-columns: auto 110px minmax(0, 1fr);
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+}
+
+.log__time,
+.log__stage {
+  color: var(--color-textMuted);
+}
+
+.log__message {
+  overflow-wrap: anywhere;
+}
+
+.log__line--warn .log__message {
+  color: var(--color-warningText);
+}
+
+.log__line--error .log__message {
+  color: var(--color-dangerText);
+  font-weight: var(--font-weight-bold);
+}
+
+@media (max-width: 720px) {
+  .log__line {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .log__stage {
+    display: none;
+  }
+}

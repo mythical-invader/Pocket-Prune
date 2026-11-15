@@ -24,6 +24,19 @@ export function formatPct(value) {
     : `${value > 0 ? '+' : ''}${value.toFixed(1)} %`;
 }
 
+// 65 → "1 min 05 s", 9 → "9 s"
+export function formatDuration(totalSec) {
+  if (totalSec === undefined || totalSec === null || totalSec < 0) return '—';
+  const sec = Math.round(totalSec);
+  if (sec < 60) return `${sec} s`;
+  return `${Math.floor(sec / 60)} min ${String(sec % 60).padStart(2, '0')} s`;
+}
+
+// "2026-11-15T17:55:55Z" → "22:55:55" (local time, for log lines)
+export function formatTime(iso) {
+  return new Date(iso).toLocaleTimeString(undefined, { hour12: false });
+}
+
 export function formatDate(iso) {
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 }

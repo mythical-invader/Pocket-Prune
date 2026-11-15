@@ -7,6 +7,10 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-12: Job Progress page (`/jobs/:id`) — refreshes every 2 s: stage stepper, progress bar, elapsed
+  time, queue position, log panel, error with fix and code, "FAKE DATA" badge, files made;
+  `errorHint` in `GET /api/jobs/:id`.
+
 - WP-11: background worker (`npm run dev:worker`) — picks the oldest queued job atomically, runs the
   real or fake pipeline, heartbeat every 10 s, cancel between stages, stuck jobs → `E-WORKER-01`.
 
