@@ -5,6 +5,47 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Sibghatullah — WP-04 Command runner
+
+**Built**
+
+- `backend/utils/runCommand.js`: runs one program with `spawn(program, args)` and no shell,
+  passes every output line to `onLine`, keeps the last 200 lines, stops slow programs
+  (`E-TIME-01`), reports a missing program as `E-TOOL-01`.
+- `backend/worker/llamacpp.js`: `toolPath`, `pythonPath`, `checkInstalled` (VERSION = pinned tag),
+  `convertToF16`, `quantize`, `smokeTest`. The only file that knows llama.cpp flags.
+- `backend/worker/downloader.js`: `hf download` at the pinned revision (safetensors / json /
+  tokenizer only), reuse via a `.pocketprune-revision` marker, `E-HF-01` (gated) / `E-HF-02`.
+- 22 new tests (`runCommand`, `llamacpp`, `downloader`) — 55 in total, no llama.cpp or internet.
+- `E-TOOL-01` hint now points to `npm run setup:llamacpp`.
+
+**Real check (Windows, b12376):** download 47 s → F16 20 s → Q4_K_M 1.1 s → smoke test PASS
+("Paris. Paris is a city…"); second download reused; 862 log lines collected.
+
+**Files touched:** `backend/utils/runCommand.js`, `backend/worker/llamacpp.js`,
+`backend/worker/downloader.js`, `backend/tests/runCommand.test.js`,
+`backend/tests/llamacpp.test.js`, `backend/tests/downloader.test.js`, `backend/utils/errors.js`,
+docs.
+
+**Decisions and why**
+
+- **runCommand resolves with the exit code instead of throwing** on a non-zero code; the caller
+  picks the right error code (convert, quantize and smoke test mean different things).
+- **A smoke-test timeout is a failed file, not a crash** (`passed: false`), so one bad level doesn't
+  stop the job; a missing program still throws `E-TOOL-01`.
+- **HF token via the environment**, never in arguments (arguments end up in the job log).
+- **Downloads go to `data/models/<owner>__<name>`** (`/` is not allowed in folder names);
+  `HF_HOME` points into `data/` so nothing is cached on C:.
+- **Bench and perplexity commands are not added yet** — they belong to WP-14 / WP-16.
+- **Commits go directly on `sibghatullah`** (no WP sub-branch), as Sibghatullah prefers.
+
+**Problems:** none. Note: `data/models/SmolLM2-135M-Instruct` (the WP-02 hand download) is now a
+duplicate of `HuggingFaceTB__SmolLM2-135M-Instruct` and can be deleted.
+
+**Next step:** PR `sibghatullah` → `main`. Then WP-06: `pipeline.js` + `cli.js` + `fakePipeline.js`.
+
+---
+
 ## 14 Nov 2026 — Sibghatullah — WP-02 llama.cpp setup + first hand compression
 
 **Built**
