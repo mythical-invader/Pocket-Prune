@@ -651,3 +651,85 @@ a.stepper__item:hover .stepper__label {
     align-items: flex-start;
   }
 }
+
+/* ---------- Metrics table (WP-15) ---------- */
+
+/* Wide tables scroll sideways inside their card on phones instead of squeezing. */
+.metrics-table__wrap {
+  overflow-x: auto;
+}
+
+.metrics-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.metrics-table th,
+.metrics-table td {
+  padding: var(--space-sm) var(--space-md) var(--space-sm) 0;
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.metrics-table thead th {
+  border-top: 0;
+  color: var(--color-textMuted);
+  font-weight: var(--font-weight-regular);
+  white-space: nowrap;
+}
+
+.metrics-table .num-col {
+  text-align: right;
+}
+
+.metrics-table tbody th {
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+
+.metrics-table tr.is-baseline {
+  background: var(--color-background);
+}
+
+.metrics-table__sub {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-textMuted);
+}
+
+.metrics-table__change {
+  display: block;
+  font-weight: var(--font-weight-bold);
+}
+
+.metrics-table__change.is-better {
+  color: var(--color-successText);
+}
+
+.metrics-table__change.is-worse {
+  color: var(--color-dangerText);
+}
+
+.metrics-table__change.is-same {
+  color: var(--color-textMuted);
+}
+
+.metrics-table .is-ok,
+.metrics-table .is-bad {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.metrics-table .is-ok {
+  color: var(--color-successText);
+}
+
+.metrics-table .is-bad {
+  color: var(--color-dangerText);
+}
