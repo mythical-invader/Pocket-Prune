@@ -317,6 +317,17 @@ a.stepper__item:hover .stepper__label {
   color: var(--color-primaryText);
 }
 
+.stepper__step--failed .stepper__dot {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+  color: var(--color-primaryText);
+}
+
+.stepper__step--failed .stepper__label {
+  color: var(--color-dangerText);
+  font-weight: var(--font-weight-bold);
+}
+
 .stepper__step--current .stepper__label {
   color: var(--color-text);
   font-weight: var(--font-weight-bold);

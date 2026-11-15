@@ -22,7 +22,7 @@
     { "id": "WP-09", "title": "Catalog trials", "owner": "S", "weight": 2, "phase": 2, "week": "3", "needs": ["WP-06"], "status": "merged", "pr": 47 },
     { "id": "WP-10", "title": "Jobs API", "owner": "H", "weight": 3, "phase": 2, "week": "3–4", "needs": ["WP-08"], "status": "merged", "pr": 52 },
     { "id": "WP-11", "title": "Worker", "owner": "S", "weight": 3, "phase": 2, "week": "4", "needs": ["WP-06", "WP-10"], "status": "merged", "pr": 58 },
-    { "id": "WP-12", "title": "Job Progress page", "owner": "H", "weight": 2, "phase": 2, "week": "4", "needs": ["WP-10", "WP-11"], "status": "not-started", "pr": null },
+    { "id": "WP-12", "title": "Job Progress page", "owner": "H", "weight": 2, "phase": 2, "week": "4", "needs": ["WP-10", "WP-11"], "status": "merged", "pr": 60 },
     { "id": "WP-13", "title": "Pipeline hardening", "owner": "S", "weight": 2, "phase": 2, "week": "4", "needs": ["WP-11"], "status": "in-progress", "pr": null },
 
     { "id": "WP-14", "title": "Benchmarking", "owner": "S", "weight": 4, "phase": 3, "week": "5–6", "needs": ["WP-13"], "status": "not-started", "pr": null },

@@ -18,7 +18,8 @@ before starting the work package that needs it — and use it to prepare for the
    6c. [Pinned revisions and the catalog (WP-05)](#6c-pinned-revisions-and-the-catalog-wp-05)
 7. [Preflight checks (WP-08)](#7-preflight-checks-wp-08)
 8. [Background workers, heartbeats and cancelling (WP-11)](#8-background-workers-heartbeats-and-cancelling-wp-11)
-   8b. [Failing cleanly: process trees, disk reserve, clean-up, regression tests (WP-13)](#8b-failing-cleanly-process-trees-disk-reserve-clean-up-regression-tests-wp-13)
+   8b. [Polling: how the progress page stays live (WP-12)](#8b-polling-how-the-progress-page-stays-live-wp-12)
+   8c. [Failing cleanly: process trees, disk reserve, clean-up, regression tests (WP-13)](#8c-failing-cleanly-process-trees-disk-reserve-clean-up-regression-tests-wp-13)
 9. Benchmarking: tokens per second and peak RAM — _WP-14_
 10. Perplexity — _WP-16_
 11. The recommendation rules — _WP-18_
@@ -509,7 +510,27 @@ Node program inside it: an old worker kept running, took the next job and failed
 running processes (`Get-Process node`) and never run two workers with different code. Running two
 _identical_ workers is safe — that is what the atomic pick-up is for.
 
-## 8b. Failing cleanly: process trees, disk reserve, clean-up, regression tests (WP-13)
+### 8b. Polling: how the progress page stays live (WP-12)
+
+The worker writes progress into the database; the website can't be "told" about it. So the page
+**asks again every 2 seconds** — "how is job X doing?" — and redraws with the answer. This is
+called **polling**.
+
+- **Stop when done:** once the job is `COMPLETED`, `FAILED` or `CANCELLED`, the page stops asking.
+- **Pause when hidden:** if the browser tab isn't visible, it skips its turns (no wasted requests).
+- **Cost:** one small request every 2 s per open page — fine for a few users. Big sites use
+  _WebSockets_ (the server pushes updates), but polling is much simpler to build and explain.
+
+```js
+// usePolling(fetcher, intervalMs, stopWhen)
+const { data: job } = usePolling(
+  () => getJob(id),
+  2000,
+  (j) => ['COMPLETED', 'FAILED', 'CANCELLED'].includes(j.status)
+);
+```
+
+## 8c. Failing cleanly: process trees, disk reserve, clean-up, regression tests (WP-13)
 
 **Process trees.** A program can start other programs. On Windows, `hf.exe` is only a small
 launcher that starts `python.exe`, which does the real download. If a time limit stops only the

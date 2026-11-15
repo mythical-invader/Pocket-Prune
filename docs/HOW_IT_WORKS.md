@@ -269,6 +269,25 @@ A job's life: website **Start compression** → `POST /api/jobs` saves `QUEUED` 
 within 3 s → stages update `status`, `stage`, `progressPct` and add JobEvents → `GET /api/jobs/:id`
 shows them → `COMPLETED` with three files in `data/artifacts/<jobId>/`.
 
+## WP-12 — Job Progress page
+
+```
+Start compression ──▶ /jobs/:id ──every 2 s──▶ GET /api/jobs/:id ──▶ redraw
+                                   (stops when COMPLETED / FAILED / CANCELLED)
+```
+
+| File                                       | What it does                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `frontend/src/utils/usePolling.js`         | `usePolling(fetcher, ms, stopWhen)` — loads once, then again every `ms` until `stopWhen(data)` is true; skips rounds while the tab is hidden; also returns `fetchedAt` (when the latest answer arrived).                                                                                                                                                                          |
+| `frontend/src/pages/JobProgressPage.jsx`   | The page: header with status and **FAKE DATA** badges, the 9-stage stepper (Queued → Download → Convert → Quantize → Smoke test → Benchmark → Evaluate → Recommend → Done), progress bar, "now", elapsed time, queue position, a hint when waiting long for the worker, the error card (code, message, fix), the files made (level, size, smoke test, SHA-256) and the log panel. |
+| `frontend/src/components/StageStepper.jsx` | Now also shows a **failed** step (red cross) where a job stopped.                                                                                                                                                                                                                                                                                                                 |
+| `backend/controllers/jobController.js`     | `GET /api/jobs/:id` adds `errorHint` for failed jobs.                                                                                                                                                                                                                                                                                                                             |
+| `frontend/src/pages/JobSetupPage.jsx`      | After **Start compression**, saves the job id and opens `/jobs/:id`.                                                                                                                                                                                                                                                                                                              |
+| `frontend/src/components/AppLayout.jsx`    | The rail shows **Run** on `/jobs/...`; the Run step links to the latest job.                                                                                                                                                                                                                                                                                                      |
+
+**Which stages get a tick:** every stage before the furthest one the job really reached (from its
+status, its log lines and whether files exist). A stage the pipeline doesn't run yet stays grey.
+
 ## WP-13 — Pipeline hardening
 
 | File                           | What changed                                                                                                                                                                                                                                                               |

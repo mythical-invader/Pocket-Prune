@@ -50,6 +50,39 @@ complete (40 %) → tag `v0.2.0-M2`.
 
 ---
 
+## 15 Nov 2026 — Huzaifah — WP-12 Job Progress page
+
+**Built:** `pages/JobProgressPage.jsx` (`/jobs/:id`), `utils/usePolling.js`, a `failed` state in
+`StageStepper`, `formatDuration` / `formatTime`, `errorHint` in `GET /api/jobs/:id`; Job Setup now
+opens the progress page after **Start compression**, and the rail's **Run** step links to the
+latest job. 1 new test (98 total).
+
+**Decisions and why**
+
+- **Polling every 2 s** (CLAUDE.md §8) instead of live sockets: simplest to explain and enough for
+  jobs that take minutes. It stops when the job is finished and pauses while the tab is hidden.
+- **Stages never reached stay grey.** The Phase 2 real pipeline stops after the smoke test, so the
+  page must not tick Benchmark / Evaluate / Recommend; they light up when WP-14/16/18 add them. The
+  furthest stage comes from the status, the log and whether files exist.
+- **The API sends the "how to fix" hint** for a failed job (looked up from `errors.js` by code), so
+  the error card shows code, message and fix like everywhere else.
+- **FAKE DATA badge** while running too: the fake pipeline's stage text ends in "(FAKE)"; after it
+  finishes, `job.fake` is set by the worker.
+- **Only the log box scrolls** to the newest line, not the whole page (a first version jumped the
+  page down on every update — fixed).
+- **"Elapsed" uses the time each update arrived**, not the clock during drawing (React 19's lint
+  rule forbids impure calls in render).
+- **No Cancel button yet**: the cancel API belongs to WP-22 / WP-23.
+
+**Live test:** API + Sibghatullah's worker with `FAKE_PIPELINE=true` against my **local** MongoDB
+(so the shared Atlas queue was not touched): a fake job went Queued → … → Done in 20 s with three
+files; a failed `E-HF-01` job showed the red stage and the fix; at phone width the page stays put
+while progress moves.
+
+**Next step:** Sibghatullah WP-13; then the mid-term rehearsal. Mine after the mid-term: WP-15.
+
+---
+
 ## 15 Nov 2026 — Sibghatullah — WP-11 Worker
 
 **Built**

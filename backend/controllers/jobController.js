@@ -5,7 +5,7 @@
 import Job from '../models/Job.js';
 import JobEvent from '../models/JobEvent.js';
 import { runPreflight } from '../services/preflightService.js';
-import { appError } from '../utils/errors.js';
+import { appError, ERRORS } from '../utils/errors.js';
 
 const EVENTS_SHOWN = 50; // latest log lines sent with a job (CLAUDE.md §6)
 
@@ -68,7 +68,8 @@ export async function listJobs(req, res, next) {
   }
 }
 
-// GET /api/jobs/:id — status, stage, progress, queue position and the latest log lines.
+// GET /api/jobs/:id — status, stage, progress, queue position, error hint and the latest log
+// lines. The Job Progress page (WP-12) asks for this every 2 s while the job runs.
 export async function getJob(req, res, next) {
   try {
     const job = await Job.findOne({ _id: req.params.id, user: req.user._id })
@@ -89,7 +90,10 @@ export async function getJob(req, res, next) {
         1 + (await Job.countDocuments({ status: 'QUEUED', createdAt: { $lt: job.createdAt } }));
     }
 
-    res.json({ ...job.toJSON(), queuePosition, events });
+    // A failed job stores its code and message; add the "how to fix" text from errors.js.
+    const errorHint = job.errorCode ? (ERRORS[job.errorCode]?.[2] ?? null) : null;
+
+    res.json({ ...job.toJSON(), queuePosition, errorHint, events });
   } catch (err) {
     next(err);
   }

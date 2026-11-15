@@ -224,6 +224,11 @@ One of your jobs with its model and profile, plus:
 
 - `queuePosition` — `1` = next to run (only while `QUEUED`, otherwise `null`)
 - `events` — the latest 50 log lines, oldest first: `{ stage, level, message, createdAt }`
+- `errorHint` — for a `FAILED` job, the "how to fix" text of its `errorCode` (from `errors.js`),
+  e.g. `"Set HF_TOKEN in .env."`; otherwise `null`
+
+The Job Progress page (WP-12) asks for this every 2 s until the status is `COMPLETED`, `FAILED`
+or `CANCELLED`.
 
 ```json
 {
