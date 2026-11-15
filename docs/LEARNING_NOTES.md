@@ -17,7 +17,7 @@ before starting the work package that needs it — and use it to prepare for the
    6b. [React pages, components and the theme (WP-07)](#6b-react-pages-components-and-the-theme-wp-07)
    6c. [Pinned revisions and the catalog (WP-05)](#6c-pinned-revisions-and-the-catalog-wp-05)
 7. [Preflight checks (WP-08)](#7-preflight-checks-wp-08)
-8. Background workers and polling — _WP-11 / WP-12_
+8. [Background workers, heartbeats and cancelling (WP-11)](#8-background-workers-heartbeats-and-cancelling-wp-11)
 9. Benchmarking: tokens per second and peak RAM — _WP-14_
 10. Perplexity — _WP-16_
 11. The recommendation rules — _WP-18_
@@ -467,3 +467,43 @@ Accepted`** — "got it, the work happens later" — instead of `200`/`201`.
   is called _polling_ and arrives with the Progress page (WP-12).
 - **Preflight runs twice**: once when you click "Run preflight" (to show you the list) and again
   when the job is created (so a script calling the API directly can't skip the checks).
+
+## 8. Background workers, heartbeats and cancelling (WP-11)
+
+**Why a separate program?** Compressing a model takes minutes. A web request must answer in
+milliseconds, so the API only _saves_ the job (`QUEUED`, answer `202`), and a second Node program —
+the **worker** (`npm run dev:worker`) — does the slow work in the background. Both talk only
+through MongoDB: the API writes jobs, the worker reads and updates them, the website reads them.
+
+```text
+Website ──POST /api/jobs──▶ API ──saves QUEUED job──▶ MongoDB ◀──picks + updates── Worker ──▶ llama.cpp
+   ▲                                                    │
+   └───────────── GET /api/jobs/:id every 2 s ──────────┘   (status, stage, %, log lines)
+```
+
+**Polling.** The idle worker asks the database "any queued job?" every 3 s. Simple, and with one
+job at a time we need nothing fancier (no Redis, no message queue).
+
+**Atomic pick-up.** "Find the oldest queued job" and "mark it DOWNLOADING" happen in **one**
+database command (`findOneAndUpdate`). If two workers ask at the same moment, MongoDB gives the job
+to only one of them; the other gets nothing. (A separate find, then update, could give both the
+same job.) There is a test for exactly this.
+
+**Heartbeat and recovery.** While a job runs, the worker writes `heartbeatAt = now` every 10 s —
+"I'm still alive". If the worker crashes or the laptop sleeps, the heartbeat stops. Before each
+pick, the worker looks for jobs that say "running" but whose heartbeat is older than **60 s** and
+marks them `FAILED` with **E-WORKER-01** ("the worker restarted") so the user can retry. Ctrl+C
+marks the running job failed at once.
+
+**Cancelling between stages.** The website (later) only sets `cancelRequested: true` on the job.
+Before each new stage the worker re-reads that flag; if it is set, the pipeline stops there and the
+job becomes `CANCELLED`. Stopping a tool in the _middle_ of a stage comes in WP-22.
+
+**Every ending is saved.** `COMPLETED` (with the variants), `FAILED` (with the error code, message
+and the "how to fix" hint in the log) or `CANCELLED`. An unexpected crash becomes `E-SERVER-01`
+instead of stopping the worker — it just takes the next job.
+
+**What we learned testing it for real.** Stopping a background terminal does not always stop the
+Node program inside it: an old worker kept running, took the next job and failed it. Check
+running processes (`Get-Process node`) and never run two workers with different code. Running two
+_identical_ workers is safe — that is what the atomic pick-up is for.

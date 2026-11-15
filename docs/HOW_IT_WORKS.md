@@ -254,3 +254,17 @@ run (its own `.env`), so it writes those when it finishes.
 
 Tests: `backend/tests/jobs.test.js` — 202 within 1 s, the preflight gate (first code + every
 failed check), the 2-job limit (429), list order, queue position, 50 log lines, other user's job → 404.
+
+## WP-11 — Worker
+
+| File                                   | What it does                                                                                                                                                                                                            |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/worker/worker.js`             | `npm run dev:worker`. Every 3 s: `recoverStuckJobs()` (running jobs with a heartbeat older than 60 s → FAILED E-WORKER-01), then `pickNextJob()` (oldest QUEUED → DOWNLOADING in one atomic step), then `processJob()`. |
+| `processJob(job)`                      | Loads the catalog model, starts a 10 s heartbeat, runs `pipeline.js` (or `fakePipeline.js` when `FAKE_PIPELINE=true`) with `cancellableReporter`, then saves COMPLETED + variants, FAILED + error code, or CANCELLED.   |
+| `cancellableReporter(job)`             | The normal `dbReporter`, but before every new stage it re-reads `cancelRequested` and stops the pipeline if the user cancelled.                                                                                         |
+| `backend/tests/worker.test.js`         | 11 tests on the in-memory MongoDB: oldest-first, no double pick, COMPLETED/FAILED/CANCELLED, deleted model, crash → E-SERVER-01, recovery, fake vs real. Both pipelines are mocked.                                     |
+| `backend/tests/helpers/globalSetup.js` | Now keeps the MongoDB test download in `node_modules/.cache` (never the home folder on C:).                                                                                                                             |
+
+A job's life: website **Start compression** → `POST /api/jobs` saves `QUEUED` → the worker takes it
+within 3 s → stages update `status`, `stage`, `progressPct` and add JobEvents → `GET /api/jobs/:id`
+shows them → `COMPLETED` with three files in `data/artifacts/<jobId>/`.

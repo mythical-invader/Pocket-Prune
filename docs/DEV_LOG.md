@@ -5,6 +5,48 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Sibghatullah — WP-11 Worker
+
+**Built**
+
+- `backend/worker/worker.js` (`npm run dev:worker`): every 3 s `recoverStuckJobs()` → `pickNextJob()`
+  (oldest `QUEUED` → `DOWNLOADING` in one `findOneAndUpdate`) → `processJob()`: loads the catalog
+  model, heartbeat every 10 s, runs `pipeline.js` or `fakePipeline.js` (`FAKE_PIPELINE=true`) with a
+  `cancellableReporter`, saves `COMPLETED` + variants / `FAILED` + code / `CANCELLED`. Ctrl+C fails
+  the running job at once; a job with no heartbeat for 60 s → `E-WORKER-01`.
+- `backend/tests/worker.test.js`: 11 tests (oldest first, no double pick, all three endings, deleted
+  model → `E-CAT-01`, crash → `E-SERVER-01`, recovery, fake vs real) — 97 in total.
+- `backend/tests/helpers/globalSetup.js`: the MongoDB test download stays in `node_modules/.cache`.
+
+**Real check (shared Atlas):** API + worker on the model machine; a SmolLM2-135M job created with
+`POST /api/jobs` (preflight 9/9) was picked up within 3 s and went DOWNLOADING → CONVERTING →
+QUANTIZING → VALIDATING → COMPLETED in ~35 s (download reused): F16 258.3 / Q5_K_M 106.9 / Q4_K_M
+100.6 MB, 3/3 smoke tests pass, 50 log lines visible through `GET /api/jobs/:id`.
+
+**Decisions and why**
+
+- **Cancel is checked before each stage** (inside the reporter), so the pipeline needs no changes;
+  stopping a tool mid-stage is WP-22.
+- **Recovery runs before every pick**, not only at start: a crashed worker's job is failed within
+  ~60 s even if no worker restarts on that machine. 60 s (6 missed heartbeats) avoids failing a
+  job that another running worker is still working on.
+- **The model is loaded inside the try block**: any error after the pick fails the job at once.
+
+**Problems**
+
+1. `populate('model')` threw "Schema hasn't been registered" — `worker.js` never imported
+   `CatalogModel` (the tests did, so they passed). The job had already been taken, so it stayed
+   "running" until recovery failed it 60 s later. Fixed: import the model, populate inside `try`,
+   new test for a deleted model.
+2. Stopping the background terminal did not stop the Node worker inside it: the old, buggy worker
+   took the next job too. Found with the process list; stopped it.
+3. `npx vitest` started from `backend/` downloaded the MongoDB test binary to the home folder (C:).
+   Deleted it and pinned `MONGOMS_DOWNLOAD_DIR` to the repo cache.
+
+**Next step:** PR `sibghatullah` → `main` (closes #12). Then WP-13. Huzaifah can start WP-12.
+
+---
+
 ## 15 Nov 2026 — Sibghatullah — Git guide + SRS versions
 
 **Changed**
