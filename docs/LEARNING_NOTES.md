@@ -12,6 +12,7 @@ before starting the work package that needs it — and use it to prepare for the
 5. [Quantization levels and the hand compression (WP-02)](#5-quantization-levels-and-the-hand-compression-wp-02)
    5b. [Running programs from Node: spawn, timeouts, mocking (WP-04)](#5b-running-programs-from-node-spawn-timeouts-mocking-wp-04)
    5c. [The pipeline, reporters, the fake pipeline and reproducibility (WP-06)](#5c-the-pipeline-reporters-the-fake-pipeline-and-reproducibility-wp-06)
+   5d. [Checking the catalog, the fixed test text and temp folders (WP-09)](#5d-checking-the-catalog-the-fixed-test-text-and-temp-folders-wp-09)
 6. [REST APIs, Express, MongoDB and Mongoose (WP-03)](#6-rest-apis-express-mongodb-and-mongoose-wp-03)
    6b. [React pages, components and the theme (WP-07)](#6b-react-pages-components-and-the-theme-wp-07)
    6c. [Pinned revisions and the catalog (WP-05)](#6c-pinned-revisions-and-the-catalog-wp-05)
@@ -291,6 +292,41 @@ converter writes `general.name` from the **download folder name** (`HuggingFaceT
 `SmolLM2…`). Fix: always pass `--model-name SmolLM2-135M-Instruct`. After the fix, two separate
 runs gave identical SHA-256 for F16, Q5_K_M and Q4_K_M. (Good viva example of why checksums are
 useful: they caught a difference we could not see.)
+
+## 5d. Checking the catalog, the fixed test text and temp folders (WP-09)
+
+**Checking a model without downloading it.** Hugging Face has a free JSON API:
+`https://huggingface.co/api/models/<repo>/revision/<commit>` returns the file list, whether the
+model is gated, and `safetensors.total` — the **exact number of weights**, read from the file
+headers. `npm run validate:catalog` asks this for every catalog model and checks: the commit
+exists, there are `.safetensors` files (never `.bin` — those can run code when loaded), the model
+is ≤ 4 B parameters, our `paramsBillion` is within 3 %, and `gated` matches. It takes seconds,
+so it can be re-run any time a model owner changes something.
+
+**Why one fixed test text (WikiText-2).** Perplexity (WP-16) is "how surprised the model is by
+real text". It is only comparable if every file is measured on the **same** text. So
+`npm run fetch:wikitext` downloads `wiki.test.raw` and checks its **SHA-256**; if even one byte
+were different, the script stops instead of quietly measuring on another text.
+
+**Temp folders.** Programs write scratch files to the folder named by the `TMP`/`TEMP`
+(Windows) or `TMPDIR` (Linux) variable — on Windows that is on C:. `runCommand` sets all three to
+`data/tmp` for every tool it starts, so big scratch files stay on the data drive.
+
+**What the trials showed.**
+
+| Model (params)      | F16 → Q4_K_M (MiB) | Whole CLI run |
+| ------------------- | ------------------ | ------------- |
+| SmolLM2-360M (0.36) | 692 → 258          | 2.4 min       |
+| Qwen2.5-0.5B (0.49) | 948 → 379          | 3.2 min       |
+| TinyLlama (1.1)     | 2099 → 637         | 7.3 min       |
+| Qwen2.5-1.5B (1.54) | 2950 → 940         | 10 min        |
+| SmolLM2-1.7B (1.71) | 3266 → 1007        | 12 min        |
+| Phi-3.5-mini (3.82) | 7289 → 2286        | 26 min        |
+
+Q4_K_M is roughly **⅓ of F16** for every model — about 4.5–5 bits per weight instead of 16.
+Small models shrink a bit less because their vocabulary table is a big share of the weights and
+llama.cpp keeps some tensors at higher precision. Time grows with size, mostly from download and
+conversion. The gated Llama-3.2 stopped with `E-HF-01`: the error we designed, with a fix hint.
 
 ## 6. REST APIs, Express, MongoDB and Mongoose (WP-03)
 

@@ -3,8 +3,13 @@
 //   can never be read as an extra command (no "command injection").
 // - every run has a time limit; a program that is too slow is stopped (E-TIME-01).
 // - every output line is passed to onLine(), so the pipeline can save it as a job log line.
+// - temporary files of every tool go to data/tmp (next to our data), never to the system
+//   temp folder — on Windows that is on C:, and model work must stay on the data drive.
 // SRS: REQ-14 (tool output to the job log), REQ-15 (time limits). Owner: Sibghatullah (WP-04).
+import fs from 'node:fs';
+import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { settings } from '../config/settings.js';
 import { appError } from './errors.js';
 
 const KEEP_LINES = 200; // only the last 200 lines are kept in memory (REQ-26 shows 200)
@@ -12,11 +17,14 @@ const KEEP_LINES = 200; // only the last 200 lines are kept in memory (REQ-26 sh
 export function runCommand(program, args, options = {}) {
   const { cwd, env, timeoutMs = 60_000, onLine = () => {} } = options;
   const started = Date.now();
+  const tmpDir = path.join(settings.dataDir, 'tmp');
+  fs.mkdirSync(tmpDir, { recursive: true });
 
   return new Promise((resolve, reject) => {
     const child = spawn(program, args, {
       cwd,
-      env: { ...process.env, ...env },
+      // TMP/TEMP = Windows, TMPDIR = Linux/macOS. Python, hf and llama.cpp all respect these.
+      env: { ...process.env, TMP: tmpDir, TEMP: tmpDir, TMPDIR: tmpDir, ...env },
       stdio: ['ignore', 'pipe', 'pipe'], // no keyboard input: tools must never wait for it
       windowsHide: true, // no pop-up console windows on Windows
     });

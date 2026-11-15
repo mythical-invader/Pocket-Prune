@@ -2,11 +2,14 @@
 //
 // revision   = the exact Hugging Face commit, so every job downloads identical files (REQ-2).
 //              Looked up on 11 Nov 2026 from https://huggingface.co/api/models/<repo>;
-//              Sibghatullah confirms or updates them after the hand trials (WP-02 / WP-09).
+//              Confirmed 15 Nov 2026 by Sibghatullah (WP-09): `npm run validate:catalog` checks
+//              each one on Hugging Face, and every non-gated model was compressed with the CLI
+//              (results in docs/catalog-trials.md).
 // paramsBillion = parameter count from the model's safetensors metadata.
-// f16SizeMb  = parameters × 2 bytes (F16 stores each weight in 16 bits).
+// f16SizeMb  = measured size of the F16 GGUF in MiB (WP-09 trials; Llama-3.2 = parameters × 2
+//              bytes, since it needs a token). Preflight uses it for the disk/RAM checks.
 // isDemo     = tiny models that finish a full job in a few minutes, for live demos.
-// SRS: REQ-1, REQ-2, REQ-3. Owner: Huzaifah.
+// SRS: REQ-1, REQ-2, REQ-3. Owner: Huzaifah (revisions + sizes: Sibghatullah, WP-09).
 
 export const CATALOG_SEED = [
   // ---- Demo models ----
@@ -16,7 +19,7 @@ export const CATALOG_SEED = [
     displayName: 'SmolLM2 135M Instruct',
     paramsBillion: 0.135,
     license: 'Apache-2.0',
-    f16SizeMb: 257,
+    f16SizeMb: 259,
     isDemo: true,
   },
   {
@@ -25,7 +28,7 @@ export const CATALOG_SEED = [
     displayName: 'SmolLM2 360M Instruct',
     paramsBillion: 0.362,
     license: 'Apache-2.0',
-    f16SizeMb: 690,
+    f16SizeMb: 692,
     isDemo: true,
   },
   {
@@ -34,7 +37,7 @@ export const CATALOG_SEED = [
     displayName: 'Qwen2.5 0.5B Instruct',
     paramsBillion: 0.494,
     license: 'Apache-2.0',
-    f16SizeMb: 942,
+    f16SizeMb: 949,
     isDemo: true,
   },
 
@@ -45,7 +48,7 @@ export const CATALOG_SEED = [
     displayName: 'TinyLlama 1.1B Chat',
     paramsBillion: 1.1,
     license: 'Apache-2.0',
-    f16SizeMb: 2098,
+    f16SizeMb: 2100,
   },
   {
     hfRepoId: 'Qwen/Qwen2.5-1.5B-Instruct',
@@ -53,7 +56,7 @@ export const CATALOG_SEED = [
     displayName: 'Qwen2.5 1.5B Instruct',
     paramsBillion: 1.544,
     license: 'Apache-2.0',
-    f16SizeMb: 2944,
+    f16SizeMb: 2951,
   },
   {
     hfRepoId: 'HuggingFaceTB/SmolLM2-1.7B-Instruct',
@@ -61,7 +64,7 @@ export const CATALOG_SEED = [
     displayName: 'SmolLM2 1.7B Instruct',
     paramsBillion: 1.711,
     license: 'Apache-2.0',
-    f16SizeMb: 3264,
+    f16SizeMb: 3267,
   },
   {
     // Gated: the user must accept Meta's licence on Hugging Face and set HF_TOKEN.
@@ -81,6 +84,6 @@ export const CATALOG_SEED = [
     displayName: 'Phi-3.5 mini Instruct',
     paramsBillion: 3.821,
     license: 'MIT',
-    f16SizeMb: 7288,
+    f16SizeMb: 7290,
   },
 ];

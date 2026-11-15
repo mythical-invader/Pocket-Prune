@@ -8,6 +8,7 @@ import { parseArgs } from 'node:util';
 import { settings } from './config/settings.js';
 import { appError } from './utils/errors.js';
 import { CATALOG_SEED } from './seedData.js';
+import { checkCatalogEntry } from './services/catalogService.js';
 import { runPipeline as realPipeline } from './worker/pipeline.js';
 import { runPipeline as fakePipeline } from './worker/fakePipeline.js';
 import { consoleReporter } from './worker/reporter.js';
@@ -23,9 +24,9 @@ const { values } = parseArgs({
 async function main() {
   const model = CATALOG_SEED.find((m) => m.hfRepoId === values.model);
   if (!model) throw appError('E-CAT-01', { message: `${values.model} is not in the catalog.` });
-  if (model.paramsBillion > settings.maxParamsBillion) {
-    throw appError('E-CAT-01', { message: `${model.hfRepoId} is larger than 4 B parameters.` });
-  }
+  // Same rules as seed.js (4 B limit, full commit hash…), so the CLI can't bypass them (REQ-3).
+  const problems = checkCatalogEntry(model);
+  if (problems.length) throw appError('E-CAT-01', { message: problems.join(' ') });
 
   const job = {
     _id: `cli-${Date.now()}`, // files go to data/artifacts/cli-<time>/
