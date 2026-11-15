@@ -455,3 +455,15 @@ recommender, to pick the file that fits _that_ device.
 
 **Fake pipeline:** with `FAKE_PIPELINE=true` (the web machine has no llama.cpp), the llama.cpp
 check is shown as _skipped_ instead of failing.
+
+### 7b. Jobs, queues and 202 Accepted (WP-10)
+
+- A **job** is a to-do note in the database: "compress this model to these levels". Creating it
+  takes milliseconds; doing it takes minutes. So the API answers right away with **`202
+Accepted`** — "got it, the work happens later" — instead of `200`/`201`.
+- The **queue** is simply all jobs with status `QUEUED`, oldest first. Queue position = 1 + the
+  number of queued jobs created before yours.
+- The website then **asks again every few seconds** (`GET /api/jobs/:id`) to show progress — this
+  is called _polling_ and arrives with the Progress page (WP-12).
+- **Preflight runs twice**: once when you click "Run preflight" (to show you the list) and again
+  when the job is created (so a script calling the API directly can't skip the checks).
