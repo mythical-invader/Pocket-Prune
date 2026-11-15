@@ -22,7 +22,7 @@ The students have **no prior experience with model compression**. Keep the work 
 
 **Rule 2 — Teach as you go.** Before a work package that introduces a new idea (GGUF, quantization levels, perplexity, benchmarking, recommendation rules, JWT, polling…), explain it in simple words in chat and add it to `docs/LEARNING_NOTES.md`. After finishing, explain what was built so the owner can present it in the viva.
 
-**Rule 3 — GitHub history is graded (~20 marks), and it must stay simple.** Each member has a personal branch (`huzaifah`, `sibghatullah`). A WP is built on a small WP branch → PR into the personal branch → when ready, PR personal branch → `main`, reviewed by the other member (Section 11). **2–3 short commits per WP** with plain captions like `WP-08: add preflight checks`. Never push to `main` directly, and never build several work packages in one PR.
+**Rule 3 — GitHub history is graded (~20 marks), and it must stay simple.** Each member has a personal branch (`huzaifah`, `sibghatullah`). A WP is committed directly on the personal branch → PR personal branch → `main`, reviewed by the other member (Section 11). **2–3 short commits per WP** with plain captions like `WP-08: add preflight checks`. Never push to `main` directly, and never build several work packages in one PR.
 
 **Rule 5 — Secrets stay local.** Anything secret (MongoDB Atlas string, HF token, JWT secret, passwords, API keys) goes **only** into the local `.env` file, which is git-ignored. Never write real secrets into code, docs, `.env.example`, commit messages, PR text or issues.
 
@@ -83,7 +83,7 @@ If it's wrong, stop and help fix it before any commit.
 | Part | Choice | Notes |
 | --- | --- | --- |
 | Database | **MongoDB** + **Mongoose** | |
-| Backend | **Node.js 20** + **Express**, ES modules (`import`) | Simple controllers/routes like the team's last project |
+| Backend | **Node.js 22 LTS** (or newer) + **Express**, ES modules (`import`) | Simple controllers/routes like the team's last project |
 | Frontend | **React** with **Vite** (JSX), **React Router**, **axios**, **Recharts** (charts) | Styling approach is open (Section 9). Redux Toolkit / Context as needed |
 | Auth | **bcryptjs** + **jsonwebtoken**, **express-rate-limit** on login | |
 | Logging | **morgan** | |
@@ -353,19 +353,17 @@ At the end of every session, tell the user in 5–10 simple lines what was built
 7. Allow **"Create a merge commit"** so branches stay visible in history.
 Write this in `docs/GIT_GUIDE.md`.
 
-### 11.2 Branches — simple and per person (agreed 12 Nov 2026)
+### 11.2 Branches — simple and per person (agreed 12 Nov 2026, simplified 15 Nov 2026)
 
 ```text
 main                 ← finished, reviewed work only
-├── huzaifah         ← Huzaifah's branch
-│   └── wp08-preflight, wp10-jobs-api …   (one small branch per WP)
-└── sibghatullah     ← Sibghatullah's branch
-    └── wp02-llamacpp-setup, wp04-command-runner …
+├── huzaifah         ← Huzaifah commits his WPs here
+└── sibghatullah     ← Sibghatullah commits his WPs here
 ```
 
-- **One WP = one small branch** off your personal branch, named `wpNN-short-name` (e.g. `wp02-llamacpp-setup`). The long names in the Section 12 tables are only descriptions.
-- WP branch → **PR into your personal branch** (you may merge this one yourself).
-- Personal branch → **PR into `main`**, reviewed by the other member, merged with **Create a merge commit**. Do this after each WP (or a couple of small ones) so the other person can build on it. A WP counts as `merged` in `progress.json` only when it is on `main`.
+- **Commit each WP directly on your personal branch** — no WP sub-branches (since 15 Nov 2026; WP-01 … WP-07 used them). The branch names in the Section 12 tables are only descriptions.
+- Personal branch → **PR into `main`** (one WP per PR), reviewed by the other member, merged with **Create a merge commit**. Do this after each WP so the other person can build on it. If the reviewer can't look in time, the author may merge once CI is green and the reviewer comments afterwards. A WP counts as `merged` in `progress.json` only when it is on `main`.
+- Stage files **by name**, never `git add .`; never commit `.env`, `data/` or private local folders.
 - **2–3 commits per WP**, plain captions: `WP-02: build llama.cpp`, `WP-02: hand compression notes`. No `feat(area):` prefixes, no long bodies.
 - **Never generate future WPs early.** If the user asks to "do everything", do the next WP only.
 - The reviewer leaves at least one real comment or approval note on every PR into `main`.
@@ -375,35 +373,32 @@ main                 ← finished, reviewed work only
 ### 11.3 Show these Git boxes to the user every time
 (Example for Sibghatullah; Huzaifah uses `huzaifah`.)
 
-**▶ START of a WP** — update your branch from `main`, then branch off it
+**▶ START of a WP** — update your branch from `main`
 ```bash
 git checkout sibghatullah
 git pull
 git merge origin/main
-git checkout -b wp02-llamacpp-setup
 ```
 
 **▶ COMMIT** (a part works, tests pass) — 2–3 per WP
 ```bash
-git add .
+git add backend/worker/worker.js docs/DEV_LOG.md     # by name, never "git add ."
 git status          # check: no .env, data/, model files
-git commit -m "WP-02: build llama.cpp"
+git commit -m "WP-11: worker picks jobs"
 ```
 
 **▶ END of a WP**
 ```bash
 npm test
-git push -u origin wp02-llamacpp-setup
+git push origin sibghatullah
 ```
-1. Open a PR **wp02-llamacpp-setup → sibghatullah**, merge it.
-2. Open a PR **sibghatullah → main** (title `WP-02: llama.cpp setup`, body: what, how tested, `Closes #__`). Ask the other member to review and merge.
+Open a PR **sibghatullah → main** (title `WP-11: Worker`, body: what, how tested, `Closes #__`). Ask the other member to review; merge with **Create a merge commit**.
 
 **▶ AFTER merge**
 ```bash
 git checkout sibghatullah
 git pull
 git merge origin/main
-git branch -d wp02-llamacpp-setup
 ```
 
 **▶ MILESTONE** (after its last PR merges)

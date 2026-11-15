@@ -5,6 +5,25 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Sibghatullah — Git guide + SRS versions
+
+**Changed**
+
+- **Simpler Git flow** (`docs/GIT_GUIDE.md`, CLAUDE.md §0 Rule 3, §11.2, §11.3): each member now
+  commits a WP **directly on their own branch** and opens one PR per WP into `main` — no more
+  `wpNN-…` sub-branches. Files are staged by name, never `git add .`. Added the
+  `querySrv ECONNREFUSED` fix for Atlas.
+- **SRS** (`docs/PocketPrune_SRS.docx`): operating environment and tech stack now say
+  **Node.js 22 LTS** (what `package.json` and CI require; Node 20 is end-of-life), **MongoDB 8**
+  (the shared Atlas M0 runs 8.0) and **Python 3.12** (the llama.cpp venv). CLAUDE.md §3 says Node 22.
+- Deleted the WP-09 trial downloads and GGUF files from `data/` (44 GB; results are in
+  `catalog-trials.md`). Kept the three demo-model downloads so demo jobs start without downloading.
+
+**Why:** sub-branches added a second PR per WP without making the history clearer; the SRS must
+match what the project really runs on.
+
+---
+
 ## 15 Nov 2026 — Huzaifah — Evaluation plan for Phase 3
 
 To make the project clearly FYP-level, we add **measured evidence** rather than more features:
