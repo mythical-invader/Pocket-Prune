@@ -7,6 +7,10 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-13: pipeline hardening — timeouts stop the whole process tree, 2 GB disk reserve checked
+  before each heavy step (E-DISK-01), unfinished jobs leave no files, downloads deleted after
+  conversion (demo models kept), `npm run regression` + `docs/regression-M2.md`.
+
 - WP-12: Job Progress page (`/jobs/:id`) — refreshes every 2 s: stage stepper, progress bar, elapsed
   time, queue position, log panel, error with fix and code, "FAKE DATA" badge, files made;
   `errorHint` in `GET /api/jobs/:id`.

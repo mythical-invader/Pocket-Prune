@@ -19,6 +19,7 @@ before starting the work package that needs it — and use it to prepare for the
 7. [Preflight checks (WP-08)](#7-preflight-checks-wp-08)
 8. [Background workers, heartbeats and cancelling (WP-11)](#8-background-workers-heartbeats-and-cancelling-wp-11)
    8b. [Polling: how the progress page stays live (WP-12)](#8b-polling-how-the-progress-page-stays-live-wp-12)
+   8c. [Failing cleanly: process trees, disk reserve, clean-up, regression tests (WP-13)](#8c-failing-cleanly-process-trees-disk-reserve-clean-up-regression-tests-wp-13)
 9. Benchmarking: tokens per second and peak RAM — _WP-14_
 10. Perplexity — _WP-16_
 11. The recommendation rules — _WP-18_
@@ -528,3 +529,35 @@ const { data: job } = usePolling(
   (j) => ['COMPLETED', 'FAILED', 'CANCELLED'].includes(j.status)
 );
 ```
+
+## 8c. Failing cleanly: process trees, disk reserve, clean-up, regression tests (WP-13)
+
+**Process trees.** A program can start other programs. On Windows, `hf.exe` is only a small
+launcher that starts `python.exe`, which does the real download. If a time limit stops only the
+launcher, the Python child might keep downloading in the background. So `runCommand` stops the
+**whole tree**: `taskkill /T /F` on Windows, the whole process group on Linux. A test proves it:
+a "tool" starts a detached child that would write a file after 1.5 s; after a 0.5 s timeout the
+file must never appear. (With the old "stop only the tool" code, this test fails.)
+
+**Disk reserve.** If the disk fills up completely, everything breaks in confusing ways (Windows,
+MongoDB, half-written files). So before each heavy step — download, convert, each quantization —
+the pipeline checks free space and stops with **E-DISK-01** while at least 2 GB is still free
+(`DISK_RESERVE_MB`). Preflight already checks before the job starts; this catches a disk that
+fills up _during_ the job.
+
+**Clean-up rules (SRS REQ-11, REQ-15).**
+
+| What                                        | When it is deleted                                            | Why                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| The job's files (`data/artifacts/<jobId>/`) | the job fails, times out, is cancelled, or its worker crashed | a stopped job leaves no junk                                              |
+| The downloaded model (`data/models/…`)      | right after the F16 file is made — **except demo models**     | the F16 file holds the same weights; demo models stay for fast live demos |
+| A half-finished download                    | **kept**                                                      | the next try resumes it (REQ-11) instead of starting 7 GB again           |
+| A refused gated download                    | at once                                                       | it holds nothing useful                                                   |
+| `data/tmp` (tool scratch files)             | when the worker starts                                        | tools killed last time can't clean up after themselves                    |
+
+**Regression test.** A _regression_ is when something that used to work stops working after a
+change. `npm run regression` re-runs the real pipeline on the three demo models and compares every
+file size with the sizes measured before — same model, same revision, same llama.cpp → the sizes
+must be identical. It also starts one job with a 1-second time limit and checks it stops with
+E-TIME-01 and leaves no files. Results go to `docs/regression-M2.md`. Run it after any change to
+the pipeline or a llama.cpp upgrade.
