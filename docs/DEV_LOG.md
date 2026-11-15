@@ -5,6 +5,44 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Sibghatullah — WP-06 CLI pipeline + fake pipeline
+
+**Built**
+
+- `backend/worker/pipeline.js`: `runPipeline(job, report)` — download → F16 → quantize each level →
+  smoke test each file; returns `{ variants, llamaCppRef }`. Convert failure stops the job; a
+  failed level is logged and its half-written file deleted; no passing quantized file → `E-VAL-01`.
+- `backend/worker/reporter.js`: `consoleReporter()` (terminal) and `dbReporter(job)` (Job
+  status/stage/progress/heartbeat + JobEvents, for the worker in WP-11); `STAGE_PROGRESS`.
+- `backend/worker/fakePipeline.js` ⏳: same `runPipeline`, all 7 stages, real WP-02 numbers scaled
+  by `f16SizeMb`, placeholder files, `fake: true` + a FAKE recommendation.
+- `backend/utils/fileHash.js`: streamed SHA-256 + size in MB.
+- `backend/cli.js` + `npm run pipeline` (root and backend): `--model`, `--levels`, `--fake`.
+- 8 new tests (pipeline, reporter, fileHash, model name) — 63 in total.
+
+**Real check:** `npm run pipeline` on SmolLM2-135M → F16 258.3 / Q5_K_M 106.9 / Q4_K_M 100.6 MB,
+3/3 smoke tests PASS, 12–14 s (download reused). Fake run: 7 stages, ~20 s.
+
+**Decisions and why**
+
+- **Pipeline returns the results, the caller saves them.** cli.js prints them; the worker (WP-11)
+  will save them on the Job. So the pipeline needs no database and is easy to test.
+- **Reporter object** instead of `console.log` / `JobEvent.create` inside the pipeline (same code
+  for CLI, worker and tests).
+- **`--model-name` for the converter**: without it the GGUF metadata contains the download folder
+  name, so identical weights gave different SHA-256s. With it, two runs are byte-identical.
+- **Tool lines are logged without waiting** (`report.log(line).catch(...)`), so hundreds of lines
+  don't slow the pipeline down.
+- **The fake pipeline has no automated test** (CLAUDE.md §7.7: deleting it in WP-20 must break
+  nothing); it was checked by running `npm run pipeline -- --fake`.
+
+**Problems:** the checksum difference above — fixed.
+
+**Next step:** PR `sibghatullah` → `main` (closes #7). Phase 1 then only needs WP-00 (Atlas).
+Next for Sibghatullah: WP-09 (catalog trials) — needs WP-06 merged.
+
+---
+
 ## 15 Nov 2026 — Sibghatullah — WP-04 Command runner
 
 **Built**

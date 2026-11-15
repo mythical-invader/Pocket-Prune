@@ -189,3 +189,20 @@ await convertToF16(dir, f16File, { onLine });
 await quantize(f16File, q4File, 'Q4_K_M', { onLine });
 const { passed } = await smokeTest(q4File, { onLine });
 ```
+
+## WP-06 — CLI pipeline + fake pipeline
+
+| File                             | What it does                                                                                                                                                                                                                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `backend/worker/pipeline.js`     | `runPipeline(job, report)`: checks llama.cpp, downloads, converts to F16 (with a fixed `--model-name`), quantizes each level (a failure skips only that level), smoke-tests every file, and returns `{ variants, llamaCppRef }`. Files go to `data/artifacts/<jobId>/<name>-<LEVEL>.gguf`. |
+| `backend/worker/reporter.js`     | `consoleReporter()` prints stages and log lines; `dbReporter(job)` writes them to the Job and JobEvent collections. `STAGE_PROGRESS` maps each stage to a progress %.                                                                                                                      |
+| `backend/worker/fakePipeline.js` | ⏳ Temporary. Same function, no tools: walks all stages with a delay and returns real WP-02 numbers + `fake: true`.                                                                                                                                                                        |
+| `backend/utils/fileHash.js`      | `sha256File(path)` (streamed, works for multi-GB files) and `fileSizeMb(path)`.                                                                                                                                                                                                            |
+| `backend/cli.js`                 | `npm run pipeline -- --model <repo> --levels Q5_K_M,Q4_K_M [--fake]`. Looks up the pinned revision in `seedData.js`, runs the pipeline with the console reporter, prints a table. No database needed.                                                                                      |
+
+How the worker (WP-11) will use it:
+
+```js
+const result = await runPipeline(job, dbReporter(job)); // or fakePipeline when FAKE_PIPELINE=true
+job.variants = result.variants; // then status COMPLETED (or FAILED with the error code)
+```

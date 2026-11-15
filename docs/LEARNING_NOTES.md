@@ -11,6 +11,7 @@ before starting the work package that needs it — and use it to prepare for the
 4. [Language models, GGUF and llama.cpp (WP-02)](#4-language-models-gguf-and-llamacpp-wp-02)
 5. [Quantization levels and the hand compression (WP-02)](#5-quantization-levels-and-the-hand-compression-wp-02)
    5b. [Running programs from Node: spawn, timeouts, mocking (WP-04)](#5b-running-programs-from-node-spawn-timeouts-mocking-wp-04)
+   5c. [The pipeline, reporters, the fake pipeline and reproducibility (WP-06)](#5c-the-pipeline-reporters-the-fake-pipeline-and-reproducibility-wp-06)
 6. [REST APIs, Express, MongoDB and Mongoose (WP-03)](#6-rest-apis-express-mongodb-and-mongoose-wp-03)
    6b. [React pages, components and the theme (WP-07)](#6b-react-pages-components-and-the-theme-wp-07)
    6c. [Pinned revisions and the catalog (WP-05)](#6c-pinned-revisions-and-the-catalog-wp-05)
@@ -244,6 +245,52 @@ result. `runCommand` itself is tested with tiny real Node scripts instead.
 **Reuse.** After a complete download, `downloader.js` writes a small file
 `.pocketprune-revision` with the commit hash. Next time, if that file says the same revision, the
 download is skipped (seconds instead of minutes).
+
+## 5c. The pipeline, reporters, the fake pipeline and reproducibility (WP-06)
+
+**Pipeline** = the WP-04 commands chained in a fixed order, for one job:
+
+```text
+DOWNLOADING → CONVERTING (F16) → QUANTIZING (each level) → VALIDATING (smoke test each file)
+```
+
+Each stage has rules (CLAUDE.md §7.2):
+
+- **Convert fails → the job stops.** Without the F16 file nothing can be quantized.
+- **One level fails → the others continue.** If Q5_K_M breaks we still deliver Q4_K_M. The
+  half-written file of the failed level is deleted.
+- **No quantized file passes the smoke test → `E-VAL-01`.** A job with no usable file is a failure.
+- Every file gets its **size, SHA-256 and time** (REQ-14).
+
+Benchmarks, perplexity and the recommendation are added to the same pipeline in WP-14 / 16 / 18.
+
+**Reporter.** The pipeline never prints or writes to MongoDB itself. It only calls
+`report.stage('QUANTIZING', 'Quantizing to Q4_K_M')` and `report.log('…')`. Who listens decides
+where it goes:
+
+| Reporter            | Used by            | Where it goes                                                    |
+| ------------------- | ------------------ | ---------------------------------------------------------------- |
+| `consoleReporter()` | `cli.js`           | The terminal — so the pipeline runs without a database (REQ-16)  |
+| `dbReporter(job)`   | the worker (WP-11) | `Job.status / stage / progressPct` + one `JobEvent` per log line |
+
+This is why the same pipeline can be tested, run by hand and run by the worker without changes.
+
+**CLI** (command-line interface): `npm run pipeline -- --model HuggingFaceTB/SmolLM2-135M-Instruct --levels Q5_K_M,Q4_K_M`
+runs the whole pipeline in the terminal and prints a table of the files.
+
+**Fake pipeline** (temporary, removed in WP-20). `fakePipeline.js` has the same
+`runPipeline(job, report)` but runs no tools: it waits ~2.5 s per stage, makes tiny placeholder
+files, and returns our **real WP-02 numbers** (scaled to the model's size) with `fake: true`.
+Huzaifah can build the Progress and Results pages on a laptop without llama.cpp; the website shows
+a "FAKE DATA" badge. Run it with `npm run pipeline -- --fake` or `FAKE_PIPELINE=true` in `.env`.
+
+**Reproducibility and the model-name bug we found.** The SRS says: same inputs → identical
+SHA-256. Our first CLI files had different checksums from the WP-02 hand-made files, although the
+weights were byte-for-byte the same. The difference was inside the file's **metadata**: the
+converter writes `general.name` from the **download folder name** (`HuggingFaceTB__SmolLM2…` vs
+`SmolLM2…`). Fix: always pass `--model-name SmolLM2-135M-Instruct`. After the fix, two separate
+runs gave identical SHA-256 for F16, Q5_K_M and Q4_K_M. (Good viva example of why checksums are
+useful: they caught a difference we could not see.)
 
 ## 6. REST APIs, Express, MongoDB and Mongoose (WP-03)
 
