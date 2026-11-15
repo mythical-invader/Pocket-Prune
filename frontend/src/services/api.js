@@ -34,4 +34,8 @@ export const updateProfile = (id, profile) =>
   api.put(`/profiles/${id}`, profile).then((r) => r.data);
 export const deleteProfile = (id) => api.delete(`/profiles/${id}`).then((r) => r.data);
 
+// Jobs (WP-08: preflight; creating and following jobs arrive in WP-10)
+// body: { modelId, levels, profileId, licenseAccepted } → { passed, checks[] }
+export const runPreflight = (body) => api.post('/jobs/preflight', body).then((r) => r.data);
+
 export default api;

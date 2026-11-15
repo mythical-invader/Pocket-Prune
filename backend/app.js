@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import systemRoutes from './routes/systemRoutes.js';
 import catalogRoutes from './routes/catalogRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
+import jobRoutes from './routes/jobRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -20,6 +21,7 @@ app.get('/api', (req, res) => {
 app.use('/api/system', systemRoutes);
 app.use('/api/catalog', catalogRoutes);
 app.use('/api/profiles', profileRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // These two must stay last: unknown /api addresses, then the shared error format.
 app.use('/api', notFound);

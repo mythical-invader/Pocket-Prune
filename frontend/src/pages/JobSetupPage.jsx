@@ -1,34 +1,42 @@
 // JobSetupPage.jsx — step 3 "Preflight": choose the quantization levels (with expected sizes),
-// see the checks that run before any heavy work, accept the licence, and submit.
-// The real preflight call arrives in WP-08 and job submission in WP-10; until then the checks
-// are listed and the buttons stay disabled with a clear note. SRS: REQ-6 – REQ-9. Owner: Huzaifah.
+// accept the licence, and run the preflight checks on the server. Each check shows passed or
+// failed with its reason, fix and error code. Starting the job arrives in WP-10.
+// SRS: REQ-6 – REQ-10. Owner: Huzaifah.
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { Circle, Info, ListChecks, Play } from 'lucide-react';
+import { CheckCircle2, Circle, ListChecks, Play, XCircle } from 'lucide-react';
 import { useJobDraft } from '../context/JobDraftContext.jsx';
+import { runPreflight } from '../services/api.js';
 import { estimateSizeMb, formatMb, LEVEL_HINTS } from '../utils/format.js';
 import PageHeader from '../components/PageHeader.jsx';
 import Card from '../components/Card.jsx';
 import Button from '../components/Button.jsx';
 import CompressionLadder from '../components/CompressionLadder.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import ErrorAlert from '../components/ErrorAlert.jsx';
 import JobSummary from '../components/JobSummary.jsx';
 
 const LEVELS = ['Q5_K_M', 'Q4_K_M', 'Q8_0'];
 
-// What preflight will check (CLAUDE.md §7.2) — shown so the user knows what happens next.
-const CHECKS = [
-  'Model is active in the catalog',
-  'Enough free disk for the download, F16 and every level',
-  'Enough free RAM to convert the model',
+// Shown before the first run, so the user knows what will be checked.
+const PLANNED_CHECKS = [
+  'Model is in the catalog',
+  'Quantization levels are supported',
+  'Device profile chosen',
+  'Enough free disk space',
+  'Enough free memory (RAM)',
   'Model licence accepted',
-  'llama.cpp found at the pinned version',
-  'Fewer than 2 of your jobs already running',
+  'Hugging Face access',
+  'llama.cpp installed',
+  'Fewer than 2 jobs running',
 ];
 
 export default function JobSetupPage() {
   const { draft, setLevels } = useJobDraft();
   const [licenceAccepted, setLicenceAccepted] = useState(false);
+  const [result, setResult] = useState(null); // { passed, checks } from the server
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState(null);
   const { model, profile, levels } = draft;
 
   if (!model || !profile) {
@@ -46,9 +54,36 @@ export default function JobSetupPage() {
     );
   }
 
+  // Any change makes the last preflight result out of date.
   function toggleLevel(level) {
     setLevels(levels.includes(level) ? levels.filter((l) => l !== level) : [...levels, level]);
+    setResult(null);
   }
+  function toggleLicence(e) {
+    setLicenceAccepted(e.target.checked);
+    setResult(null);
+  }
+
+  async function preflight() {
+    setRunning(true);
+    setError(null);
+    try {
+      setResult(
+        await runPreflight({
+          modelId: model._id,
+          profileId: profile._id,
+          levels,
+          licenseAccepted: licenceAccepted,
+        })
+      );
+    } catch (err) {
+      setError(err);
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  const failedCount = result ? result.checks.filter((c) => !c.passed).length : 0;
 
   return (
     <div className="workspace">
@@ -83,9 +118,7 @@ export default function JobSetupPage() {
             ))}
           </fieldset>
           {levels.length === 0 && (
-            <p className="field__error" style={{ marginTop: 'var(--space-sm)' }}>
-              Choose at least one level.
-            </p>
+            <p className="field__error section-gap">Choose at least one level.</p>
           )}
         </Card>
 
@@ -106,44 +139,61 @@ export default function JobSetupPage() {
         <Card>
           <h2 className="section-title">Preflight checks</h2>
           <p className="section-intro">
-            Before downloading anything, PocketPrune checks that this job can finish on this
-            machine.
+            Before downloading anything, PocketPrune checks on the server that this job can finish:
+            disk, memory, licence, tools and your running jobs.
           </p>
-          <ul className="checklist">
-            {CHECKS.map((check) => (
-              <li key={check}>
-                <Circle size={16} aria-hidden />
-                {check}
-              </li>
-            ))}
-          </ul>
-          <div className="alert alert--info">
-            <Info size={20} className="alert__icon" aria-hidden />
-            <div className="alert__body">
-              <p className="alert__title">Preflight is not connected yet</p>
-              <p className="alert__hint">
-                The checks run on the server once the preflight API is added. Your choices are kept
-                until then.
-              </p>
-            </div>
-          </div>
-        </Card>
 
-        <Card>
           <label className="checkbox">
-            <input
-              type="checkbox"
-              checked={licenceAccepted}
-              onChange={(e) => setLicenceAccepted(e.target.checked)}
-            />
+            <input type="checkbox" checked={licenceAccepted} onChange={toggleLicence} />
             <span>
               I accept the <strong>{model.license}</strong> licence of {model.hfRepoId}.
             </span>
           </label>
+
           <div className="submit-row">
-            <Button icon={ListChecks} variant="secondary" disabled>
-              Run preflight
+            <Button icon={ListChecks} variant="secondary" loading={running} onClick={preflight}>
+              {result ? 'Run preflight again' : 'Run preflight'}
             </Button>
+            {result && (
+              <span className={`preflight-summary ${result.passed ? 'is-ok' : 'is-bad'}`}>
+                {result.passed
+                  ? `All ${result.checks.length} checks passed`
+                  : `${failedCount} of ${result.checks.length} checks failed`}
+              </span>
+            )}
+          </div>
+
+          <ErrorAlert error={error} onRetry={preflight} />
+
+          <ul className="checklist section-gap" aria-live="polite">
+            {result
+              ? result.checks.map((check) => (
+                  <li key={check.id} className={check.passed ? 'is-ok' : 'is-bad'}>
+                    {check.passed ? (
+                      <CheckCircle2 size={18} aria-label="Passed" />
+                    ) : (
+                      <XCircle size={18} aria-label="Failed" />
+                    )}
+                    <div className="checklist__text">
+                      <span className="checklist__label">{check.label}</span>
+                      <span className="checklist__message">{check.message}</span>
+                      {!check.passed && check.hint && (
+                        <span className="checklist__hint">
+                          {check.hint} <span className="num">({check.code})</span>
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))
+              : PLANNED_CHECKS.map((label) => (
+                  <li key={label}>
+                    <Circle size={16} aria-hidden />
+                    {label}
+                  </li>
+                ))}
+          </ul>
+
+          <div className="submit-row">
             <Button icon={Play} disabled>
               Start compression
             </Button>
@@ -155,7 +205,9 @@ export default function JobSetupPage() {
         <JobSummary
           footer={
             <p className="summary__note">
-              Starting a job becomes available after a successful preflight.
+              {result?.passed
+                ? 'Preflight passed. Starting the job is the next feature being added.'
+                : 'Run preflight to check that this job can finish on this machine.'}
             </p>
           }
         />

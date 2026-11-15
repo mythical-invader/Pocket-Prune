@@ -5,6 +5,32 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Huzaifah — WP-08 Preflight
+
+**Built:** `services/preflightService.js` (9 checks, one small function each),
+`POST /api/jobs/preflight`, the live checklist on the Job Setup page, 14 new tests (78 total).
+
+**Decisions and why**
+
+- **All checks run every time** and the page shows every failure at once, so the user can fix
+  everything in one go instead of one error per click.
+- **A failed check answers 200**, not an error status: "your disk is too small" is a normal
+  answer. Only real server problems use the error format.
+- **Disk and RAM are measured on the API's machine** (the model machine does the work). The device
+  profile is for the recommender later, not for preflight.
+- **llama.cpp check reuses Sibghatullah's `checkInstalled()`**, so API and worker agree; with
+  `FAKE_PIPELINE=true` it is shown as skipped (the web machine has no llama.cpp).
+- **The licence is part of preflight** (`licenseAccepted` in the body) so the checklist shows it
+  too; WP-10 checks it again when the job is created.
+- Changing a level or the licence box clears the old result, so a stale "passed" is never shown.
+
+**Problems:** my local `.env` still had the placeholder `LLAMA_CPP_REF=b0000`; updated it to
+`b12376` and set `FAKE_PIPELINE=true` (local only, not committed).
+
+**Next step:** WP-10 Jobs API (`POST /api/jobs` → 202, list, status + events, 2-job limit).
+
+---
+
 ## 15 Nov 2026 — Sibghatullah — WP-00 shared Atlas database · Phase 1 complete (M1)
 
 **Done**

@@ -16,7 +16,7 @@ before starting the work package that needs it — and use it to prepare for the
 6. [REST APIs, Express, MongoDB and Mongoose (WP-03)](#6-rest-apis-express-mongodb-and-mongoose-wp-03)
    6b. [React pages, components and the theme (WP-07)](#6b-react-pages-components-and-the-theme-wp-07)
    6c. [Pinned revisions and the catalog (WP-05)](#6c-pinned-revisions-and-the-catalog-wp-05)
-7. Preflight checks — _WP-08_
+7. [Preflight checks (WP-08)](#7-preflight-checks-wp-08)
 8. Background workers and polling — _WP-11 / WP-12_
 9. Benchmarking: tokens per second and peak RAM — _WP-14_
 10. Perplexity — _WP-16_
@@ -422,3 +422,36 @@ never creates duplicates.
 **Own data only.** The profile queries always filter by `user: req.user._id`. If you ask for
 someone else's profile id, the query finds nothing and the API answers 404, so it doesn't even
 reveal that the profile exists.
+
+## 7. Preflight checks (WP-08)
+
+**Preflight** is a checklist that runs _before_ a job, like a pilot's checklist before take-off.
+Downloading and converting a model takes minutes and gigabytes; if the disk is too small we want
+to say so in one second, not after ten minutes of work.
+
+The server runs 9 checks and shows **all** of them at once (not only the first failure):
+
+| Check          | Rule                                         | Error if it fails |
+| -------------- | -------------------------------------------- | ----------------- |
+| Model          | active in the catalog                        | `E-CAT-01`        |
+| Levels         | at least one of Q5_K_M, Q4_K_M, Q8_0         | `E-LVL-01`        |
+| Device profile | exists and is yours                          | `E-NOTFOUND-01`   |
+| Disk           | free ≥ 3 × F16 + all quantized files + 2 GB  | `E-DISK-01`       |
+| RAM            | free ≥ 1.2 × F16                             | `E-RAM-01`        |
+| Licence        | the box is ticked                            | `E-LIC-01`        |
+| Hugging Face   | gated model → `HF_TOKEN` is set              | `E-HF-01`         |
+| llama.cpp      | the pinned build (b12376) is installed       | `E-TOOL-01`       |
+| Jobs           | fewer than 2 of your jobs waiting or running | `E-LIMIT-01`      |
+
+**Why 3 × F16 on disk?** During a job three big things exist at once: the downloaded weights
+(about the F16 size), the F16 GGUF file, and room for the converter to work. Example for
+SmolLM2-135M (F16 ≈ 259 MB) with Q5_K_M + Q4_K_M: 3 × 259 + 92 + 79 + 2048 ≈ 2.9 GB.
+
+**Why 1.2 × F16 RAM?** The converter holds the whole model in memory, plus a bit extra.
+
+**Disk and RAM are measured on the server**, because the server (the model machine) does the
+compression — not on the device in the profile. The device profile is used later, by the
+recommender, to pick the file that fits _that_ device.
+
+**Fake pipeline:** with `FAKE_PIPELINE=true` (the web machine has no llama.cpp), the llama.cpp
+check is shown as _skipped_ instead of failing.
