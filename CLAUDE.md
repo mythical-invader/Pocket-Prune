@@ -434,7 +434,9 @@ The team is new to model compression, so the order is: **learn → prove compres
 
 **Must-have** (the core FYP): catalog, preflight, pipeline, worker, progress, metrics, perplexity, recommender, results, downloads.
 **Should-have:** login, history, cancel/retry, storage clean-up and limits, admin, help, Docker, the mobile app (planned for weeks 15–18, started only when you say), tests, docs.
-**Could-have (only when the rest is done):** free hosting, "Publish to Hugging Face", a "compare outputs" box (type a prompt, see F16 vs Q4 answers side by side), Q8_0 level, the gated Llama-3.2 model, Phi-3.5-mini.
+**Could-have (only when the rest is done):** free hosting, "Publish to Hugging Face", a "compare outputs" box (type a prompt, see F16 vs Q4 answers side by side), Q8_0 level, the gated Llama-3.2 model, Phi-3.5-mini, Q4_K_M with an importance matrix (E5).
+
+**Evaluation plan (agreed 15 Nov 2026):** [`docs/EVALUATION_PLAN.md`](docs/EVALUATION_PLAN.md) adds measurable checks to Phase 3 — E1 size estimates vs real files, E2 HellaSwag task accuracy, E3 recommender vs simple baselines, E4 the same benchmark on both laptops, E5 imatrix (could-have), E6 compare outputs (could-have). They live inside WP-15/16/18/20 (no new WPs, no weight changes) and become the Evaluation chapter of the final report. Nothing here starts before the mid-term.
 
 ### 12.1 Progress percentage — how much is done
 Every WP has a **weight** (its share of the whole project). The weights add up to **100 %**; the project percentage is the sum of the weights of **merged** WPs only (work on a branch or in review doesn't count yet — this keeps the number honest).
@@ -495,12 +497,12 @@ H = Huzaifah, S = Sibghatullah. Week 1 = 9 Nov 2026. **%** = weight. **Needs** =
 | WP | Wk | % | Owner | Needs | Branch | What to build | Done when |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | WP-14 | 5–6 | 4 | S | WP-13 | `feat/wp14-benchmarking` | `evaluator.js`: size, llama-bench JSON, 3 runs, unstable flag, peak RAM | Metrics saved for each file |
-| WP-15 | 5–6 | 3 | H | WP-12 | `feat/wp15-results-table` | `GET /api/jobs/:id/results`, Results comparison table | Real numbers on the website |
-| WP-16 | 7 | 3 | S | WP-14 | `feat/wp16-perplexity-demo-mode` | Perplexity, change vs F16, saved settings, demo mode, **delete F16 after evaluation** | All metrics present; no F16 left behind |
+| WP-15 | 5–6 | 3 | H | WP-12 | `feat/wp15-results-table` | `GET /api/jobs/:id/results`, Results comparison table (incl. task accuracy % vs F16 once E2 exists; measured vs estimated size, E1) | Real numbers on the website |
+| WP-16 | 7 | 3 | S | WP-14 | `feat/wp16-perplexity-demo-mode` | Perplexity, change vs F16, saved settings, demo mode, **delete F16 after evaluation**; **+ HellaSwag task accuracy (E2)**; optional imatrix Q4 (E5) | All metrics present (incl. task accuracy); no F16 left behind |
 | WP-17 | 7 | 3 | H | WP-15 | `feat/wp17-charts-downloads` | 3 charts, Demo badge, machine name; Downloads page + download endpoint | Charts render; a GGUF downloads |
-| WP-18 | 8–9 | 4 | S | WP-16 | `feat/wp18-recommender` | `recommender.js` rules 1–6 + explanation + tests, called by the pipeline | All rule tests pass |
+| WP-18 | 8–9 | 4 | S | WP-16 | `feat/wp18-recommender` | `recommender.js` rules 1–6 + explanation + tests, called by the pipeline; **+ tests against baselines "always Q4" and "largest that fits" (E3)** | All rule tests pass; baseline comparison test passes |
 | WP-19 | 8–9 | 3 | H | WP-17, WP-18 | `feat/wp19-recommendation-export` | Recommendation card, `POST /recommend`, profile dropdown, CSV/JSON export | Profile change updates recommendation |
-| WP-20 | 10 | 2 | S | WP-18, WP-19 | `chore/wp20-benchmark-report-remove-fake` | Full catalog run, repeatability check, `benchmark-report.md`; **remove the fake pipeline** (7.7) | Report done; no fake code left |
+| WP-20 | 10 | 2 | S | WP-18, WP-19 | `chore/wp20-benchmark-report-remove-fake` | Full catalog run, repeatability check, `benchmark-report.md` **with the evaluation tables: size estimate error (E1), recommender vs baselines (E3), two laptops (E4)**; **remove the fake pipeline** (7.7) | Report done with E1/E3/E4; no fake code left |
 
 ### Phase 4 — Complete product + mobile app (weeks 11–18, 18 Jan – 14 Mar) → `v0.4.0-M4` = 86 %
 | WP | Wk | % | Owner | Needs | Branch | What to build | Done when |
