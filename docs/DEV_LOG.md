@@ -5,6 +5,46 @@ problems, next step.
 
 ---
 
+## 15 Nov 2026 — Sibghatullah — WP-14 Benchmarking
+
+**Built**
+
+- `backend/worker/evaluator.js`: `benchmarkFile()` + `summarise()` → `metrics` (tpsPrompt,
+  tpsGen + std, peakRamMb, runs, unstable, settings); `spread()` = (fastest − slowest) / average.
+- `backend/worker/llamacpp.js`: `benchmark()` — `llama-bench -p 512 -n 128 -r 3 -ngl 0 -o json`
+  (demo mode 128 / 32; `-t` from `BENCH_THREADS` if set); stderr → job log; `E-BENCH-01`.
+- `backend/utils/peakMemory.js`: `watchPeakMemory(pid)` — OS peak counter (Windows
+  PeakWorkingSet64 via one PowerShell loop, Linux VmHWM).
+- `runCommand`: `onSpawn(child)` option. `pipeline.js`: BENCHMARKING stage after the smoke tests.
+  `cli.js`: speed / RAM columns. `.env.example`: `BENCH_THREADS`. CLAUDE.md: RAM method.
+- Tests: evaluator (real llama-bench JSON), benchmark command, pipeline stage, a REAL RAM-watcher
+  test (a program fills 200 MB) — 136 in total.
+
+**Real check:** CLI on SmolLM2-135M — F16 2209 / 105 tok/s, 315 MB; Q5_K_M 1524 / 201 tok/s,
+169 MB; Q4_K_M 990 / 209 tok/s, 170 MB; all stable; same speeds as the WP-02 hand measurement and
+the same SHA-256 as before. Then API + worker on Atlas: a website job went … → BENCHMARKING →
+COMPLETED, and `GET /api/jobs/:id/results` (WP-15) showed the real numbers vs F16 (Q4_K_M:
+size −61 %, generation +102 %, RAM −46 %). The worker also finished a job that had been waiting
+in the shared queue since 18:50 (started from a website while no worker was running).
+
+**Decisions and why**
+
+- **OS peak counter instead of pidusage.** pidusage reads memory through `wmic`, which this
+  Windows 11 build (26200) no longer has; and a peak counter can't miss a short spike between
+  samples. Same method as the WP-02 hand measurement (peak working set).
+- **Benchmark only files that passed the smoke test**, F16 included (it is the baseline).
+- **A failed benchmark doesn't fail the job** — that file just has no numbers (`E-BENCH-01` in
+  the log).
+- **Threads:** llama.cpp's default (20 = physical cores here); the value used is saved.
+
+**Problems:** the RAM watcher could miss the last numbers when the benchmark ended → `stop()` now
+waits (max 3 s) for the watcher to finish. Peak RAM in llama-bench (512 + 128 tokens) is lower
+than WP-02's 4096-token run — explained in LEARNING_NOTES §9.
+
+**Next step:** PR `sibghatullah` → `main` (closes #15). Then WP-16.
+
+---
+
 ## 15 Nov 2026 — Huzaifah — WP-15 Results table
 
 **Built:** `utils/sizeEstimate.js` (shared by preflight + results), `services/resultsService.js`,

@@ -90,7 +90,7 @@ If it's wrong, stop and help fix it before any commit.
 | Background jobs | A **separate Node process** `backend/worker/worker.js` that picks the oldest `QUEUED` job from MongoDB | No Redis needed |
 | Model tools | **llama.cpp** at one pinned release tag (**b12376**): official Windows CPU build; built from source on Linux | `npm run setup:llamacpp` |
 | Python (tool only) | Python venv inside the llama.cpp folder — runs `convert_hf_to_gguf.py` and `hf download` | We write no Python |
-| Process RAM | **pidusage** | |
+| Process RAM | the operating system's **peak memory counter** (`backend/utils/peakMemory.js`) | Windows `PeakWorkingSet64`, Linux `VmHWM`. Replaces pidusage (WP-14): it needs `wmic`, which Windows 11 no longer has, and sampling can miss short peaks |
 | Dev tools | **nodemon**, **concurrently**, **cross-env**, **dotenv** | Scripts must run on Windows and Linux |
 | Tests | **Vitest** + **supertest** + **mongodb-memory-server** | |
 | Lint/format | ESLint + Prettier | |
@@ -236,7 +236,7 @@ llama-perplexity -m <file> -f data/wikitext/wiki.test.raw -c 512 --chunks 100 -t
 | Convert | F16 GGUF; save size, SHA-256, time |
 | Quantize | each level; one failure doesn't stop the others |
 | Smoke test | fixed prompt, seed 42, temp 0, 32 tokens; valid if it exits normally in 120 s and prints text |
-| Benchmark | llama-bench JSON, 3 runs averaged; `unstable` if > 10 % variation; peak RAM via pidusage every 100 ms |
+| Benchmark | llama-bench JSON, 3 runs averaged; `unstable` if fastest and slowest run differ by > 10 %; peak RAM = the OS peak counter of the llama-bench process (read every 200 ms); a failed benchmark (`E-BENCH-01`) only leaves that file without numbers |
 | Perplexity | fixed local WikiText-2 (save SHA-256), context 512, 100 chunks (10 in demo mode) |
 | Clean-up | delete half-written files on failure/cancel; delete the downloaded snapshot after conversion; **delete the F16 file once evaluation is finished** (its metrics stay in the database); stop if free disk < 2 GB |
 

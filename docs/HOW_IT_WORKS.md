@@ -316,3 +316,16 @@ Progress page (job COMPLETED) ──"See results"──▶ /jobs/:id/results ─
 Only measured columns appear: a real job before WP-14/16 shows Size and Smoke test; fake jobs (and
 later real ones) show all five numbers. The recommendation block is basic for now; WP-19 adds the
 full card, the profile dropdown and export.
+
+## WP-14 — Benchmarking
+
+| File                          | What it does                                                                                                                                                                                                                                  |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/worker/llamacpp.js`  | `benchmark(file)`: `llama-bench -p 512 -n 128 -r 3 -ngl 0 -o json` (demo mode `-p 128 -n 32`; `-t` only if `BENCH_THREADS` is set). Only stderr goes to the job log; stdout is the JSON answer. Errors → `E-BENCH-01`.                        |
+| `backend/utils/peakMemory.js` | `watchPeakMemory(pid)` reads the OS peak counter of a running program every 200 ms (Windows `PeakWorkingSet64` via one PowerShell loop, Linux `/proc/<pid>/status` `VmHWM`); `await stop()` gives the peak in MB.                             |
+| `backend/worker/evaluator.js` | `benchmarkFile(file)`: runs the benchmark while watching its RAM; `summarise()` turns the JSON into `metrics` — `tpsPrompt`, `tpsGen` (+ std), `peakRamMb`, `runs`, `unstable` (runs differ > 10 %), `settings` (threads, sizes, CPU, build). |
+| `backend/worker/pipeline.js`  | New stage **BENCHMARKING** after the smoke tests, for every file that passed (F16 too, as the baseline). A failed benchmark is logged; the job continues.                                                                                     |
+| `backend/cli.js`              | The result table shows prompt / generation speed, peak RAM and stability.                                                                                                                                                                     |
+
+The metrics are saved on each variant by the worker, so Huzaifah's Results page
+(`GET /api/jobs/:id/results`) shows real speed and RAM numbers and their change vs F16.

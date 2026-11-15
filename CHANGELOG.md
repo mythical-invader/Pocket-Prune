@@ -5,15 +5,22 @@ All notable changes, grouped by release. Format based on
 
 ## [Unreleased]
 
+### Added
+
+- WP-14: benchmarking — new BENCHMARKING stage: `llama-bench` (pp512 + tg128, 3 runs) on every
+  file that passed the smoke test, prompt and generation speed with spread, `unstable` flag,
+  peak RAM from the operating system's peak counter, settings saved with every result;
+  `BENCH_THREADS`, `E-BENCH-01`, speed columns in `npm run pipeline`.
+
+- WP-15: Results — `GET /api/jobs/:id/results` (every file vs F16 in %, size estimate vs real) and the
+  Results page with the `MetricsTable` comparison.
+
 ## [0.2.0-M2] — 2026-11-15
 
 Phase 2 complete: a real compression job from the website, end to end (40 %). See
 [docs/release-notes/M2.md](docs/release-notes/M2.md).
 
 ### Added
-
-- WP-15: Results — `GET /api/jobs/:id/results` (every file vs F16 in %, size estimate vs real) and the
-  Results page with the `MetricsTable` comparison.
 
 - WP-13: pipeline hardening — timeouts stop the whole process tree, 2 GB disk reserve checked
   before each heavy step (E-DISK-01), unfinished jobs leave no files, downloads deleted after

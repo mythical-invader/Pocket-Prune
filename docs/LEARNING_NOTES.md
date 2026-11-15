@@ -23,7 +23,7 @@ before starting the work package that needs it — and use it to prepare for the
 
    8d. [Comparing with F16: "change vs baseline" (WP-15)](#8d-comparing-with-f16-change-vs-baseline-wp-15)
 
-9. Benchmarking: tokens per second and peak RAM — _WP-14_
+9. [Benchmarking: tokens per second and peak RAM (WP-14)](#9-benchmarking-tokens-per-second-and-peak-ram-wp-14)
 10. Perplexity — _WP-16_
 11. The recommendation rules — _WP-18_
 12. Passwords and JWT login — _WP-21_
@@ -589,3 +589,51 @@ quality. The Results page colours good changes green and bad ones red.
 **Estimate vs real (evaluation E1):** before a job the site guesses each size from "bits per
 weight". The Results table shows that guess under the real size, e.g. "est. 79 MB (−21.2 %)" — the
 guess was 21 % too small for this tiny model.
+
+## 9. Benchmarking: tokens per second and peak RAM (WP-14)
+
+The smoke test proves a file **works**. Benchmarking measures **how well** it runs on this machine,
+with `llama-bench`:
+
+| Number                                     | What it means                                              | Why it matters                                                       |
+| ------------------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Prompt speed** (tok/s, test `pp512`)     | how fast the model _reads_ 512 tokens of input             | long questions, documents                                            |
+| **Generation speed** (tok/s, test `tg128`) | how fast it _writes_ 128 tokens                            | what a user feels as "speed"                                         |
+| **Peak RAM** (MB)                          | the most memory the program used                           | does it fit on the device?                                           |
+| **Unstable**                               | fastest and slowest of the 3 runs differ by more than 10 % | the number can't be trusted (laptop busy, overheating, power saving) |
+
+```bash
+llama-bench -m <file> -p 512 -n 128 -r 3 -ngl 0 -o json     # demo mode: -p 128 -n 32
+```
+
+**Why 3 runs?** One run can be unlucky (another program, the CPU warming up). Three runs give an
+average and a _spread_: `(fastest − slowest) / average`. Example from our real run (Q4_K_M):
+generation 193, 201, 206 tok/s → average 200, spread 6.6 % → stable.
+
+**Why every result saves its settings.** Threads, test sizes, CPU and llama.cpp build are stored
+with the numbers (REQ-21). "200 tok/s" only means something if you know it was 20 threads, CPU
+only, 128 tokens, b12376.
+
+**Peak RAM — how we measure it.** The operating system already remembers the **peak** memory of
+every process (Windows: _PeakWorkingSet_, Linux: _VmHWM_ = "high water mark"). We read that
+counter every 200 ms while llama-bench runs. Reading a peak counter is better than sampling the
+current memory, because a short spike between two samples can't be missed. (The plan said
+`pidusage`; on Windows it needs the old `wmic` tool, which Windows 11 has removed.)
+
+**What we measured** (SmolLM2-135M, i7-14700HX, 20 threads, b12376):
+
+| File   | Prompt speed | Generation speed | Peak RAM |
+| ------ | ------------ | ---------------- | -------- |
+| F16    | 2209 tok/s   | 105 tok/s        | 315 MB   |
+| Q5_K_M | 1524 tok/s   | 201 tok/s        | 169 MB   |
+| Q4_K_M | 990 tok/s    | 209 tok/s        | 170 MB   |
+
+- **Generation is ~2× faster** after quantizing: writing is limited by how fast weights come from
+  memory, and smaller weights arrive faster.
+- **Prompt reading is slower** (−55 % for Q4_K_M): reading is limited by calculation, and
+  quantized weights must be "unpacked" first. That is why we measure both.
+- **RAM drops ~46 %**, less than the file (−61 %), because RAM also holds the context (the
+  "working memory" for the text) which doesn't shrink.
+- The same numbers as the hand measurement in WP-02 (974 / 199 tok/s for Q4_K_M) → repeatable.
+- WP-02 showed 320 MB peak RAM for Q4_K_M because it measured with a 4096-token context;
+  llama-bench uses 512 + 128 tokens. Always compare RAM measured the same way.
