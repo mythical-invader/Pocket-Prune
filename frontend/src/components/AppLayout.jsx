@@ -6,7 +6,7 @@ import { Download, HelpCircle, History, Layers } from 'lucide-react';
 import StageStepper from './StageStepper.jsx';
 import { useJobDraft } from '../context/JobDraftContext.jsx';
 
-// The five steps of a compression job. Run and Results get their pages in WP-12 / WP-15.
+// The five steps of a compression job. Run = /jobs/:id (WP-12); Results gets its page in WP-15.
 export const PIPELINE_STEPS = [
   { key: 'model', label: 'Model', to: '/catalog' },
   { key: 'device', label: 'Device', to: '/profiles' },
@@ -14,6 +14,12 @@ export const PIPELINE_STEPS = [
   { key: 'run', label: 'Run' },
   { key: 'results', label: 'Results' },
 ];
+
+// Which rail step a page belongs to (-1 = not a job page, so no rail).
+function stepForPath(pathname) {
+  if (pathname.startsWith('/jobs/')) return 3; // Run
+  return PIPELINE_STEPS.findIndex((step) => step.to === pathname);
+}
 
 const NAV = [
   { to: '/history', label: 'History', icon: History },
@@ -24,10 +30,19 @@ const NAV = [
 export default function AppLayout() {
   const { pathname } = useLocation();
   const { draft } = useJobDraft();
-  const stepIndex = PIPELINE_STEPS.findIndex((step) => step.to === pathname);
+  const stepIndex = stepForPath(pathname);
   // A tick means the step is really finished, not just that it comes earlier.
-  const doneByStep = { model: !!draft.model, device: !!draft.profile };
-  const steps = PIPELINE_STEPS.map((step) => ({ ...step, done: doneByStep[step.key] ?? false }));
+  const doneByStep = {
+    model: !!draft.model,
+    device: !!draft.profile,
+    preflight: !!draft.lastJobId, // a job was started, so preflight passed
+  };
+  const steps = PIPELINE_STEPS.map((step) => ({
+    ...step,
+    // "Run" links to the latest job started from this browser.
+    to: step.key === 'run' && draft.lastJobId ? `/jobs/${draft.lastJobId}` : step.to,
+    done: doneByStep[step.key] ?? false,
+  }));
 
   return (
     <>
