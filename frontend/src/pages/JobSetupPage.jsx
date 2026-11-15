@@ -1,12 +1,13 @@
 // JobSetupPage.jsx — step 3 "Preflight": choose the quantization levels (with expected sizes),
 // accept the licence, and run the preflight checks on the server. Each check shows passed or
-// failed with its reason, fix and error code; when it passes, "Start compression" creates the job.
-// SRS: REQ-6 – REQ-10. Owner: Huzaifah (WP-07, WP-08, WP-10).
-import { Link } from 'react-router-dom';
+// failed with its reason, fix and error code; when it passes, "Start compression" creates the job
+// and opens its live progress page.
+// SRS: REQ-6 – REQ-10. Owner: Huzaifah (WP-07, WP-08, WP-10, WP-12).
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { CheckCircle2, Circle, ListChecks, Play, XCircle } from 'lucide-react';
 import { useJobDraft } from '../context/JobDraftContext.jsx';
-import { createJob, getJob, runPreflight } from '../services/api.js';
+import { createJob, runPreflight } from '../services/api.js';
 import { estimateSizeMb, formatMb, LEVEL_HINTS } from '../utils/format.js';
 import PageHeader from '../components/PageHeader.jsx';
 import Card from '../components/Card.jsx';
@@ -32,13 +33,13 @@ const PLANNED_CHECKS = [
 ];
 
 export default function JobSetupPage() {
-  const { draft, setLevels } = useJobDraft();
+  const { draft, setLevels, setLastJobId } = useJobDraft();
+  const navigate = useNavigate();
   const [licenceAccepted, setLicenceAccepted] = useState(false);
   const [result, setResult] = useState(null); // { passed, checks } from the server
   const [running, setRunning] = useState(false);
   const [error, setError] = useState(null);
   const [starting, setStarting] = useState(false);
-  const [createdJob, setCreatedJob] = useState(null); // the job just started, with queue position
   const { model, profile, levels } = draft;
 
   if (!model || !profile) {
@@ -76,7 +77,6 @@ export default function JobSetupPage() {
   async function preflight() {
     setRunning(true);
     setError(null);
-    setCreatedJob(null);
     try {
       setResult(await runPreflight(jobRequest));
     } catch (err) {
@@ -86,17 +86,16 @@ export default function JobSetupPage() {
     }
   }
 
-  // Create the job (the server runs preflight again), then read its queue position.
+  // Create the job (the server runs preflight again), then go to its live progress page.
   async function start() {
     setStarting(true);
     setError(null);
     try {
       const { jobId } = await createJob(jobRequest);
-      setCreatedJob(await getJob(jobId));
-      setResult(null); // a new job needs a fresh preflight
+      setLastJobId(jobId);
+      navigate(`/jobs/${jobId}`);
     } catch (err) {
       setError(err);
-    } finally {
       setStarting(false);
     }
   }
@@ -216,23 +215,6 @@ export default function JobSetupPage() {
               Start compression
             </Button>
           </div>
-
-          {createdJob && (
-            <div className="alert alert--success section-gap" role="status">
-              <CheckCircle2 size={20} className="alert__icon" aria-hidden />
-              <div className="alert__body">
-                <p className="alert__title">
-                  Job started — waiting in the queue
-                  {createdJob.queuePosition ? ` (position ${createdJob.queuePosition})` : ''}.
-                </p>
-                <p className="alert__hint">
-                  The worker picks it up and compresses {createdJob.model.displayName} to{' '}
-                  {createdJob.quantLevels.join(' and ')}. You can leave this page.
-                </p>
-                <p className="alert__code num">Job ID {createdJob._id}</p>
-              </div>
-            </div>
-          )}
         </Card>
       </section>
 
@@ -240,11 +222,9 @@ export default function JobSetupPage() {
         <JobSummary
           footer={
             <p className="summary__note">
-              {createdJob
-                ? 'Job started. Run preflight again to start another one.'
-                : result?.passed
-                  ? 'Preflight passed. You can start the compression.'
-                  : 'Run preflight, then start the compression.'}
+              {result?.passed
+                ? 'Preflight passed. Start the compression to follow it live.'
+                : 'Run preflight, then start the compression.'}
             </p>
           }
         />

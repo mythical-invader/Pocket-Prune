@@ -5,7 +5,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'pocketprune.jobDraft';
-const EMPTY_DRAFT = { model: null, profile: null, levels: ['Q5_K_M', 'Q4_K_M'] };
+const EMPTY_DRAFT = {
+  model: null,
+  profile: null,
+  levels: ['Q5_K_M', 'Q4_K_M'],
+  lastJobId: null, // the latest job started from this browser (the rail's "Run" step links to it)
+};
 
 const JobDraftContext = createContext(null);
 
@@ -33,6 +38,7 @@ export function JobDraftProvider({ children }) {
     setModel: (model) => setDraft((d) => ({ ...d, model })),
     setProfile: (profile) => setDraft((d) => ({ ...d, profile })),
     setLevels: (levels) => setDraft((d) => ({ ...d, levels })),
+    setLastJobId: (lastJobId) => setDraft((d) => ({ ...d, lastJobId })),
     clearDraft: () => setDraft(EMPTY_DRAFT),
   };
 

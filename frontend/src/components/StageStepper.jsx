@@ -2,9 +2,10 @@
 // current one is filled blue. Used as the pipeline rail at the top of every job page
 // (Model → Device → Preflight → Run → Results) and later for job progress stages.
 // A step with `to` becomes a link. A step may say `done: true/false` itself (e.g. "a model is
-// chosen"); otherwise every step before the current one counts as done. Owner: Huzaifah.
+// chosen"); otherwise every step before the current one counts as done. `failed: true` shows a
+// red cross (where a job stopped). Owner: Huzaifah.
 import { Link } from 'react-router-dom';
-import { Check } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 export default function StageStepper({ steps, currentIndex, label = 'Steps' }) {
   return (
@@ -12,7 +13,13 @@ export default function StageStepper({ steps, currentIndex, label = 'Steps' }) {
       <ol className="stepper__list">
         {steps.map((step, i) => {
           const done = step.done ?? i < currentIndex;
-          const state = i === currentIndex ? 'current' : done ? 'done' : 'todo';
+          const state = step.failed
+            ? 'failed'
+            : i === currentIndex
+              ? 'current'
+              : done
+                ? 'done'
+                : 'todo';
           // The line after a step turns blue only when it leads to a step already reached,
           // so a blue line never points at an unfinished step.
           const next = steps[i + 1];
@@ -23,7 +30,13 @@ export default function StageStepper({ steps, currentIndex, label = 'Steps' }) {
           const content = (
             <>
               <span className="stepper__dot num" aria-hidden>
-                {state === 'done' ? <Check size={16} strokeWidth={2.5} /> : i + 1}
+                {state === 'done' ? (
+                  <Check size={16} strokeWidth={2.5} />
+                ) : state === 'failed' ? (
+                  <X size={16} strokeWidth={2.5} />
+                ) : (
+                  i + 1
+                )}
               </span>
               <span className="stepper__label">{step.label}</span>
             </>
