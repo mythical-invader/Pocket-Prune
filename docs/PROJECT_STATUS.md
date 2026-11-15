@@ -19,20 +19,20 @@ _Last updated: 15 Nov 2026 — Huzaifah (WP-10 merged, design polish)._
 Status values: `not-started` · `in-progress` · `in-review` · `merged`. Weights and dependencies live in
 [progress.json](progress.json).
 
-| WP                           | Title                                    | Owner | Status      | Branch / PR     | Notes                                                                                                             |
-| ---------------------------- | ---------------------------------------- | ----- | ----------- | --------------- | ----------------------------------------------------------------------------------------------------------------- |
-| WP-00                        | GitHub setup + shared Atlas database     | Both  | merged      | —               | Repo, labels, milestones, issues, collaborator; Atlas M0 shared + seeded; main protected (public repo) |
-| WP-01                        | Project setup                            | H     | merged      | #38             | Skeletons, scripts, docs, CI                                                                                      |
-| WP-02                        | llama.cpp setup + first hand compression | S     | merged      | #44             | Windows 11, llama.cpp b12376; SmolLM2-135M compressed by hand (3/3 smoke tests pass); revision OK                 |
-| WP-03                        | Backend core                             | H     | merged      | #39             | Models, errors, health, host profile                                                                              |
-| WP-04                        | Command runner                           | S     | merged      | #45             | runCommand, llamacpp, downloader + 22 tests; real run on SmolLM2-135M passes                                      |
-| WP-05                        | Catalog + profiles API                   | H     | merged      | #42             | Catalog, profiles CRUD, seed with pinned revisions                                                                |
-| WP-06                        | CLI pipeline + fake pipeline             | S     | merged      | #46             | pipeline.js + cli.js + fakePipeline.js; CLI makes 3 valid, reproducible files                                     |
-| WP-07                        | Website foundation                       | H     | merged      | #41             | Pipeline-rail layout, theme, components, Catalog/Profiles/Job Setup                                               |
-| WP-09                        | Catalog trials                           | S     | merged      | #47             | 7/8 models compress + pass smoke tests; Llama-3.2 needs HF token; validate-catalog 8/8 OK                         |
-| WP-08                        | Preflight                                | H     | merged      | #50             | 9 checks on the server, live checklist on Job Setup                                                               |
-| WP-10                        | Jobs API                                 | H     | merged      | #52             | Create (202, preflight again), list, status + 50 log lines + queue position, 2-job limit                          |
-| WP-11 – WP-32, WP-M1 – WP-M4 | see [progress.json](progress.json)       |       | not-started |                 | Phases 2–5                                                                                                        |
+| WP                           | Title                                    | Owner | Status      | Branch / PR | Notes                                                                                                  |
+| ---------------------------- | ---------------------------------------- | ----- | ----------- | ----------- | ------------------------------------------------------------------------------------------------------ |
+| WP-00                        | GitHub setup + shared Atlas database     | Both  | merged      | —           | Repo, labels, milestones, issues, collaborator; Atlas M0 shared + seeded; main protected (public repo) |
+| WP-01                        | Project setup                            | H     | merged      | #38         | Skeletons, scripts, docs, CI                                                                           |
+| WP-02                        | llama.cpp setup + first hand compression | S     | merged      | #44         | Windows 11, llama.cpp b12376; SmolLM2-135M compressed by hand (3/3 smoke tests pass); revision OK      |
+| WP-03                        | Backend core                             | H     | merged      | #39         | Models, errors, health, host profile                                                                   |
+| WP-04                        | Command runner                           | S     | merged      | #45         | runCommand, llamacpp, downloader + 22 tests; real run on SmolLM2-135M passes                           |
+| WP-05                        | Catalog + profiles API                   | H     | merged      | #42         | Catalog, profiles CRUD, seed with pinned revisions                                                     |
+| WP-06                        | CLI pipeline + fake pipeline             | S     | merged      | #46         | pipeline.js + cli.js + fakePipeline.js; CLI makes 3 valid, reproducible files                          |
+| WP-07                        | Website foundation                       | H     | merged      | #41         | Pipeline-rail layout, theme, components, Catalog/Profiles/Job Setup                                    |
+| WP-09                        | Catalog trials                           | S     | merged      | #47         | 7/8 models compress + pass smoke tests; Llama-3.2 needs HF token; validate-catalog 8/8 OK              |
+| WP-08                        | Preflight                                | H     | merged      | #50         | 9 checks on the server, live checklist on Job Setup                                                    |
+| WP-10                        | Jobs API                                 | H     | merged      | #52         | Create (202, preflight again), list, status + 50 log lines + queue position, 2-job limit               |
+| WP-11 – WP-32, WP-M1 – WP-M4 | see [progress.json](progress.json)       |       | not-started |             | Phases 2–5                                                                                             |
 
 ## What works now
 
