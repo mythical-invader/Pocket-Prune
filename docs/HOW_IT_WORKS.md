@@ -288,6 +288,17 @@ Start compression ──▶ /jobs/:id ──every 2 s──▶ GET /api/jobs/:id
 **Which stages get a tick:** every stage before the furthest one the job really reached (from its
 status, its log lines and whether files exist). A stage the pipeline doesn't run yet stays grey.
 
+## WP-13 — Pipeline hardening
+
+| File                           | What changed                                                                                                                                                                                                                                                               |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/utils/runCommand.js`  | `killTree(child)`: a timeout stops the tool **and every program it started** (`taskkill /T /F` on Windows, the process group on Linux).                                                                                                                                    |
+| `backend/worker/pipeline.js`   | `ensureDiskReserve()` before download, convert and each quantization (E-DISK-01 below `DISK_RESERVE_MB`); any error or cancel deletes `data/artifacts/<jobId>/`; after conversion the download is deleted unless the model `isDemo`. `jobDir(jobId)` gives a job's folder. |
+| `backend/worker/downloader.js` | A half-finished download stays for resume (REQ-11); a refused gated download (E-HF-01) is removed.                                                                                                                                                                         |
+| `backend/worker/worker.js`     | `removeJobFiles()` on every FAILED / CANCELLED job and every recovered (crashed) job — also covers the fake pipeline; empties `data/tmp` at start.                                                                                                                         |
+| `scripts/regression.js`        | `npm run regression`: real pipeline on the 3 demo models, sizes compared with earlier measurements (±1 %), plus a 1-second-limit stop test; writes `docs/regression-M2.md`.                                                                                                |
+| Tests                          | +14: process tree, clean-up on failure / cancel / E-VAL-01, disk reserve before and during a job, snapshot kept for demo models, download resume, worker clean-up.                                                                                                         |
+
 ## WP-15 — Results table
 
 ```

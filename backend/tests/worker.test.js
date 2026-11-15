@@ -2,26 +2,50 @@
 // COMPLETED / FAILED / CANCELLED endings, recovery of stuck jobs, real vs fake pipeline.
 // Both pipelines are replaced by small mocks, so no llama.cpp or internet is needed.
 // SRS: REQ-11 – REQ-16, REQ-26. Owner: Sibghatullah (WP-11).
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import mongoose from 'mongoose';
 import { vi } from 'vitest';
+import { settings } from '../config/settings.js';
 import CatalogModel from '../models/CatalogModel.js';
 import Job from '../models/Job.js';
 import JobEvent from '../models/JobEvent.js';
-import { runPipeline as realPipeline } from '../worker/pipeline.js';
+import { jobDir, runPipeline as realPipeline } from '../worker/pipeline.js';
 import { runPipeline as fakePipeline } from '../worker/fakePipeline.js';
 import { pickNextJob, processJob, recoverStuckJobs, workOnce, STALE_MS } from '../worker/worker.js';
 import { appError } from '../utils/errors.js';
 import { clearTestDb, startTestDb, stopTestDb } from './helpers/testDb.js';
 
-vi.mock('../worker/pipeline.js', () => ({ runPipeline: vi.fn() }));
+// Keep the real jobDir() (where a job's files live); only the pipeline run is replaced.
+vi.mock('../worker/pipeline.js', async (original) => ({
+  ...(await original()),
+  runPipeline: vi.fn(),
+}));
 vi.mock('../worker/fakePipeline.js', () => ({ runPipeline: vi.fn() }));
 
-beforeAll(startTestDb);
+// A throw-away data folder, so the clean-up tests never touch the real data/.
+const tmpData = fs.mkdtempSync(path.join(os.tmpdir(), 'pp-worker-'));
+beforeAll(async () => {
+  settings.dataDir = tmpData;
+  await startTestDb();
+});
 afterEach(async () => {
   await clearTestDb();
   vi.clearAllMocks();
 });
-afterAll(stopTestDb);
+afterAll(async () => {
+  await stopTestDb();
+  fs.rmSync(tmpData, { recursive: true, force: true });
+});
+
+// Pretend a job already wrote some files, like a real pipeline would.
+function makeJobFiles(jobId) {
+  const dir = jobDir(jobId);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'model-F16.gguf'), 'half-written');
+  return dir;
+}
 
 const VARIANTS = [
   { level: 'F16', filePath: 'x-F16.gguf', fileSizeMb: 258.3, sha256: 'a', smokePassed: true },
@@ -177,6 +201,47 @@ describe('recoverStuckJobs', () => {
     expect((await Job.findById(stuck._id)).errorCode).toBe('E-WORKER-01');
     expect((await Job.findById(alive._id)).status).toBe('QUANTIZING');
     expect((await Job.findById(waiting._id)).status).toBe('QUEUED');
+  });
+});
+
+describe('clean-up of jobs that do not finish (WP-13)', () => {
+  it('a FAILED job leaves no files behind (also with the fake pipeline)', async () => {
+    const queued = await queueJob();
+    const dir = makeJobFiles(queued._id);
+    fakePipeline.mockRejectedValue(appError('E-QNT-01'));
+    await processJob(await pickNextJob(), { useFake: true });
+
+    expect((await Job.findById(queued._id)).status).toBe('FAILED');
+    expect(fs.existsSync(dir)).toBe(false);
+  });
+
+  it('a CANCELLED job leaves no files behind', async () => {
+    const queued = await queueJob();
+    const dir = makeJobFiles(queued._id);
+    realPipeline.mockImplementation(async (job, report) => {
+      await Job.updateOne({ _id: job._id }, { cancelRequested: true });
+      await report.stage('CONVERTING', 'Converting');
+    });
+    await processJob(await pickNextJob(), { useFake: false });
+
+    expect((await Job.findById(queued._id)).status).toBe('CANCELLED');
+    expect(fs.existsSync(dir)).toBe(false);
+  });
+
+  it("a crashed worker's job loses its files when it is recovered", async () => {
+    const old = new Date(Date.now() - STALE_MS - 1000);
+    const stuck = await queueJob({ status: 'CONVERTING', heartbeatAt: old });
+    const dir = makeJobFiles(stuck._id);
+    await recoverStuckJobs();
+    expect(fs.existsSync(dir)).toBe(false);
+  });
+
+  it('a COMPLETED job keeps its files', async () => {
+    const queued = await queueJob();
+    const dir = makeJobFiles(queued._id);
+    realPipeline.mockImplementation(goodPipeline);
+    await processJob(await pickNextJob(), { useFake: false });
+    expect(fs.existsSync(dir)).toBe(true);
   });
 });
 

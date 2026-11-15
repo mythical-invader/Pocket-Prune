@@ -1,7 +1,9 @@
 // downloader.js — downloads one catalog model from Hugging Face with the `hf` tool.
 // Only safetensors weights + tokenizer + config, at the pinned revision (never .bin files).
 // If the same revision is already on disk it is reused instead of downloaded again.
-// SRS: REQ-2 (pinned revision), REQ-11 (safetensors only, resume). Owner: Sibghatullah (WP-04).
+// A half-finished download stays on disk so the next try resumes it; the pipeline deletes the
+// download after conversion (REQ-15).
+// SRS: REQ-2 (pinned revision), REQ-11 (safetensors only, resume). Owner: Sibghatullah (WP-04, WP-13).
 import fs from 'node:fs';
 import path from 'node:path';
 import { settings } from '../config/settings.js';
@@ -42,21 +44,29 @@ export async function downloadModel(hfRepoId, revision, { onLine } = {}) {
     HF_HUB_DISABLE_PROGRESS_BARS: '1', // progress bars would flood the job log
   };
 
-  const result = await runCommand(hfPath(), args, {
-    env,
-    onLine,
-    timeoutMs: settings.timeoutsMin.download * 60_000,
-  });
-  if (result.code !== 0) {
-    // 401/403 = the model is gated and we have no (valid) token.
-    const text = result.lines.join('\n');
-    if (/\b(401|403)\b|gated|restricted/i.test(text)) throw appError('E-HF-01');
-    throw appError('E-HF-02');
+  try {
+    const result = await runCommand(hfPath(), args, {
+      env,
+      onLine,
+      timeoutMs: settings.timeoutsMin.download * 60_000,
+    });
+    if (result.code !== 0) {
+      // 401/403 = the model is gated and we have no (valid) token.
+      const text = result.lines.join('\n');
+      if (/\b(401|403)\b|gated|restricted/i.test(text)) throw appError('E-HF-01');
+      throw appError('E-HF-02');
+    }
+    if (!fs.existsSync(dir) || !fs.readdirSync(dir).some((f) => f.endsWith('.safetensors'))) {
+      throw appError('E-HF-02', {
+        message: 'Download finished but no .safetensors file was found.',
+      });
+    }
+    fs.writeFileSync(marker, revision);
+    return { dir, reused: false, durationSec: result.durationSec };
+  } catch (err) {
+    // A half-finished download is KEPT on purpose: the next try resumes it instead of starting
+    // again (REQ-11). Only a refused gated download is removed — it holds nothing useful.
+    if (err.code === 'E-HF-01') fs.rmSync(dir, { recursive: true, force: true });
+    throw err;
   }
-  if (!fs.readdirSync(dir).some((f) => f.endsWith('.safetensors'))) {
-    throw appError('E-HF-02', { message: 'Download finished but no .safetensors file was found.' });
-  }
-
-  fs.writeFileSync(marker, revision);
-  return { dir, reused: false, durationSec: result.durationSec };
 }

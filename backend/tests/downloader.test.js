@@ -89,6 +89,26 @@ describe('downloadModel', () => {
     await expect(downloadModel(REPO, REV)).rejects.toMatchObject({ code: 'E-HF-01' });
   });
 
+  it('keeps a half-finished download so the next try can resume it (REQ-11)', async () => {
+    runCommand.mockImplementation(async () => {
+      fs.mkdirSync(modelDir(REPO), { recursive: true });
+      fs.writeFileSync(path.join(modelDir(REPO), 'model-00001-of-00002.safetensors'), 'part');
+      return { code: 1, stdout: '', lines: ['Connection reset'] };
+    });
+    await expect(downloadModel(REPO, REV)).rejects.toMatchObject({ code: 'E-HF-02' });
+    expect(fs.existsSync(path.join(modelDir(REPO), 'model-00001-of-00002.safetensors'))).toBe(true);
+    expect(fs.existsSync(path.join(modelDir(REPO), '.pocketprune-revision'))).toBe(false); // not reusable
+  });
+
+  it('removes the empty folder of a refused gated download (WP-13)', async () => {
+    runCommand.mockImplementation(async () => {
+      fs.mkdirSync(modelDir(REPO), { recursive: true });
+      return { code: 1, stdout: '', lines: ['403 Forbidden: gated repo'] };
+    });
+    await expect(downloadModel(REPO, REV)).rejects.toMatchObject({ code: 'E-HF-01' });
+    expect(fs.existsSync(modelDir(REPO))).toBe(false);
+  });
+
   it('throws E-HF-02 when no safetensors file arrived', async () => {
     runCommand.mockImplementation(async () => {
       fs.mkdirSync(modelDir(REPO), { recursive: true });

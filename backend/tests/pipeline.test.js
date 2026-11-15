@@ -1,6 +1,7 @@
 // pipeline.test.js — checks the order of stages, the saved variants and the failure rules of
 // pipeline.js. The downloader and llama.cpp adapter are mocked (no internet, no llama.cpp);
-// the mocks write tiny files so sizes and SHA-256 are real. Owner: Sibghatullah (WP-06).
+// the mocks write tiny files so sizes and SHA-256 are real. Free disk is mocked too.
+// Owner: Sibghatullah (WP-06; clean-up and disk reserve WP-13).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -9,8 +10,10 @@ import { settings } from '../config/settings.js';
 import { downloadModel } from '../worker/downloader.js';
 import { convertToF16, quantize, smokeTest } from '../worker/llamacpp.js';
 import { runPipeline } from '../worker/pipeline.js';
+import { getFreeDiskMb } from '../utils/systemInfo.js';
 
 vi.mock('../worker/downloader.js', () => ({ downloadModel: vi.fn() }));
+vi.mock('../utils/systemInfo.js', () => ({ getFreeDiskMb: vi.fn() }));
 vi.mock('../worker/llamacpp.js', () => ({
   checkInstalled: vi.fn(() => 'b12376'),
   convertToF16: vi.fn(),
@@ -55,6 +58,7 @@ beforeEach(() => {
     return { durationSec: 1 };
   });
   smokeTest.mockResolvedValue({ passed: true, output: 'Paris.', durationSec: 0.5 });
+  getFreeDiskMb.mockResolvedValue(100_000); // plenty of free disk unless a test says otherwise
 });
 afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
@@ -119,5 +123,66 @@ describe('runPipeline (real pipeline, mocked tools)', () => {
     convertToF16.mockRejectedValue(Object.assign(new Error('bad'), { code: 'E-CONV-01' }));
     await expect(runPipeline(job, recorder())).rejects.toMatchObject({ code: 'E-CONV-01' });
     expect(quantize).not.toHaveBeenCalled();
+  });
+});
+
+describe('runPipeline hardening (WP-13)', () => {
+  const outDir = () => path.join(tmp, 'artifacts', 'test-job');
+
+  it('deletes the job folder when a stage fails half-way (no junk left)', async () => {
+    convertToF16.mockImplementation(async (dir, out) => {
+      fs.writeFileSync(out, 'half-written F16'); // the tool wrote part of the file, then died
+      throw Object.assign(new Error('timed out'), { code: 'E-TIME-01' });
+    });
+    const report = recorder();
+    await expect(runPipeline(job, report)).rejects.toMatchObject({ code: 'E-TIME-01' });
+    expect(fs.existsSync(outDir())).toBe(false);
+    expect(report.logs.at(-1)).toMatchObject({ level: 'warn' });
+  });
+
+  it('deletes the finished files too when no level passes (E-VAL-01)', async () => {
+    smokeTest.mockResolvedValue({ passed: false, output: '' });
+    await expect(runPipeline(job, recorder())).rejects.toMatchObject({ code: 'E-VAL-01' });
+    expect(fs.existsSync(outDir())).toBe(false);
+  });
+
+  it('deletes the job folder when the job is cancelled between stages', async () => {
+    const report = recorder();
+    report.stage = async (status) => {
+      if (status === 'QUANTIZING') throw Object.assign(new Error('Cancelled'), { cancelled: true });
+    };
+    await expect(runPipeline(job, report)).rejects.toMatchObject({ cancelled: true });
+    expect(fs.existsSync(outDir())).toBe(false);
+  });
+
+  it('stops with E-DISK-01 before downloading when free disk is below the reserve', async () => {
+    getFreeDiskMb.mockResolvedValue(settings.diskReserveMb - 1);
+    await expect(runPipeline(job, recorder())).rejects.toMatchObject({ code: 'E-DISK-01' });
+    expect(downloadModel).not.toHaveBeenCalled();
+  });
+
+  it('stops before quantizing when the disk fills up during the job', async () => {
+    // plenty of space for download + convert, then the disk is nearly full
+    getFreeDiskMb
+      .mockResolvedValueOnce(50_000)
+      .mockResolvedValueOnce(50_000)
+      .mockResolvedValue(1_000);
+    await expect(runPipeline(job, recorder())).rejects.toMatchObject({ code: 'E-DISK-01' });
+    expect(quantize).not.toHaveBeenCalled();
+    expect(fs.existsSync(outDir())).toBe(false);
+  });
+
+  it('deletes the downloaded snapshot after conversion for normal models', async () => {
+    const snapshot = path.join(tmp, 'models', 'm');
+    fs.mkdirSync(snapshot, { recursive: true });
+    await runPipeline(job, recorder());
+    expect(fs.existsSync(snapshot)).toBe(false);
+  });
+
+  it('keeps the downloaded snapshot of demo models (fast live demos)', async () => {
+    const snapshot = path.join(tmp, 'models', 'm');
+    fs.mkdirSync(snapshot, { recursive: true });
+    await runPipeline({ ...job, model: { ...job.model, isDemo: true } }, recorder());
+    expect(fs.existsSync(snapshot)).toBe(true);
   });
 });

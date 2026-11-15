@@ -33,6 +33,63 @@ sizes-only job shows Size + Smoke test with the "not measured" note; an unfinish
 
 ---
 
+## 15 Nov 2026 — Sibghatullah — Phase 2 complete (M2, 40 %)
+
+- WP-13 merged (#61) after merging WP-12 from `main` (doc conflicts kept both sides; LEARNING_NOTES
+  WP-12 polling = 8b, WP-13 = 8c). Every Phase 2 WP is on `main` → **40 %**, the mid-term target,
+  22 days early.
+- `docs/release-notes/M2.md` for the tag `v0.2.0-M2`.
+
+**Next step:** rehearse the mid-term demo on both laptops (Atlas + the worker on the model machine).
+Phase 3: WP-14 (S) and WP-15 (H) are ready.
+
+---
+
+## 15 Nov 2026 — Sibghatullah — WP-13 Pipeline hardening
+
+**Built**
+
+- `runCommand.js`: `killTree()` — a timeout stops the tool and everything it started
+  (`taskkill /T /F` on Windows, the process group on Linux).
+- `pipeline.js`: `ensureDiskReserve()` before download, convert and each quantization
+  (E-DISK-01 below `DISK_RESERVE_MB` = 2 GB); any error or cancel deletes `data/artifacts/<jobId>/`;
+  the download is deleted after conversion unless the model is a demo model; `jobDir()`.
+- `downloader.js`: a refused gated download (E-HF-01) removes its empty folder.
+- `worker.js`: `removeJobFiles()` on FAILED / CANCELLED / recovered jobs (also covers the fake
+  pipeline); empties `data/tmp` at start.
+- `scripts/regression.js` (`npm run regression`) → `docs/regression-M2.md`.
+- 14 new tests — 111 in total.
+
+**Real check:** `npm run regression` → **PASS**: SmolLM2-135M (11 s), SmolLM2-360M (15 s),
+Qwen2.5-0.5B (19 s), every size identical to the WP-09 measurements, all smoke tests pass; the stop
+test (1-second conversion limit) ended with E-TIME-01 and no files. No python/llama process left
+running, demo downloads kept, nothing written to C:.
+
+**Decisions and why**
+
+- **Half-finished downloads are kept** — the SRS asks for resume support (REQ-11) and REQ-15's
+  "partial files" are the job's output files. A partial download has no `.pocketprune-revision`
+  marker, so it is never mistaken for a complete one; `hf` resumes it next time.
+- **Demo models keep their download** (CLAUDE.md §7.4: demo models are downloaded in advance);
+  every other model's download is deleted after conversion (§7.2, REQ-15).
+- **The worker cleans up too**, not only the pipeline: the fake pipeline has no clean-up, and a
+  crashed worker's job can only be cleaned by whoever recovers it.
+- **Regression compares sizes, not just "it ran"**: identical sizes show the pipeline is
+  reproducible; a llama.cpp upgrade or a changed flag would show up at once.
+
+**Problems**
+
+1. The first process-tree test passed even with the old "stop only the tool" code: on Windows a
+   Node child is tied to its parent and dies with it. Made the test's grandchild _detached_ on
+   Windows; now the test fails with the old code and passes with the fix.
+2. My first downloader change deleted half-finished downloads — that would have broken resume
+   (REQ-11). Changed after reading the SRS.
+
+**Next step:** PR `sibghatullah` → `main` (closes #14). After WP-12 (Huzaifah) is merged, Phase 2 is
+complete (40 %) → tag `v0.2.0-M2`.
+
+---
+
 ## 15 Nov 2026 — Huzaifah — WP-12 Job Progress page
 
 **Built:** `pages/JobProgressPage.jsx` (`/jobs/:id`), `utils/usePolling.js`, a `failed` state in

@@ -5,10 +5,19 @@ All notable changes, grouped by release. Format based on
 
 ## [Unreleased]
 
+## [0.2.0-M2] — 2026-11-15
+
+Phase 2 complete: a real compression job from the website, end to end (40 %). See
+[docs/release-notes/M2.md](docs/release-notes/M2.md).
+
 ### Added
 
 - WP-15: Results — `GET /api/jobs/:id/results` (every file vs F16 in %, size estimate vs real) and the
   Results page with the `MetricsTable` comparison.
+
+- WP-13: pipeline hardening — timeouts stop the whole process tree, 2 GB disk reserve checked
+  before each heavy step (E-DISK-01), unfinished jobs leave no files, downloads deleted after
+  conversion (demo models kept), `npm run regression` + `docs/regression-M2.md`.
 
 - WP-12: Job Progress page (`/jobs/:id`) — refreshes every 2 s: stage stepper, progress bar, elapsed
   time, queue position, log panel, error with fix and code, "FAKE DATA" badge, files made;
