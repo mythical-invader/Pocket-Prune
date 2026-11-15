@@ -30,6 +30,12 @@ export const ERRORS = {
     'Retry, or raise the TIMEOUT_* value in .env.',
   ],
   'E-WORKER-01': [500, 'The worker restarted while this job was running.', 'Retry the job.'],
+  // WP-14: a file's speed test failed. Only that file has no speed numbers; the job goes on.
+  'E-BENCH-01': [
+    500,
+    'The speed test (llama-bench) failed.',
+    'See the job log for the tool output.',
+  ],
   'E-AUTH-01': [401, 'Wrong email or password.', 'Check your details and try again.'],
   'E-LIMIT-01': [429, 'Too many active jobs.', 'Wait for a running job to finish.'],
   'E-QUOTA-01': [409, 'Storage limit reached.', 'Delete old files on the Downloads page.'],

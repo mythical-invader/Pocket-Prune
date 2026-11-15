@@ -49,8 +49,11 @@ async function main() {
       level: v.level,
       'size (MB)': v.fileSizeMb,
       smoke: v.smokePassed ? 'PASS' : 'FAIL',
+      'prompt tok/s': v.metrics?.tpsPrompt ?? '—',
+      'gen tok/s': v.metrics?.tpsGen ?? '—',
+      'peak RAM (MB)': v.metrics?.peakRamMb ?? '—',
+      stable: v.metrics ? (v.metrics.unstable ? 'NO' : 'yes') : '—',
       'sha256 (start)': v.sha256.slice(0, 12),
-      file: v.filePath,
     }))
   );
 }

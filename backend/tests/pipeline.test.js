@@ -11,9 +11,13 @@ import { downloadModel } from '../worker/downloader.js';
 import { convertToF16, quantize, smokeTest } from '../worker/llamacpp.js';
 import { runPipeline } from '../worker/pipeline.js';
 import { getFreeDiskMb } from '../utils/systemInfo.js';
+import { benchmarkFile } from '../worker/evaluator.js';
 
 vi.mock('../worker/downloader.js', () => ({ downloadModel: vi.fn() }));
 vi.mock('../utils/systemInfo.js', () => ({ getFreeDiskMb: vi.fn() }));
+vi.mock('../worker/evaluator.js', () => ({ benchmarkFile: vi.fn() }));
+
+const METRICS = { tpsPrompt: 990, tpsGen: 200, peakRamMb: 170, runs: 3, unstable: false };
 vi.mock('../worker/llamacpp.js', () => ({
   checkInstalled: vi.fn(() => 'b12376'),
   convertToF16: vi.fn(),
@@ -59,6 +63,7 @@ beforeEach(() => {
   });
   smokeTest.mockResolvedValue({ passed: true, output: 'Paris.', durationSec: 0.5 });
   getFreeDiskMb.mockResolvedValue(100_000); // plenty of free disk unless a test says otherwise
+  benchmarkFile.mockResolvedValue(METRICS);
 });
 afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
@@ -75,6 +80,9 @@ describe('runPipeline (real pipeline, mocked tools)', () => {
       'VALIDATING',
       'VALIDATING',
       'VALIDATING',
+      'BENCHMARKING',
+      'BENCHMARKING',
+      'BENCHMARKING',
     ]);
     expect(result.variants.map((v) => v.level)).toEqual(['F16', 'Q5_K_M', 'Q4_K_M']);
 
@@ -123,6 +131,48 @@ describe('runPipeline (real pipeline, mocked tools)', () => {
     convertToF16.mockRejectedValue(Object.assign(new Error('bad'), { code: 'E-CONV-01' }));
     await expect(runPipeline(job, recorder())).rejects.toMatchObject({ code: 'E-CONV-01' });
     expect(quantize).not.toHaveBeenCalled();
+  });
+});
+
+describe('runPipeline benchmarking (WP-14)', () => {
+  it('saves speed and RAM metrics on every file that passed the smoke test', async () => {
+    const result = await runPipeline(job, recorder());
+    expect(benchmarkFile).toHaveBeenCalledTimes(3); // F16 + Q5_K_M + Q4_K_M
+    for (const v of result.variants) expect(v.metrics).toEqual(METRICS);
+  });
+
+  it('does not benchmark a file that failed the smoke test', async () => {
+    smokeTest.mockImplementation(async (file) =>
+      file.endsWith('Q5_K_M.gguf') ? { passed: false, output: '' } : { passed: true, output: 'ok' }
+    );
+    const result = await runPipeline(job, recorder());
+    expect(benchmarkFile).toHaveBeenCalledTimes(2);
+    expect(result.variants.find((v) => v.level === 'Q5_K_M').metrics).toBeUndefined();
+  });
+
+  it('keeps the job going when one benchmark fails (that file just has no numbers)', async () => {
+    benchmarkFile.mockImplementation(async (file) => {
+      if (file.endsWith('F16.gguf'))
+        throw Object.assign(new Error('crashed'), { code: 'E-BENCH-01' });
+      return METRICS;
+    });
+    const report = recorder();
+    const result = await runPipeline(job, report);
+    expect(result.variants.find((v) => v.level === 'F16').metrics).toBeUndefined();
+    expect(result.variants.find((v) => v.level === 'Q4_K_M').metrics).toEqual(METRICS);
+    expect(report.logs).toContainEqual({
+      message: 'F16: benchmark failed (E-BENCH-01): crashed',
+      level: 'warn',
+    });
+  });
+
+  it('marks an unstable file with a warning in the log', async () => {
+    benchmarkFile.mockResolvedValue({ ...METRICS, unstable: true });
+    const report = recorder();
+    await runPipeline(job, report);
+    expect(report.logs.some((l) => l.level === 'warn' && l.message.includes('UNSTABLE'))).toBe(
+      true
+    );
   });
 });
 

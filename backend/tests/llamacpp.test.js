@@ -6,7 +6,14 @@ import path from 'node:path';
 import { vi } from 'vitest';
 import { settings } from '../config/settings.js';
 import { runCommand } from '../utils/runCommand.js';
-import { checkInstalled, convertToF16, quantize, smokeTest, toolPath } from '../worker/llamacpp.js';
+import {
+  benchmark,
+  checkInstalled,
+  convertToF16,
+  quantize,
+  smokeTest,
+  toolPath,
+} from '../worker/llamacpp.js';
 
 vi.mock('../utils/runCommand.js', () => ({ runCommand: vi.fn() }));
 
@@ -64,6 +71,63 @@ describe('quantize', () => {
   it('throws E-QNT-01 when llama-quantize fails', async () => {
     runCommand.mockResolvedValue(ok({ code: 1 }));
     await expect(quantize('a', 'b', 'Q5_K_M')).rejects.toMatchObject({ code: 'E-QNT-01' });
+  });
+});
+
+describe('benchmark (WP-14)', () => {
+  afterEach(() => {
+    settings.demoMode = false;
+    settings.benchThreads = 0;
+  });
+
+  it('runs llama-bench: pp512 + tg128, 3 repeats, CPU only, JSON output', async () => {
+    runCommand.mockResolvedValue(ok({ stdout: '[{"n_prompt":512}]' }));
+    const result = await benchmark('a.gguf', { runs: 3 });
+
+    const [program, args] = runCommand.mock.calls[0];
+    expect(program).toBe(toolPath('llama-bench'));
+    expect(args).toEqual([
+      '-m',
+      'a.gguf',
+      '-p',
+      '512',
+      '-n',
+      '128',
+      '-r',
+      '3',
+      '-ngl',
+      '0',
+      '-o',
+      'json',
+    ]);
+    expect(result.tests).toEqual([{ n_prompt: 512 }]);
+    expect(result.sizes).toEqual({ prompt: 512, gen: 128 });
+  });
+
+  it('uses the short test in demo mode and a fixed thread count when set', async () => {
+    settings.demoMode = true;
+    settings.benchThreads = 8;
+    runCommand.mockResolvedValue(ok({ stdout: '[]' }));
+    await benchmark('a.gguf');
+    const [, args] = runCommand.mock.calls[0];
+    expect(args).toEqual(expect.arrayContaining(['-p', '128', '-n', '32', '-t', '8']));
+  });
+
+  it('sends only stderr lines to the job log (stdout is the JSON answer)', async () => {
+    runCommand.mockResolvedValue(ok({ stdout: '[]' }));
+    const logged = [];
+    await benchmark('a.gguf', { onLine: (l) => logged.push(l) });
+    const { onLine } = runCommand.mock.calls[0][2];
+    onLine('loading model', 'stderr');
+    onLine('[{"avg_ts": 1}]', 'stdout');
+    expect(logged).toEqual(['loading model']);
+  });
+
+  it('throws E-BENCH-01 when llama-bench fails or prints no valid JSON', async () => {
+    runCommand.mockResolvedValue(ok({ code: 1 }));
+    await expect(benchmark('a.gguf')).rejects.toMatchObject({ code: 'E-BENCH-01' });
+    runCommand.mockResolvedValue(ok({ stdout: 'not json' }));
+    await expect(benchmark('a.gguf')).rejects.toMatchObject({ code: 'E-BENCH-01' });
   });
 });
 

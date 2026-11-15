@@ -29,6 +29,7 @@ export const settings = {
   dataDir: path.resolve(ROOT_DIR, env.DATA_DIR || 'data'),
   demoMode: env.DEMO_MODE === 'true',
   fakePipeline: env.FAKE_PIPELINE === 'true', // ⏳ temporary, removed in WP-20
+  benchThreads: number(env.BENCH_THREADS, 0), // 0 = llama.cpp's default (WP-14)
 
   maxActiveJobsPerUser: number(env.MAX_ACTIVE_JOBS_PER_USER, 2),
   userStorageLimitMb: number(env.USER_STORAGE_LIMIT_MB, 3072),

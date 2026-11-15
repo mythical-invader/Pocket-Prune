@@ -1,6 +1,7 @@
 // pipeline.js — the real compression pipeline for ONE job, stage by stage:
 //   DOWNLOADING → CONVERTING (F16) → QUANTIZING (each level) → VALIDATING (smoke test)
-// Benchmarking, perplexity and the recommendation are added in WP-14 / WP-16 / WP-18.
+//   → BENCHMARKING (speed + peak RAM, WP-14)
+// Perplexity and the recommendation are added in WP-16 / WP-18.
 // It returns the variants; the caller (cli.js or worker.js) saves them.
 // fakePipeline.js exports the same runPipeline(job, report), so the worker can use either.
 // Hardening (WP-13):
@@ -16,6 +17,7 @@ import { fileSizeMb, sha256File } from '../utils/fileHash.js';
 import { getFreeDiskMb } from '../utils/systemInfo.js';
 import { downloadModel } from './downloader.js';
 import { checkInstalled, convertToF16, quantize, smokeTest } from './llamacpp.js';
+import { benchmarkFile } from './evaluator.js';
 import { consoleReporter } from './reporter.js';
 
 // The folder for one job's files: data/artifacts/<jobId>/
@@ -100,6 +102,27 @@ async function runStages(job, report) {
 
   const goodLevels = variants.filter((v) => v.level !== 'F16' && v.smokePassed);
   if (goodLevels.length === 0) throw appError('E-VAL-01');
+
+  // 5. Benchmark every file that passed (F16 too: it is the baseline the results compare with).
+  // One failed benchmark only means that file has no speed numbers — the job goes on.
+  for (const variant of variants.filter((v) => v.smokePassed)) {
+    await report.stage('BENCHMARKING', `Measuring speed and RAM of ${variant.level}`);
+    try {
+      variant.metrics = await benchmarkFile(variant.filePath, { onLine });
+      const m = variant.metrics;
+      await report.log(
+        `${variant.level}: prompt ${m.tpsPrompt} tok/s, generation ${m.tpsGen} tok/s, ` +
+          `peak RAM ${m.peakRamMb ?? '?'} MB${m.unstable ? ' (UNSTABLE: runs differ > 10 %)' : ''}`,
+        m.unstable ? 'warn' : 'info'
+      );
+    } catch (err) {
+      if (err.cancelled) throw err;
+      await report.log(
+        `${variant.level}: benchmark failed (${err.code || 'E-BENCH-01'}): ${err.message}`,
+        'warn'
+      );
+    }
+  }
 
   return { variants, llamaCppRef: settings.llamaCppRef };
 }
