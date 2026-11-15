@@ -5,6 +5,11 @@ All notable changes, grouped by release. Format based on
 
 ## [Unreleased]
 
+### Added
+
+- WP-08: preflight — `POST /api/jobs/preflight` with 9 checks (catalog, levels, profile, disk, RAM,
+  licence, HF token, llama.cpp, 2-job limit) and the live checklist on the Job Setup page.
+
 ## [0.1.0-M1] — 2026-11-15
 
 Phase 1 complete: setup + first compression. See [docs/release-notes/M1.md](docs/release-notes/M1.md).

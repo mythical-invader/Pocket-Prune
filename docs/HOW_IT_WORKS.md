@@ -216,3 +216,18 @@ job.variants = result.variants; // then status COMPLETED (or FAILED with the err
 | `backend/utils/runCommand.js` | Now also points `TMP`/`TEMP`/`TMPDIR` of every tool to `data/tmp`, so no scratch files go to C:.                                                                                                  |
 | `backend/seedData.js`         | Measured F16 sizes (used by preflight); revisions confirmed.                                                                                                                                      |
 | `docs/catalog-trials.md`      | Result of compressing every catalog model with the CLI: sizes, smoke tests, works / doesn't.                                                                                                      |
+
+## WP-08 — Preflight
+
+| File                                   | What it does                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/services/preflightService.js` | One small function per check (`checkModel`, `checkLevels`, `checkProfile`, `checkDisk`, `checkRam`, `checkLicence`, `checkToken`, `checkTool`, `checkActiveJobs`), each returning a row `{ id, label, passed, message, code?, hint? }`. `runPreflight()` looks everything up once (model, your profile, your active jobs, free disk on `DATA_DIR`, free RAM) and returns `{ passed, checks }`. |
+| `backend/controllers/jobController.js` | `preflight` — reads `{ modelId, levels, profileId, licenseAccepted }` and answers with the checklist. A failed check is a normal answer (200), not an error.                                                                                                                                                                                                                                   |
+| `backend/routes/jobRoutes.js`          | `POST /api/jobs/preflight`, behind `protect`. More job routes arrive in WP-10.                                                                                                                                                                                                                                                                                                                 |
+| `frontend/src/pages/JobSetupPage.jsx`  | Licence box + **Run preflight**; shows each check with a green tick or red cross, the reason, the fix and the code. Changing a level or the licence box clears the old result.                                                                                                                                                                                                                 |
+
+The llama.cpp check reuses Sibghatullah's `checkInstalled()` from `worker/llamacpp.js`, so the
+API and the worker agree on what "installed" means. With `FAKE_PIPELINE=true` it is skipped.
+
+Tests: `backend/tests/preflight.test.js` — one test per check, plus the endpoint (all pass, every
+failure listed at once, bad model id, someone else's profile, the 2-job limit).

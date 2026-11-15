@@ -150,8 +150,49 @@ Invalid values → `400 E-INPUT-01` with `details` per field. A `user` field in 
 Read, update (same body and rules as POST) or delete one of **your own** profiles. DELETE answers
 `{ "deleted": true }`. Another user's profile, or an unknown id → `404 E-NOTFOUND-01`.
 
+### `POST /api/jobs/preflight` — user
+
+Checks whether a job can finish on this server, before anything heavy starts.
+
+```json
+{
+  "modelId": "6af4a0…",
+  "profileId": "6af4ac…",
+  "levels": ["Q5_K_M", "Q4_K_M"],
+  "licenseAccepted": true
+}
+```
+
+Always answers `200` with every check (a failed check is a normal answer, not an error):
+
+```json
+{
+  "passed": false,
+  "checks": [
+    {
+      "id": "model",
+      "label": "Model is in the catalog",
+      "passed": true,
+      "message": "SmolLM2 135M Instruct, pinned to 12fd25f."
+    },
+    {
+      "id": "disk",
+      "label": "Enough free disk space",
+      "passed": false,
+      "code": "E-DISK-01",
+      "message": "Needs 2.9 GB free, only 1.0 GB free.",
+      "hint": "Free 1.9 GB or choose fewer levels."
+    }
+  ]
+}
+```
+
+Check ids, in order: `model` (E-CAT-01), `levels` (E-LVL-01), `profile` (E-NOTFOUND-01), `disk`
+(E-DISK-01), `ram` (E-RAM-01), `licence` (E-LIC-01), `token` (E-HF-01), `tool` (E-TOOL-01; skipped
+when `FAKE_PIPELINE=true`), `jobs` (E-LIMIT-01). `disk` and `ram` are left out when the model or
+levels are invalid.
+
 ## Planned endpoints
 
-Filled in as each WP lands (see `CLAUDE.md` §6): `/api/jobs/preflight` (WP-08), `/api/jobs`
-(WP-10), results (WP-15), downloads (WP-17), recommendation and export (WP-19), auth (WP-21),
-admin (WP-25).
+Filled in as each WP lands (see `CLAUDE.md` §6): `/api/jobs` (WP-10), results (WP-15), downloads
+(WP-17), recommendation and export (WP-19), auth (WP-21), admin (WP-25).
