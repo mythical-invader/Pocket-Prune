@@ -144,7 +144,7 @@
 
 .btn--sm {
   min-height: 34px;
-  padding: 0 12px;
+  padding: 0 var(--space-md);
   font-size: var(--font-size-sm);
 }
 
@@ -206,7 +206,7 @@
   gap: var(--space-xs);
   padding: 2px var(--space-sm);
   border-radius: 999px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
   line-height: 1.6;
   white-space: nowrap;
@@ -244,7 +244,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 14px 20px;
+  padding: var(--space-md) 20px;
 }
 
 .stepper__list {
@@ -281,7 +281,7 @@
 .stepper__item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-md);
   padding: var(--space-xs);
   border-radius: var(--radius-md);
   color: var(--color-textMuted);
@@ -327,7 +327,7 @@ a.stepper__item:hover .stepper__label {
 .progress {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 .progress__track {
@@ -374,7 +374,7 @@ a.stepper__item:hover .stepper__label {
   display: block;
   font-weight: var(--font-weight-regular);
   color: var(--color-textMuted);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .ladder__bar-cell {
@@ -411,7 +411,7 @@ a.stepper__item:hover .stepper__label {
 }
 
 .page-header__description {
-  margin-top: 6px;
+  margin-top: var(--space-sm);
   color: var(--color-textMuted);
   max-width: 68ch;
 }
@@ -429,7 +429,7 @@ a.stepper__item:hover .stepper__label {
   flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
-  padding: 40px var(--space-lg);
+  padding: var(--space-xl) var(--space-lg);
   text-align: center;
   background: var(--color-surface);
   border: 1px dashed var(--color-borderStrong);
@@ -468,7 +468,7 @@ a.stepper__item:hover .stepper__label {
 .alert {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-md);
   padding: var(--space-md);
   border-radius: var(--radius-md);
   border: 1px solid transparent;
@@ -504,7 +504,7 @@ a.stepper__item:hover .stepper__label {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-xs);
 }
 
 .alert__title {
@@ -526,7 +526,7 @@ a.stepper__item:hover .stepper__label {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-sm);
 }
 
 .field__label {
@@ -552,7 +552,7 @@ a.stepper__item:hover .stepper__label {
 .input {
   width: 100%;
   min-height: 42px;
-  padding: 0 12px;
+  padding: 0 var(--space-md);
   border: 1px solid var(--color-borderStrong);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -591,7 +591,7 @@ a.stepper__item:hover .stepper__label {
     right: 0;
     bottom: 0;
     z-index: 10;
-    padding: 12px var(--space-md);
+    padding: var(--space-sm) var(--space-md);
     background: var(--color-surface);
     border-top: 1px solid var(--color-border);
   }
@@ -614,7 +614,7 @@ a.stepper__item:hover .stepper__label {
 
   /* Only the current step keeps its name; the others show their number. */
   .stepper {
-    padding: 12px var(--space-md);
+    padding: var(--space-sm) var(--space-md);
   }
 
   .stepper__step:not(.stepper__step--current) .stepper__label {
