@@ -21,7 +21,8 @@
     "setup:llamacpp": "node scripts/setup-llamacpp.js",
     "pipeline": "npm run pipeline --prefix backend --",
     "validate:catalog": "node scripts/validate-catalog.js",
-    "fetch:wikitext": "node scripts/fetch-wikitext.js"
+    "fetch:wikitext": "node scripts/fetch-wikitext.js",
+    "regression": "node scripts/regression.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
