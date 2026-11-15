@@ -15,7 +15,7 @@ export const ERRORS = {
   'E-TOOL-01': [
     500,
     'llama.cpp is missing or the wrong version.',
-    'Run scripts/build-llamacpp.sh on the model machine.',
+    'Run `npm run setup:llamacpp` on the model machine and check LLAMA_CPP_DIR in .env.',
   ],
   'E-CONV-01': [500, 'Conversion to GGUF failed.', 'See the job log for the tool output.'],
   'E-QNT-01': [500, 'Quantization failed.', 'See the job log for the tool output.'],
