@@ -19,7 +19,9 @@
     "format": "prettier --write .",
     "progress": "node scripts/progress.js",
     "setup:llamacpp": "node scripts/setup-llamacpp.js",
-    "pipeline": "npm run pipeline --prefix backend --"
+    "pipeline": "npm run pipeline --prefix backend --",
+    "validate:catalog": "node scripts/validate-catalog.js",
+    "fetch:wikitext": "node scripts/fetch-wikitext.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

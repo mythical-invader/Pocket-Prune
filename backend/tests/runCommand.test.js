@@ -1,6 +1,17 @@
 // runCommand.test.js — runs tiny Node scripts as "fake tools" (no internet, no llama.cpp),
 // to check output lines, exit codes, the time limit and a missing program. Owner: Sibghatullah.
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { settings } from '../config/settings.js';
 import { runCommand } from '../utils/runCommand.js';
+
+// Use a throw-away data folder so the test never creates data/tmp in the repo.
+const tmpData = fs.mkdtempSync(path.join(os.tmpdir(), 'pp-run-'));
+beforeAll(() => {
+  settings.dataDir = tmpData;
+});
+afterAll(() => fs.rmSync(tmpData, { recursive: true, force: true }));
 
 const node = process.execPath; // the Node program itself — exists on every machine and in CI
 const script = (code) => ['-e', code];
@@ -40,6 +51,15 @@ describe('runCommand', () => {
       runCommand(node, script('setTimeout(() => {}, 10000)'), { timeoutMs: 300 })
     ).rejects.toMatchObject({ code: 'E-TIME-01' });
     expect(Date.now() - started).toBeLessThan(5000);
+  });
+
+  it('gives every tool a temp folder inside the data folder (never the system temp on C:)', async () => {
+    const result = await runCommand(
+      node,
+      script('console.log(process.env.TEMP, process.env.TMPDIR)')
+    );
+    const expected = path.join(settings.dataDir, 'tmp');
+    expect(result.stdout.trim()).toBe(`${expected} ${expected}`);
   });
 
   it('reports a missing program as E-TOOL-01', async () => {
