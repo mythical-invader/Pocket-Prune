@@ -1,7 +1,7 @@
 // App.jsx — the website's pages and their addresses (React Router).
 // Every page renders inside AppLayout (top bar + pipeline rail). Owner: Huzaifah.
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { Download, FileQuestion, HelpCircle, History } from 'lucide-react';
+import { FileQuestion, HelpCircle, History } from 'lucide-react';
 import { JobDraftProvider } from './context/JobDraftContext.jsx';
 import AppLayout from './components/AppLayout.jsx';
 import CatalogPage from './pages/CatalogPage.jsx';
@@ -9,6 +9,7 @@ import ProfilesPage from './pages/ProfilesPage.jsx';
 import JobSetupPage from './pages/JobSetupPage.jsx';
 import JobProgressPage from './pages/JobProgressPage.jsx';
 import ResultsPage from './pages/ResultsPage.jsx';
+import DownloadsPage from './pages/DownloadsPage.jsx';
 import PlaceholderPage from './pages/PlaceholderPage.jsx';
 import './pages/pages.css';
 
@@ -36,18 +37,7 @@ export default function App() {
                 />
               }
             />
-            <Route
-              path="/downloads"
-              element={
-                <PlaceholderPage
-                  title="Downloads"
-                  description="Compressed GGUF files from your finished jobs, with size and SHA-256 checksum."
-                  icon={Download}
-                  emptyTitle="No files yet"
-                  emptyText="Finished jobs leave their files here for 7 days unless they are pinned."
-                />
-              }
-            />
+            <Route path="/downloads" element={<DownloadsPage />} />
             <Route
               path="/help"
               element={

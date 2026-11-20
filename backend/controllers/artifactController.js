@@ -4,25 +4,10 @@
 // MongoDB. res.download() streams the file in pieces, so even a 2 GB file uses little memory and
 // the browser can resume an interrupted download.
 // SRS: REQ-30, REQ-32. Owner: Huzaifah (WP-17).
-import fs from 'node:fs';
 import path from 'node:path';
 import Job from '../models/Job.js';
-import { settings } from '../config/settings.js';
 import { appError } from '../utils/errors.js';
-
-const ARTIFACTS_DIR = () => path.resolve(settings.dataDir, 'artifacts');
-
-// Safety: only send files inside data/artifacts, whatever path is stored in the database.
-function isInsideArtifacts(filePath) {
-  const full = path.resolve(filePath);
-  return full.startsWith(ARTIFACTS_DIR() + path.sep);
-}
-
-// Is the file really on THIS server's disk? (With the shared Atlas database, a job may have run
-// on the other laptop — then its files are there, not here.)
-function onThisServer(filePath) {
-  return Boolean(filePath) && isInsideArtifacts(filePath) && fs.existsSync(filePath);
-}
+import { onThisServer } from '../utils/artifactFiles.js';
 
 // GET /api/artifacts — every file of the user's completed jobs, newest job first.
 export async function listArtifacts(req, res, next) {

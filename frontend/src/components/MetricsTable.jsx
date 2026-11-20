@@ -1,17 +1,28 @@
 // MetricsTable.jsx — the comparison table: one row per file (F16 first), one column per measured
 // number, each with its change versus F16 coloured green (better) or red (worse). Under the size
-// it also shows the estimate made before the job (evaluation E1).
+// it also shows the estimate made before the job (evaluation E1); quality numbers show their ± range
+// and task accuracy changes in percentage points.
 // Props come straight from GET /api/jobs/:id/results: { metrics, measured, rows }.
-// The mobile app has a compact MetricsTable with the same props. Owner: Huzaifah (WP-15).
+// The mobile app has a compact MetricsTable with the same props. Owner: Huzaifah (WP-15, WP-17).
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { formatMb, formatPct } from '../utils/format.js';
 
-// Show a number with its unit, the way users read it.
-function formatValue(metric, value) {
+// Show a number with its unit (and its ± range when the tool reports one), the way users read it.
+function formatValue(metric, value, range) {
   if (value === null || value === undefined) return '—';
+  const pm =
+    range !== null && range !== undefined ? ` ± ${range.toFixed(metric.unit === '%' ? 1 : 2)}` : '';
   if (metric.unit === 'MB') return formatMb(value);
   if (metric.unit === 'tok/s') return `${value.toFixed(1)} tok/s`;
-  return value.toFixed(2); // perplexity has no unit
+  if (metric.unit === '%') return `${value.toFixed(1)}${pm} %`; // task accuracy
+  return `${value.toFixed(2)}${pm}`; // perplexity has no unit
+}
+
+// A change vs F16: relative % for most numbers, percentage points ("pp") for accuracy,
+// which is already a percentage (42.0 % → 40.8 % is −1.2 pp, not −2.9 %).
+function formatChange(metric, change) {
+  if (metric.change !== 'points') return formatPct(change);
+  return `${change > 0 ? '+' : ''}${change.toFixed(1)} pp`;
 }
 
 // Is this change good news? Lower is better for size/RAM/perplexity, higher for speed.
@@ -49,10 +60,10 @@ export default function MetricsTable({ metrics, measured, rows }) {
                 const change = row.vsF16[m.key];
                 return (
                   <td key={m.key} className="num-col num">
-                    {formatValue(m, row.values[m.key])}
+                    {formatValue(m, row.values[m.key], row.ranges?.[m.key])}
                     {change !== null && (
                       <span className={`metrics-table__change is-${tone(m, change)}`}>
-                        {formatPct(change)}
+                        {formatChange(m, change)}
                       </span>
                     )}
                     {m.key === 'fileSizeMb' &&
