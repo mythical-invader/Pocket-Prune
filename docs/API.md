@@ -324,7 +324,54 @@ stay on the machine that ran the job"). Never sends anything outside `data/artif
 taskAccuracy }` ± values), `downloadable`, `fileDeleted` and `onThisServer`; the answer has
 `machine: { cpu, threads }`; `vsF16.taskAccuracy` is in percentage points.
 
+### `POST /api/jobs/:id/recommend` — user
+
+The recommendation for **another of your device profiles**, from the job's saved measurements.
+Nothing is saved: the job keeps the recommendation for the profile it ran with.
+
+```json
+{ "profileId": "6af4ac…" }
+```
+
+```json
+{
+  "profile": { "_id": "6af4ac…", "name": "Quality desktop", "preference": "quality" },
+  "recommendation": {
+    "chosenLevel": "Q5_K_M",
+    "baselineSmallest": "Q4_K_M",
+    "baselineLargest": "Q5_K_M",
+    "ruleFired": "quality",
+    "ruleText": "Preference \"quality\": the file with the lowest perplexity that fits.",
+    "explanation": "For \"Quality desktop\" (32.0 GB RAM, …), Q5_K_M is the best match: …",
+    "qualityRisk": false
+  },
+  "baselines": [
+    { "method": "recommender", "level": "Q5_K_M", "fits": true, "sizeMb": 107.2, "tpsGen": 191 },
+    { "method": "always-Q4", "level": "Q4_K_M", "fits": true },
+    { "method": "largest-fits", "level": "Q5_K_M", "fits": true }
+  ]
+}
+```
+
+When no file fits: `chosenLevel: null`, `ruleFired: "nothing-fits"` and the explanation says how
+much RAM and disk would be needed. Missing or malformed `profileId` → `400 E-INPUT-01`; someone
+else's profile or job → `404 E-NOTFOUND-01`; job not finished → `404` "No results yet".
+
+### `GET /api/jobs/:id/export?format=csv|json` — user
+
+The results as a file (`Content-Disposition: attachment; filename=SmolLM2-135M-Instruct-results.csv`).
+
+- **csv** (default): one line per file — size, speeds, peak RAM, perplexity ± range, task accuracy ±
+  range, each change vs F16, stability, smoke test, estimated size, SHA-256 — followed on every line
+  by the settings: model, revision, llama.cpp, machine, threads, demo mode, fake data, recommended level.
+- **json**: the `GET /results` answer plus `exportedAt`.
+
+Any other format → `400 E-INPUT-01`.
+
+**Results addition (WP-19):** `recommendation` now also appears when nothing fits (`chosenLevel:
+null`), and carries `ruleText`; `profile` includes its `_id`.
+
 ## Planned endpoints
 
 Filled in as each WP lands (see `CLAUDE.md` §6): cancel / retry (WP-22),
-recommendation and export (WP-19), auth (WP-21), admin (WP-25).
+auth (WP-21), admin (WP-25).

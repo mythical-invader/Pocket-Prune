@@ -5,6 +5,41 @@ problems, next step.
 
 ---
 
+## 21 Nov 2026 — Huzaifah — WP-19 Recommendation card + export
+
+**Built:** `POST /api/jobs/:id/recommend` and `GET /api/jobs/:id/export?format=csv|json`
+(`controllers/resultController.js`, `services/exportService.js`); `RecommendationCard` with a
+**Device** dropdown on the Results page; Export CSV / JSON buttons; the results answer now carries
+the rule in plain words (`ruleText`) and also shows a saved "nothing fits" recommendation. 10 new tests
+(201 total).
+
+**Decisions and why**
+
+- **Recalculating saves nothing.** The job keeps the recommendation for the profile it ran with; the
+  dropdown only asks "what if it were this device?". The measurements don't change, only the device,
+  so Sibghatullah's `recommend()` is simply called again — no new rules on the website side.
+- **The rule in plain words comes from the API** (`RULES` in `recommender.js`), so the website and
+  the later app never keep their own copy of the rule texts.
+- **CSV has one line per file and repeats the settings on every line** (model, revision, llama.cpp,
+  machine, demo mode, fake data, recommended level): a line copied into a report still says where
+  its numbers came from. Missing numbers are empty cells, text with commas is quoted.
+- **JSON export = the Results answer + `exportedAt`**, so scripts get exactly what the page shows.
+- Fake jobs: recalculated explanations also start with "FAKE DATA —", like the saved one.
+- The page header no longer names a device, because the card's dropdown now decides that.
+
+**Known issue for WP-21:** the export and download buttons are plain links (the browser saves the
+file itself). Once login exists, a plain link carries no token header, so WP-21 has to let them
+through another way (e.g. a cookie or a short-lived download link).
+
+**Live test:** local MongoDB, the fake job from WP-17 and two extra profiles: saved recommendation
+Q4_K_M ("balanced") → "Quality desktop" gives Q5_K_M (lowest perplexity) → "Old phone" (256 MB RAM)
+gives the "No file fits this device" warning with the RAM and disk needed. CSV and JSON downloaded
+with the right file names; phone width without sideways scrolling.
+
+**Next step:** WP-20 (Sibghatullah) closes Phase 3; then WP-21 login.
+
+---
+
 ## 21 Nov 2026 — Huzaifah — WP-17 Charts + downloads
 
 **Built:** `MetricsChart` (Recharts) and three charts on the Results page; `GET /api/artifacts` and
