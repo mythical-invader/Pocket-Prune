@@ -36,6 +36,14 @@ export const ERRORS = {
     'The speed test (llama-bench) failed.',
     'See the job log for the tool output.',
   ],
+  // WP-16: a file's quality test failed. Only that file has no quality numbers; the job goes on.
+  'E-EVAL-01': [500, 'The quality test (perplexity / HellaSwag) failed.', 'See the job log.'],
+  // WP-16: the fixed test texts are missing or changed, so quality can't be measured fairly.
+  'E-DATA-01': [
+    500,
+    'A test dataset is missing or has changed.',
+    'Run `npm run fetch:datasets` on the model machine.',
+  ],
   'E-AUTH-01': [401, 'Wrong email or password.', 'Check your details and try again.'],
   'E-LIMIT-01': [429, 'Too many active jobs.', 'Wait for a running job to finish.'],
   'E-QUOTA-01': [409, 'Storage limit reached.', 'Delete old files on the Downloads page.'],
