@@ -12,12 +12,41 @@ import { settings } from '../config/settings.js';
 import { fileSizeMb, sha256File } from '../utils/fileHash.js';
 import { consoleReporter } from './reporter.js';
 
-// Measured in WP-02 (docs/LEARNING_NOTES.md §5). Q8_0 was not measured — estimated values.
+// Measured in WP-02 (docs/LEARNING_NOTES.md §5); HellaSwag accuracy measured in WP-16 (400 tasks).
+// Q8_0 was not measured — estimated values.
 const MEASURED = {
-  F16: { sizeMb: 258.3, tpsPrompt: 2188, tpsGen: 105, peakRamMb: 471, perplexity: 18.92 },
-  Q8_0: { sizeMb: 137.2, tpsPrompt: 1900, tpsGen: 160, peakRamMb: 350, perplexity: 18.95 },
-  Q5_K_M: { sizeMb: 106.9, tpsPrompt: 1589, tpsGen: 191, peakRamMb: 319, perplexity: 19.57 },
-  Q4_K_M: { sizeMb: 100.6, tpsPrompt: 974, tpsGen: 199, peakRamMb: 320, perplexity: 19.87 },
+  F16: {
+    sizeMb: 258.3,
+    tpsPrompt: 2188,
+    tpsGen: 105,
+    peakRamMb: 471,
+    perplexity: 18.92,
+    taskAccuracy: 42.0,
+  },
+  Q8_0: {
+    sizeMb: 137.2,
+    tpsPrompt: 1900,
+    tpsGen: 160,
+    peakRamMb: 350,
+    perplexity: 18.95,
+    taskAccuracy: 41.8,
+  },
+  Q5_K_M: {
+    sizeMb: 106.9,
+    tpsPrompt: 1589,
+    tpsGen: 191,
+    peakRamMb: 319,
+    perplexity: 19.57,
+    taskAccuracy: 40.5,
+  },
+  Q4_K_M: {
+    sizeMb: 100.6,
+    tpsPrompt: 974,
+    tpsGen: 199,
+    peakRamMb: 320,
+    perplexity: 19.87,
+    taskAccuracy: 40.8,
+  },
 };
 const SMOKE_TEXT =
   'Paris. Paris is a city that is known for its historical landmarks, art museums…';
@@ -59,11 +88,15 @@ export async function runPipeline(job, report = consoleReporter(), { delayMs = 2
       smokePassed: true,
       smokeOutput: SMOKE_TEXT,
       durationSec: level === 'F16' ? 11 : 1,
+      fileDeleted: level === 'F16', // like the real pipeline: F16 is deleted after evaluation
       metrics: {
         tpsPrompt: m.tpsPrompt,
         tpsGen: m.tpsGen,
         peakRamMb: Math.round(m.peakRamMb * scale),
         perplexity: m.perplexity,
+        taskAccuracy: m.taskAccuracy,
+        taskAccuracyMargin: 4.8,
+        taskName: 'HellaSwag',
         runs: 3,
         unstable: false,
         settings: { fake: true, placeholderSizeMb: fileSizeMb(filePath) },
@@ -76,6 +109,7 @@ export async function runPipeline(job, report = consoleReporter(), { delayMs = 2
     fake: true,
     variants,
     llamaCppRef: settings.llamaCppRef,
+    demoMode: settings.demoMode,
     recommendation: {
       chosenLevel: job.quantLevels.includes('Q4_K_M') ? 'Q4_K_M' : job.quantLevels[0],
       baselineSmallest: job.quantLevels.includes('Q4_K_M') ? 'Q4_K_M' : job.quantLevels[0],

@@ -52,6 +52,7 @@ describe('compareVariant', () => {
       tpsGen: 89.5,
       peakRamMb: -32.1,
       perplexity: 5,
+      taskAccuracy: null, // WP-16 added this metric; these test files have no accuracy yet
     });
     expect(compareVariant(F16, F16, 259).vsF16.fileSizeMb).toBeNull();
   });

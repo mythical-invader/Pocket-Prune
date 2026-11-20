@@ -1,7 +1,8 @@
 // pipeline.js — the real compression pipeline for ONE job, stage by stage:
 //   DOWNLOADING → CONVERTING (F16) → QUANTIZING (each level) → VALIDATING (smoke test)
-//   → BENCHMARKING (speed + peak RAM, WP-14)
-// Perplexity and the recommendation are added in WP-16 / WP-18.
+//   → BENCHMARKING (speed + peak RAM, WP-14) → EVALUATING (perplexity + HellaSwag, WP-16)
+//   → the F16 baseline file is deleted (its numbers stay).
+// The recommendation is added in WP-18.
 // It returns the variants; the caller (cli.js or worker.js) saves them.
 // fakePipeline.js exports the same runPipeline(job, report), so the worker can use either.
 // Hardening (WP-13):
@@ -17,7 +18,7 @@ import { fileSizeMb, sha256File } from '../utils/fileHash.js';
 import { getFreeDiskMb } from '../utils/systemInfo.js';
 import { downloadModel } from './downloader.js';
 import { checkInstalled, convertToF16, quantize, smokeTest } from './llamacpp.js';
-import { benchmarkFile } from './evaluator.js';
+import { addQuality, benchmarkFile, checkDatasets, measureQuality } from './evaluator.js';
 import { consoleReporter } from './reporter.js';
 
 // The folder for one job's files: data/artifacts/<jobId>/
@@ -124,7 +125,42 @@ async function runStages(job, report) {
     }
   }
 
-  return { variants, llamaCppRef: settings.llamaCppRef };
+  // 6. Quality of every file that passed: perplexity + HellaSwag accuracy, on fixed local texts.
+  // Missing/changed test files or one failed test only mean "no quality numbers" — never a failed job.
+  let datasets = null;
+  try {
+    datasets = await checkDatasets();
+  } catch (err) {
+    await report.log(`${err.code}: ${err.message} How to fix: ${err.hint}`, 'error');
+  }
+  if (datasets) {
+    for (const variant of variants.filter((v) => v.smokePassed)) {
+      await report.stage('EVALUATING', `Measuring quality of ${variant.level}`);
+      try {
+        const quality = await measureQuality(variant.filePath, datasets, { onLine });
+        variant.metrics = addQuality(variant.metrics, quality);
+        await report.log(
+          `${variant.level}: perplexity ${quality.perplexity} ± ${quality.perplexityStd}, ` +
+            `HellaSwag ${quality.taskAccuracy} ± ${quality.taskAccuracyMargin} %`
+        );
+      } catch (err) {
+        if (err.cancelled) throw err;
+        await report.log(
+          `${variant.level}: quality test failed (${err.code || 'E-EVAL-01'}): ${err.message}`,
+          'warn'
+        );
+      }
+    }
+  }
+
+  // 7. The F16 file was only the baseline: delete it now that it is measured (it is the biggest
+  // file). Its numbers stay in the database, so every level is still compared with F16.
+  const baseline = variants.find((v) => v.level === 'F16');
+  fs.rmSync(baseline.filePath, { force: true });
+  baseline.fileDeleted = true;
+  await report.log('Deleted the F16 file (its measurements are kept as the baseline).');
+
+  return { variants, llamaCppRef: settings.llamaCppRef, demoMode: settings.demoMode };
 }
 
 // Stop the job (E-DISK-01) while there is still room, instead of letting the disk fill up and

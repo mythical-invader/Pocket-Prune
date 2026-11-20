@@ -13,6 +13,8 @@ export const METRICS = [
   { key: 'tpsGen', label: 'Generation speed', unit: 'tok/s', better: 'higher' },
   { key: 'peakRamMb', label: 'Peak RAM', unit: 'MB', better: 'lower' },
   { key: 'perplexity', label: 'Perplexity', unit: '', better: 'lower' },
+  // WP-16 / E2 (added by Sibghatullah): % of HellaSwag tasks answered correctly.
+  { key: 'taskAccuracy', label: 'Task accuracy (HellaSwag)', unit: '%', better: 'higher' },
 ];
 
 // (value − base) ÷ base × 100, rounded to 0.1 %. null when either number is missing.

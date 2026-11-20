@@ -30,6 +30,10 @@ const metricsSchema = new mongoose.Schema(
     tpsGenStd: Number,
     peakRamMb: Number,
     perplexity: Number, // lower = better quality
+    perplexityStd: Number, // the ± range llama-perplexity reports (WP-16)
+    taskAccuracy: Number, // % of HellaSwag tasks answered correctly; 25 % = guessing (WP-16, E2)
+    taskAccuracyMargin: Number, // ± half of the 95 % range, e.g. 4.8 → "42.0 ± 4.8 %"
+    taskName: String, // which task test, e.g. 'HellaSwag'
     runs: Number,
     unstable: { type: Boolean, default: false }, // > 10 % variation between runs
     settings: mongoose.Schema.Types.Mixed, // threads, context, chunks, dataset SHA-256…
@@ -49,6 +53,9 @@ const variantSchema = new mongoose.Schema(
     durationSec: Number,
     expiresAt: Date,
     pinned: { type: Boolean, default: false },
+    // true once the file is gone from disk but its numbers are kept — the F16 baseline is
+    // deleted after evaluation (WP-16), so the Downloads page must not offer it.
+    fileDeleted: { type: Boolean, default: false },
     metrics: metricsSchema,
   },
   { _id: false }
