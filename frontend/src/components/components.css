@@ -503,6 +503,14 @@ a.stepper__item:hover .stepper__label {
   color: var(--color-primary);
 }
 
+.alert--warning {
+  background: var(--color-warningSoft);
+}
+
+.alert--warning .alert__icon {
+  color: var(--color-warningText);
+}
+
 .alert--success {
   background: var(--color-successSoft);
 }

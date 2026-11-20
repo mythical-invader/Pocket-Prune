@@ -40,6 +40,10 @@ export const createJob = (body) => api.post('/jobs', body).then((r) => r.data); 
 export const getJobs = () => api.get('/jobs').then((r) => r.data);
 export const getJob = (id) => api.get(`/jobs/${id}`).then((r) => r.data); // + queuePosition, events
 export const getResults = (id) => api.get(`/jobs/${id}/results`).then((r) => r.data); // WP-15
+// WP-19: the recommendation for another of your device profiles (nothing is saved)
+export const recommendFor = (id, profileId) =>
+  api.post(`/jobs/${id}/recommend`, { profileId }).then((r) => r.data);
+export const exportUrl = (id, format) => `/api/jobs/${id}/export?format=${format}`;
 
 // Downloads (WP-17). The download itself is a normal link, so the browser shows its own
 // progress bar and can resume; this only builds the address.

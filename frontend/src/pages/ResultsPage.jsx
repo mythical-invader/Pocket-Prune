@@ -1,12 +1,19 @@
 // ResultsPage.jsx — step 5 "Results": what the job produced, compared with the F16 baseline.
-// Shows the recommendation (when the recommender has run), the comparison table with the change
-// vs F16 for every measured number, and the settings the results belong to (llama.cpp version,
-// machine, device, demo mode), three bar charts and the files with their downloads (WP-17).
-// The full recommendation card arrives in WP-19.
-// SRS: REQ-17, REQ-20, REQ-21, REQ-28, REQ-30. Owner: Huzaifah (WP-15, WP-17).
+// Shows the recommendation with a device-profile dropdown (WP-19), the comparison table with the
+// change vs F16 for every measured number, three bar charts and the files with their downloads
+// (WP-17), the settings the results belong to (llama.cpp version, machine, demo mode), and
+// Export CSV / JSON buttons (WP-19).
+// SRS: REQ-17, REQ-20 – REQ-23, REQ-28, REQ-30 – REQ-32. Owner: Huzaifah (WP-15, WP-17, WP-19).
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Activity, Download, FlaskConical, Info, SearchX, Sparkles, Zap } from 'lucide-react';
-import { artifactDownloadUrl, getResults } from '../services/api.js';
+import { Activity, Download, FileDown, FlaskConical, Info, SearchX, Zap } from 'lucide-react';
+import {
+  artifactDownloadUrl,
+  exportUrl,
+  getProfiles,
+  getResults,
+  recommendFor,
+} from '../services/api.js';
 import { useLoad } from '../utils/useLoad.js';
 import { formatDate, formatMb } from '../utils/format.js';
 import PageHeader from '../components/PageHeader.jsx';
@@ -15,6 +22,7 @@ import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
 import MetricsTable from '../components/MetricsTable.jsx';
 import MetricsChart from '../components/MetricsChart.jsx';
+import RecommendationCard from '../components/RecommendationCard.jsx';
 import ErrorAlert from '../components/ErrorAlert.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import Loader from '../components/Loader.jsx';
@@ -23,6 +31,31 @@ export default function ResultsPage() {
   const { id } = useParams();
   // useLoad needs a stable function; the id is part of the URL, so build it once per id.
   const { data: results, error, reload } = useLoad(fetchResultsFor(id));
+  const { data: profiles } = useLoad(getProfiles);
+  // Another device chosen in the dropdown: { profileId, profile, recommendation } from the API.
+  // null = show the recommendation saved with the job (for the profile it was run with).
+  const [other, setOther] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [recError, setRecError] = useState(null);
+
+  async function chooseProfile(profileId) {
+    setRecError(null);
+    if (!profileId || profileId === results.profile?._id) {
+      setOther(null);
+      return;
+    }
+    setOther((prev) => ({ ...prev, profileId })); // the dropdown moves at once
+    setBusy(true);
+    try {
+      const answer = await recommendFor(id, profileId);
+      setOther({ profileId, ...answer });
+    } catch (err) {
+      setRecError(err);
+      setOther(null);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   if (error) {
     return error.code === 'E-NOTFOUND-01' ? (
@@ -45,26 +78,36 @@ export default function ResultsPage() {
   if (!results) return <Loader label="Loading the results…" />;
 
   const notMeasuredYet = results.metrics.filter((m) => !results.measured.includes(m.key));
-  const rec = results.recommendation;
+  const rec = other?.recommendation ?? (other ? null : results.recommendation);
+  const deviceName = other?.profile?.name ?? (other ? null : results.profile?.name);
+  const selectedProfileId = other?.profileId ?? results.profile?._id ?? '';
   const charts = chartsFor(results.rows);
 
   return (
     <div className="stack">
       <PageHeader
         title={`Results: ${results.model?.displayName ?? 'model'}`}
-        description={`Every file compared with the uncompressed F16 baseline. Device: ${results.profile?.name ?? '—'}.`}
+        description="Every file compared with the uncompressed F16 baseline, measured on the PocketPrune machine."
         actions={
-          <span className="badge-row">
-            {results.fake && (
-              <Badge tone="warning" icon={FlaskConical}>
-                FAKE DATA
-              </Badge>
-            )}
-            {results.demoMode && (
-              <Badge tone="info" icon={Zap}>
-                Demo mode
-              </Badge>
-            )}
+          <span className="export-actions">
+            <span className="badge-row">
+              {results.fake && (
+                <Badge tone="warning" icon={FlaskConical}>
+                  FAKE DATA
+                </Badge>
+              )}
+              {results.demoMode && (
+                <Badge tone="info" icon={Zap}>
+                  Demo mode
+                </Badge>
+              )}
+            </span>
+            <a className="btn btn--secondary btn--sm" href={exportUrl(id, 'csv')} download>
+              <FileDown size={16} aria-hidden /> Export CSV
+            </a>
+            <a className="btn btn--secondary btn--sm" href={exportUrl(id, 'json')} download>
+              <FileDown size={16} aria-hidden /> Export JSON
+            </a>
           </span>
         }
       />
@@ -77,26 +120,37 @@ export default function ResultsPage() {
       )}
 
       <Card>
-        <div className="rec">
-          <Sparkles size={22} className="rec__icon" aria-hidden />
-          <div>
-            <h2 className="section-title">Recommendation</h2>
-            {rec ? (
-              <>
-                <p className="rec__choice">
-                  <strong>{rec.chosenLevel}</strong> for {results.profile?.name ?? 'this device'}
-                  {rec.qualityRisk && <Badge tone="warning">Quality risk</Badge>}
-                </p>
-                <p className="section-intro">{rec.explanation}</p>
-                <p className="rec__rule num">Rule: {rec.ruleFired}</p>
-              </>
-            ) : (
-              <p className="section-intro">
-                The recommendation is added once the recommender runs on real measurements.
-              </p>
-            )}
+        <RecommendationCard
+          recommendation={rec}
+          deviceName={deviceName}
+          busy={busy}
+          picker={
+            profiles?.length > 0 && (
+              <label className="rec__picker">
+                Device
+                <select
+                  className="input"
+                  value={selectedProfileId}
+                  onChange={(e) => chooseProfile(e.target.value)}
+                  disabled={busy}
+                >
+                  {!results.profile && <option value="">Choose a profile…</option>}
+                  {profiles.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} · {p.preference}
+                      {p._id === results.profile?._id ? ' (this job)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )
+          }
+        />
+        {recError && (
+          <div className="section-gap">
+            <ErrorAlert error={recError} />
           </div>
-        </div>
+        )}
       </Card>
 
       <Card>
