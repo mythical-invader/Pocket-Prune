@@ -121,7 +121,7 @@ pocketprune/
 │   ├── catalog-trials.md      # Manual model test results
 │   └── release-notes/         # One file per milestone
 │
-├── scripts/                   # setup-llamacpp.js, fetch-wikitext.js, validate-catalog.js, regression.js,
+├── scripts/                   # setup-llamacpp.js, fetch-datasets.js, validate-catalog.js, regression.js,
 │                              #   progress.js — prints % done, per phase, per person, and who is waiting on whom
 │
 ├── backend/

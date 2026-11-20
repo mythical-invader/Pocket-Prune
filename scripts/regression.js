@@ -144,6 +144,10 @@ function writeReport(rows, stop) {
   return passed;
 }
 
+// The regression compares sizes, smoke tests and clean-up — not speed or quality numbers — so
+// it uses the short demo-mode tests (WP-16): a few minutes instead of ~30.
+settings.demoMode = true;
+
 const demoModels = CATALOG_SEED.filter((m) => m.isDemo);
 console.log(
   `PocketPrune regression — llama.cpp ${settings.llamaCppRef}, ${demoModels.length} demo models`

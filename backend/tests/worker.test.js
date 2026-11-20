@@ -178,6 +178,13 @@ describe('processJob', () => {
     expect(saved.errorCode).toBeUndefined();
   });
 
+  it('saves whether the job ran in demo mode (shorter tests → "Demo mode" badge)', async () => {
+    realPipeline.mockResolvedValue({ variants: VARIANTS, llamaCppRef: 'b12376', demoMode: true });
+    const queued = await queueJob();
+    await processJob(await pickNextJob(), { useFake: false });
+    expect((await Job.findById(queued._id)).demoMode).toBe(true);
+  });
+
   it('uses the fake pipeline when asked, and marks the job fake', async () => {
     fakePipeline.mockResolvedValue({ variants: VARIANTS, llamaCppRef: 'fake', fake: true });
     const queued = await queueJob();

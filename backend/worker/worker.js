@@ -92,6 +92,7 @@ export async function processJob(job, { useFake = settings.fakePipeline } = {}) 
         // only the fake pipeline returns a recommendation until the recommender (WP-18)
         ...(result.recommendation && { recommendation: result.recommendation }),
         fake: Boolean(result.fake),
+        demoMode: Boolean(result.demoMode), // shorter tests → "Demo mode" badge (WP-16)
         finishedAt: new Date(),
       }
     );

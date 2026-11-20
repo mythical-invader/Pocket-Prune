@@ -1,14 +1,33 @@
 // evaluator.test.js — turning llama-bench JSON into metrics: averages, spread, the "unstable"
 // flag, saved settings, and peak RAM. The example data is a REAL llama-bench b12376 run of
 // SmolLM2-135M Q4_K_M on the model machine (15 Nov 2026). llama.cpp and the RAM watcher are
-// mocked. Owner: Sibghatullah (WP-14).
+// mocked. Quality (WP-16): the dataset checks use small temporary files; the quality numbers
+// come from mocked perplexity / HellaSwag results measured on the same model.
+// Owner: Sibghatullah (WP-14, WP-16).
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { vi } from 'vitest';
 import { settings } from '../config/settings.js';
-import { benchmark } from '../worker/llamacpp.js';
+import { benchmark, hellaswag, perplexity } from '../worker/llamacpp.js';
 import { watchPeakMemory } from '../utils/peakMemory.js';
-import { benchmarkFile, spread, summarise } from '../worker/evaluator.js';
+import {
+  DATASETS,
+  addQuality,
+  benchmarkFile,
+  checkDatasets,
+  measureQuality,
+  qualitySizes,
+  spread,
+  summarise,
+} from '../worker/evaluator.js';
 
-vi.mock('../worker/llamacpp.js', () => ({ benchmark: vi.fn() }));
+vi.mock('../worker/llamacpp.js', () => ({
+  benchmark: vi.fn(),
+  perplexity: vi.fn(),
+  hellaswag: vi.fn(),
+}));
 vi.mock('../utils/peakMemory.js', () => ({ watchPeakMemory: vi.fn() }));
 
 const common = {
@@ -95,5 +114,103 @@ describe('benchmarkFile', () => {
 
     await expect(benchmarkFile('x.gguf')).rejects.toMatchObject({ code: 'E-BENCH-01' });
     expect(stop).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('quality (WP-16)', () => {
+  afterEach(() => {
+    settings.demoMode = false;
+  });
+
+  it('uses 100 chunks / 400 tasks, and 10 / 100 in demo mode', () => {
+    expect(qualitySizes()).toEqual({ chunks: 100, tasks: 400 });
+    settings.demoMode = true;
+    expect(qualitySizes()).toEqual({ chunks: 10, tasks: 100 });
+  });
+
+  it('measureQuality: perplexity + HellaSwag with their ranges and the exact datasets used', async () => {
+    // Real numbers: SmolLM2-135M F16 on b12376 (15/20 Nov 2026).
+    perplexity.mockResolvedValue({ value: 18.9165, plusMinus: 0.3499 });
+    hellaswag.mockResolvedValue({ tasks: 400, accuracy: 42.0, low: 37.2618, high: 46.8904 });
+
+    const q = await measureQuality('x-F16.gguf', { wikitext: 'w.raw', hellaswag: 'h.txt' });
+    expect(perplexity).toHaveBeenCalledWith(
+      'x-F16.gguf',
+      'w.raw',
+      expect.objectContaining({ chunks: 100 })
+    );
+    expect(hellaswag).toHaveBeenCalledWith(
+      'x-F16.gguf',
+      'h.txt',
+      expect.objectContaining({ tasks: 400 })
+    );
+    expect(q).toMatchObject({
+      perplexity: 18.92,
+      perplexityStd: 0.35,
+      taskAccuracy: 42,
+      taskAccuracyMargin: 4.8, // half of 37.3 … 46.9
+      taskName: 'HellaSwag',
+    });
+    expect(q.settings).toMatchObject({
+      context: 512,
+      chunks: 100,
+      tasks: 400,
+      datasetSha256: DATASETS.wikitext.sha256,
+      taskDatasetSha256: DATASETS.hellaswag.sha256,
+    });
+  });
+
+  it('addQuality keeps the speed numbers and their settings', () => {
+    const speed = { tpsGen: 200, settings: { threads: 20 } };
+    const merged = addQuality(speed, { perplexity: 19.87, settings: { chunks: 100 } });
+    expect(merged).toEqual({
+      tpsGen: 200,
+      perplexity: 19.87,
+      settings: { threads: 20, quality: { chunks: 100 } },
+    });
+    expect(addQuality(undefined, { perplexity: 1, settings: {} }).perplexity).toBe(1); // no speed numbers
+  });
+
+  describe('checkDatasets', () => {
+    const tmpData = fs.mkdtempSync(path.join(os.tmpdir(), 'pp-data-'));
+    const saved = {};
+    const sha = (text) => crypto.createHash('sha256').update(text).digest('hex');
+
+    beforeEach(() => {
+      settings.dataDir = tmpData;
+      for (const [key, d] of Object.entries(DATASETS)) {
+        saved[key] = d.sha256;
+        fs.mkdirSync(path.dirname(path.join(tmpData, d.file)), { recursive: true });
+        fs.writeFileSync(path.join(tmpData, d.file), `test ${key}`);
+        d.sha256 = sha(`test ${key}`); // pretend these small files are the real ones
+      }
+    });
+    afterEach(() => {
+      for (const [key, d] of Object.entries(DATASETS)) d.sha256 = saved[key];
+    });
+    afterAll(() => fs.rmSync(tmpData, { recursive: true, force: true }));
+
+    it('returns the full paths when both files are present and unchanged', async () => {
+      const paths = await checkDatasets();
+      expect(paths.wikitext).toBe(path.join(tmpData, DATASETS.wikitext.file));
+      expect(paths.hellaswag).toBe(path.join(tmpData, DATASETS.hellaswag.file));
+    });
+
+    it('refuses a missing file (E-DATA-01) and tells how to fix it', async () => {
+      fs.rmSync(path.join(tmpData, DATASETS.hellaswag.file));
+      await expect(checkDatasets()).rejects.toMatchObject({
+        code: 'E-DATA-01',
+        message: expect.stringContaining('missing'),
+        hint: expect.stringContaining('fetch:datasets'),
+      });
+    });
+
+    it('refuses a changed file, because results would not be comparable', async () => {
+      fs.writeFileSync(path.join(tmpData, DATASETS.wikitext.file), 'one byte different!');
+      await expect(checkDatasets()).rejects.toMatchObject({
+        code: 'E-DATA-01',
+        message: expect.stringContaining('changed'),
+      });
+    });
   });
 });

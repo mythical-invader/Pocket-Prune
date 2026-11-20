@@ -7,6 +7,12 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-16: quality — new EVALUATING stage: perplexity on WikiText-2 (100 chunks) and HellaSwag task
+  accuracy (400 tasks, E2) with their ± ranges for every file that passed; both test files checked by
+  SHA-256 (`E-DATA-01`); demo mode (10 chunks / 100 tasks, `demoMode` saved); the F16 file is
+  deleted after evaluation (`fileDeleted`, numbers kept); `npm run fetch:datasets`; task accuracy
+  in the Results API.
+
 - WP-14: benchmarking — new BENCHMARKING stage: `llama-bench` (pp512 + tg128, 3 runs) on every
   file that passed the smoke test, prompt and generation speed with spread, `unstable` flag,
   peak RAM from the operating system's peak counter, settings saved with every result;

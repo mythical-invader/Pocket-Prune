@@ -1,7 +1,7 @@
 // pipeline.test.js — checks the order of stages, the saved variants and the failure rules of
 // pipeline.js. The downloader and llama.cpp adapter are mocked (no internet, no llama.cpp);
 // the mocks write tiny files so sizes and SHA-256 are real. Free disk is mocked too.
-// Owner: Sibghatullah (WP-06; clean-up and disk reserve WP-13).
+// Owner: Sibghatullah (WP-06; clean-up and disk reserve WP-13; quality + F16 deletion WP-16).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -11,13 +11,27 @@ import { downloadModel } from '../worker/downloader.js';
 import { convertToF16, quantize, smokeTest } from '../worker/llamacpp.js';
 import { runPipeline } from '../worker/pipeline.js';
 import { getFreeDiskMb } from '../utils/systemInfo.js';
-import { benchmarkFile } from '../worker/evaluator.js';
+import { benchmarkFile, checkDatasets, measureQuality } from '../worker/evaluator.js';
 
 vi.mock('../worker/downloader.js', () => ({ downloadModel: vi.fn() }));
 vi.mock('../utils/systemInfo.js', () => ({ getFreeDiskMb: vi.fn() }));
-vi.mock('../worker/evaluator.js', () => ({ benchmarkFile: vi.fn() }));
+// Keep the real addQuality(); replace the parts that run tools or read the test files.
+vi.mock('../worker/evaluator.js', async (original) => ({
+  ...(await original()),
+  benchmarkFile: vi.fn(),
+  checkDatasets: vi.fn(),
+  measureQuality: vi.fn(),
+}));
 
 const METRICS = { tpsPrompt: 990, tpsGen: 200, peakRamMb: 170, runs: 3, unstable: false };
+const QUALITY = {
+  perplexity: 19.87,
+  perplexityStd: 0.37,
+  taskAccuracy: 41.5,
+  taskAccuracyMargin: 4.8,
+  taskName: 'HellaSwag',
+  settings: { chunks: 100, tasks: 400 },
+};
 vi.mock('../worker/llamacpp.js', () => ({
   checkInstalled: vi.fn(() => 'b12376'),
   convertToF16: vi.fn(),
@@ -64,6 +78,8 @@ beforeEach(() => {
   smokeTest.mockResolvedValue({ passed: true, output: 'Paris.', durationSec: 0.5 });
   getFreeDiskMb.mockResolvedValue(100_000); // plenty of free disk unless a test says otherwise
   benchmarkFile.mockResolvedValue(METRICS);
+  checkDatasets.mockResolvedValue({ wikitext: 'wiki.test.raw', hellaswag: 'hellaswag.txt' });
+  measureQuality.mockResolvedValue(QUALITY);
 });
 afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
@@ -83,6 +99,9 @@ describe('runPipeline (real pipeline, mocked tools)', () => {
       'BENCHMARKING',
       'BENCHMARKING',
       'BENCHMARKING',
+      'EVALUATING',
+      'EVALUATING',
+      'EVALUATING',
     ]);
     expect(result.variants.map((v) => v.level)).toEqual(['F16', 'Q5_K_M', 'Q4_K_M']);
 
@@ -138,7 +157,7 @@ describe('runPipeline benchmarking (WP-14)', () => {
   it('saves speed and RAM metrics on every file that passed the smoke test', async () => {
     const result = await runPipeline(job, recorder());
     expect(benchmarkFile).toHaveBeenCalledTimes(3); // F16 + Q5_K_M + Q4_K_M
-    for (const v of result.variants) expect(v.metrics).toEqual(METRICS);
+    for (const v of result.variants) expect(v.metrics).toMatchObject(METRICS);
   });
 
   it('does not benchmark a file that failed the smoke test', async () => {
@@ -158,8 +177,8 @@ describe('runPipeline benchmarking (WP-14)', () => {
     });
     const report = recorder();
     const result = await runPipeline(job, report);
-    expect(result.variants.find((v) => v.level === 'F16').metrics).toBeUndefined();
-    expect(result.variants.find((v) => v.level === 'Q4_K_M').metrics).toEqual(METRICS);
+    expect(result.variants.find((v) => v.level === 'F16').metrics.tpsGen).toBeUndefined();
+    expect(result.variants.find((v) => v.level === 'Q4_K_M').metrics).toMatchObject(METRICS);
     expect(report.logs).toContainEqual({
       message: 'F16: benchmark failed (E-BENCH-01): crashed',
       level: 'warn',
@@ -173,6 +192,72 @@ describe('runPipeline benchmarking (WP-14)', () => {
     expect(report.logs.some((l) => l.level === 'warn' && l.message.includes('UNSTABLE'))).toBe(
       true
     );
+  });
+});
+
+describe('runPipeline quality + F16 clean-up (WP-16)', () => {
+  const f16File = () => path.join(tmp, 'artifacts', 'test-job', 'SmolLM2-135M-Instruct-F16.gguf');
+
+  it('adds perplexity and task accuracy next to the speed numbers', async () => {
+    const result = await runPipeline(job, recorder());
+    expect(measureQuality).toHaveBeenCalledTimes(3);
+    const q4 = result.variants.find((v) => v.level === 'Q4_K_M');
+    expect(q4.metrics).toMatchObject({ ...METRICS, perplexity: 19.87, taskAccuracy: 41.5 });
+    expect(q4.metrics.settings.quality).toEqual({ chunks: 100, tasks: 400 });
+  });
+
+  it('deletes the F16 file at the end but keeps its numbers as the baseline', async () => {
+    const result = await runPipeline(job, recorder());
+    const f16 = result.variants.find((v) => v.level === 'F16');
+    expect(fs.existsSync(f16File())).toBe(false);
+    expect(f16.fileDeleted).toBe(true);
+    expect(f16.metrics.perplexity).toBe(19.87);
+    const q4 = result.variants.find((v) => v.level === 'Q4_K_M');
+    expect(fs.existsSync(q4.filePath)).toBe(true);
+    expect(q4.fileDeleted).toBeUndefined();
+  });
+
+  it('still finishes (without quality numbers) when the test files are missing', async () => {
+    checkDatasets.mockRejectedValue(
+      Object.assign(new Error('WikiText-2 (test) is missing.'), {
+        code: 'E-DATA-01',
+        hint: 'Run npm run fetch:datasets',
+      })
+    );
+    const report = recorder();
+    const result = await runPipeline(job, report);
+    expect(measureQuality).not.toHaveBeenCalled();
+    expect(report.stages.some((s) => s.startsWith('EVALUATING'))).toBe(false);
+    expect(report.logs.some((l) => l.level === 'error' && l.message.startsWith('E-DATA-01'))).toBe(
+      true
+    );
+    expect(result.variants.find((v) => v.level === 'F16').fileDeleted).toBe(true);
+  });
+
+  it('keeps going when one quality test fails (that file just has no quality numbers)', async () => {
+    measureQuality.mockImplementation(async (file) => {
+      if (file.endsWith('Q5_K_M.gguf')) {
+        throw Object.assign(new Error('HellaSwag failed.'), { code: 'E-EVAL-01' });
+      }
+      return QUALITY;
+    });
+    const report = recorder();
+    const result = await runPipeline(job, report);
+    expect(result.variants.find((v) => v.level === 'Q5_K_M').metrics.perplexity).toBeUndefined();
+    expect(result.variants.find((v) => v.level === 'Q4_K_M').metrics.perplexity).toBe(19.87);
+    expect(report.logs).toContainEqual({
+      message: 'Q5_K_M: quality test failed (E-EVAL-01): HellaSwag failed.',
+      level: 'warn',
+    });
+  });
+
+  it('a cancel during evaluation still stops the job and removes its files', async () => {
+    const report = recorder();
+    report.stage = async (status) => {
+      if (status === 'EVALUATING') throw Object.assign(new Error('Cancelled'), { cancelled: true });
+    };
+    await expect(runPipeline(job, report)).rejects.toMatchObject({ cancelled: true });
+    expect(fs.existsSync(path.join(tmp, 'artifacts', 'test-job'))).toBe(false);
   });
 });
 

@@ -10,6 +10,8 @@ import {
   benchmark,
   checkInstalled,
   convertToF16,
+  hellaswag,
+  perplexity,
   quantize,
   smokeTest,
   toolPath,
@@ -130,6 +132,51 @@ describe('benchmark (WP-14)', () => {
     await expect(benchmark('a.gguf')).rejects.toMatchObject({ code: 'E-BENCH-01' });
   });
 });
+
+describe('perplexity + hellaswag (WP-16)', () => {
+  // Real output lines from llama-perplexity b12376 on SmolLM2-135M F16.
+  const PPL_LINE = '0.29.316.674 I Final estimate: PPL = 18.9165 +/- 0.34990';
+  const HS_STDOUT = '399\t41.85463659%\t[37.1143%, 46.7503%]\n400\t42.00000000%\t[37.2618%, 46.8904%]\n\n';
+
+  it('perplexity: fixed text, context 512, N chunks, CPU only; reads the final estimate', async () => {
+    runCommand.mockResolvedValue(ok({ lines: ['loading', PPL_LINE] }));
+    const result = await perplexity('a.gguf', 'wiki.test.raw', { chunks: 100 });
+
+    const [program, args] = runCommand.mock.calls[0];
+    expect(program).toBe(toolPath('llama-perplexity'));
+    expect(args).toEqual(['-m', 'a.gguf', '-f', 'wiki.test.raw', '-c', '512', '--chunks', '100', '-ngl', '0']);
+    expect(result).toMatchObject({ value: 18.9165, plusMinus: 0.3499 });
+  });
+
+  it('perplexity: E-EVAL-01 when the tool fails or prints no estimate', async () => {
+    runCommand.mockResolvedValue(ok({ lines: ['something else'] }));
+    await expect(perplexity('a.gguf', 'w', { chunks: 10 })).rejects.toMatchObject({ code: 'E-EVAL-01' });
+    runCommand.mockResolvedValue(ok({ code: 1, lines: [PPL_LINE] }));
+    await expect(perplexity('a.gguf', 'w', { chunks: 10 })).rejects.toMatchObject({ code: 'E-EVAL-01' });
+  });
+
+  it('hellaswag: N tasks; reads accuracy and the 95 % range from the last line', async () => {
+    runCommand.mockResolvedValue(ok({ stdout: HS_STDOUT }));
+    const result = await hellaswag('a.gguf', 'hs.txt', { tasks: 400 });
+
+    const [, args] = runCommand.mock.calls[0];
+    expect(args).toEqual(['-m', 'a.gguf', '-f', 'hs.txt', '--hellaswag', '--hellaswag-tasks', '400', '-c', '512', '-ngl', '0']);
+    expect(result).toMatchObject({ tasks: 400, accuracy: 42, low: 37.2618, high: 46.8904 });
+  });
+
+  it('hellaswag: E-EVAL-01 on unreadable output; only stderr goes to the job log', async () => {
+    runCommand.mockResolvedValue(ok({ stdout: 'nothing useful' }));
+    await expect(hellaswag('a.gguf', 'h', { tasks: 100 })).rejects.toMatchObject({ code: 'E-EVAL-01' });
+
+    const logged = [];
+    runCommand.mockResolvedValue(ok({ stdout: HS_STDOUT }));
+    await hellaswag('a.gguf', 'h', { tasks: 100, onLine: (l) => logged.push(l) });
+    const { onLine } = runCommand.mock.calls.at(-1)[2];
+    onLine('loading model', 'stderr');
+    onLine('1\t100.0%', 'stdout');
+    expect(logged).toEqual(['loading model']);
+  });
+}); // prettier-ignore
 
 describe('smokeTest', () => {
   it('uses llama-completion with seed 42, temp 0, 32 tokens, CPU only, no chat', async () => {

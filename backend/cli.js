@@ -53,7 +53,10 @@ async function main() {
       'gen tok/s': v.metrics?.tpsGen ?? '—',
       'peak RAM (MB)': v.metrics?.peakRamMb ?? '—',
       stable: v.metrics ? (v.metrics.unstable ? 'NO' : 'yes') : '—',
+      perplexity: v.metrics?.perplexity ?? '—',
+      'HellaSwag %': v.metrics?.taskAccuracy ?? '—',
       'sha256 (start)': v.sha256.slice(0, 12),
+      file: v.fileDeleted ? 'deleted (baseline)' : 'kept',
     }))
   );
 }

@@ -2,7 +2,8 @@
 // Each function builds one command as an argument array and runs it with runCommand.
 // If a future llama.cpp renames a flag, only this file changes.
 // SRS: REQ-9 (pinned binaries present), REQ-12 (convert + quantize), REQ-13 (smoke test),
-// REQ-17 (benchmark). Owner: Sibghatullah (WP-04, benchmark WP-14).
+// REQ-17 (benchmark), REQ-18 (perplexity + task accuracy).
+// Owner: Sibghatullah (WP-04, benchmark WP-14, quality tests WP-16).
 import fs from 'node:fs';
 import path from 'node:path';
 import { settings } from '../config/settings.js';
@@ -91,6 +92,59 @@ export async function benchmark(file, { onLine, onSpawn, runs = 3 } = {}) {
   } catch {
     throw appError('E-BENCH-01', { message: 'llama-bench did not print valid JSON.' });
   }
+}
+
+// Quality test 1 (WP-16): perplexity on a fixed text — how "surprised" the model is by real
+// Wikipedia text, chunk by chunk (512 tokens each). Lower = better. llama-perplexity prints
+// "Final estimate: PPL = 18.9165 +/- 0.34990" at the end.
+export async function perplexity(file, textFile, { chunks, onLine } = {}) {
+  const args = [
+    '-m', file,
+    '-f', textFile,
+    '-c', '512', // context: 512 tokens per chunk (CLAUDE.md §7.2)
+    '--chunks', String(chunks), // 100 chunks (10 in demo mode)
+    '-ngl', '0',
+  ]; // prettier-ignore
+  if (settings.benchThreads > 0) args.push('-t', String(settings.benchThreads));
+
+  const result = await runCommand(toolPath('llama-perplexity'), args, {
+    onLine: (line, stream) => stream === 'stderr' && onLine?.(line), // stdout = 100 numbers
+    timeoutMs: minutes(settings.timeoutsMin.perplexity),
+  });
+  const found = result.lines.join('\n').match(/Final estimate: PPL = ([\d.]+) \+\/- ([\d.]+)/);
+  if (result.code !== 0 || !found) throw appError('E-EVAL-01', { message: 'Perplexity failed.' });
+  return { value: Number(found[1]), plusMinus: Number(found[2]), durationSec: result.durationSec };
+}
+
+// Quality test 2 (WP-16, evaluation E2): HellaSwag — for each task the model picks the most
+// sensible of 4 sentence endings. llama.cpp picks the tasks with a FIXED seed, so every file is
+// tested on the same tasks. The last stdout line is: "400  42.00000000%  [37.2618%, 46.8904%]"
+// (tasks done, accuracy, 95 % confidence range).
+export async function hellaswag(file, dataFile, { tasks, onLine } = {}) {
+  const args = [
+    '-m', file,
+    '-f', dataFile,
+    '--hellaswag',
+    '--hellaswag-tasks', String(tasks), // 400 tasks (100 in demo mode)
+    '-c', '512',
+    '-ngl', '0',
+  ]; // prettier-ignore
+  if (settings.benchThreads > 0) args.push('-t', String(settings.benchThreads));
+
+  const result = await runCommand(toolPath('llama-perplexity'), args, {
+    onLine: (line, stream) => stream === 'stderr' && onLine?.(line), // stdout = one line per task
+    timeoutMs: minutes(settings.timeoutsMin.perplexity),
+  });
+  const last = result.stdout.trim().split(/\r?\n/).pop() || '';
+  const found = last.match(/^(\d+)\s+([\d.]+)%\s+\[([\d.]+)%,\s*([\d.]+)%\]/);
+  if (result.code !== 0 || !found) throw appError('E-EVAL-01', { message: 'HellaSwag failed.' });
+  return {
+    tasks: Number(found[1]),
+    accuracy: Number(found[2]),
+    low: Number(found[3]),
+    high: Number(found[4]),
+    durationSec: result.durationSec,
+  };
 }
 
 // Load a file and let it write 32 tokens. Valid = exits normally in time and prints text.

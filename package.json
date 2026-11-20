@@ -21,7 +21,8 @@
     "setup:llamacpp": "node scripts/setup-llamacpp.js",
     "pipeline": "npm run pipeline --prefix backend --",
     "validate:catalog": "node scripts/validate-catalog.js",
-    "fetch:wikitext": "node scripts/fetch-wikitext.js",
+    "fetch:datasets": "node scripts/fetch-datasets.js",
+    "fetch:wikitext": "node scripts/fetch-datasets.js",
     "regression": "node scripts/regression.js"
   },
   "devDependencies": {
