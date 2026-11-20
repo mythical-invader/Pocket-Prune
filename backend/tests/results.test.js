@@ -1,6 +1,7 @@
 // results.test.js — change vs F16, the size-estimate error (E1), which numbers exist, and
-// GET /api/jobs/:id/results (completed jobs only, owner only). SRS: REQ-20, REQ-28.
-// Owner: Huzaifah (WP-15).
+// GET /api/jobs/:id/results (completed jobs only, owner only), and the WP-17 additions
+// (accuracy in points, ± ranges, downloadable, machine). SRS: REQ-20, REQ-21, REQ-28.
+// Owner: Huzaifah (WP-15, WP-17).
 import request from 'supertest';
 import app from '../app.js';
 import { settings } from '../config/settings.js';
@@ -8,7 +9,12 @@ import CatalogModel from '../models/CatalogModel.js';
 import DeviceProfile from '../models/DeviceProfile.js';
 import Job from '../models/Job.js';
 import User from '../models/User.js';
-import { buildResults, compareVariant, pctChange } from '../services/resultsService.js';
+import {
+  buildResults,
+  compareVariant,
+  pctChange,
+  pointsChange,
+} from '../services/resultsService.js';
 import { startTestDb, clearTestDb, stopTestDb } from './helpers/testDb.js';
 
 beforeAll(startTestDb);
@@ -62,6 +68,43 @@ describe('compareVariant', () => {
     const q4 = compareVariant(Q4, F16, 259);
     expect(q4.estimatedSizeMb).toBe(79.3);
     expect(q4.estimateErrorPct).toBe(-21.2);
+  });
+});
+
+describe('WP-17 additions', () => {
+  // Same files with the quality numbers WP-16 adds, and F16 deleted after evaluation.
+  const f16 = {
+    ...F16,
+    fileDeleted: true,
+    metrics: {
+      ...F16.metrics,
+      perplexityStd: 0.21,
+      taskAccuracy: 42.0,
+      taskAccuracyMargin: 4.8,
+      settings: { cpu: 'Intel(R) Core(TM) i7-14700HX', threads: 8 },
+    },
+  };
+  const q4 = { ...Q4, metrics: { ...Q4.metrics, taskAccuracy: 40.8, taskAccuracyMargin: 4.8 } };
+
+  it('compares task accuracy in percentage points, not relative %', () => {
+    expect(pointsChange(40.8, 42.0)).toBe(-1.2);
+    expect(compareVariant(q4, f16, 259).vsF16.taskAccuracy).toBe(-1.2);
+  });
+
+  it('passes on the ± ranges the tools report', () => {
+    expect(compareVariant(f16, f16, 259).ranges).toEqual({ perplexity: 0.21, taskAccuracy: 4.8 });
+  });
+
+  it('offers a download only for files that passed and still exist', () => {
+    expect(compareVariant(f16, f16, 259)).toMatchObject({ downloadable: false, fileDeleted: true });
+    expect(compareVariant(q4, f16, 259).downloadable).toBe(true);
+    expect(compareVariant({ ...q4, smokePassed: false }, f16, 259).downloadable).toBe(false);
+  });
+
+  it('names the machine the numbers were measured on', () => {
+    const results = buildResults({ status: 'COMPLETED', variants: [q4, f16] });
+    expect(results.machine).toEqual({ cpu: 'Intel(R) Core(TM) i7-14700HX', threads: 8 });
+    expect(buildResults({ status: 'COMPLETED', variants: [Q4] }).machine).toBeNull();
   });
 });
 

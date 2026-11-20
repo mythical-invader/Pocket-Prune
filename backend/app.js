@@ -7,6 +7,7 @@ import systemRoutes from './routes/systemRoutes.js';
 import catalogRoutes from './routes/catalogRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
+import artifactRoutes from './routes/artifactRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api/system', systemRoutes);
 app.use('/api/catalog', catalogRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/artifacts', artifactRoutes);
 
 // These two must stay last: unknown /api addresses, then the shared error format.
 app.use('/api', notFound);

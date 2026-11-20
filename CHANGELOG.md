@@ -7,6 +7,11 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-17: charts + downloads — three bar charts (`MetricsChart`), a Files card and the Downloads page,
+  `GET /api/artifacts` + `/api/artifacts/:jobId/:level/download` (owner only, deleted F16 not offered,
+  "on the model machine" when the file is elsewhere); task accuracy as % ± range and in percentage
+  points vs F16; the measuring machine on Results.
+
 - WP-18: recommender — `services/recommender.js` with the six rules (fits, 10 % quality guard,
   preference, tie → smaller, nothing fits → what is needed, baselines), a plain-English explanation
   naming the device (and a note when a speed test was unstable); new RECOMMENDING stage saves the

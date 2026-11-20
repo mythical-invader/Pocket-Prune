@@ -22,6 +22,7 @@ before starting the work package that needs it — and use it to prepare for the
    8c. [Failing cleanly: process trees, disk reserve, clean-up, regression tests (WP-13)](#8c-failing-cleanly-process-trees-disk-reserve-clean-up-regression-tests-wp-13)
 
    8d. [Comparing with F16: "change vs baseline" (WP-15)](#8d-comparing-with-f16-change-vs-baseline-wp-15)
+   8e. [Downloads, ± ranges and percentage points (WP-17)](#8e-downloads--ranges-and-percentage-points-wp-17)
 
 9. [Benchmarking: tokens per second and peak RAM (WP-14)](#9-benchmarking-tokens-per-second-and-peak-ram-wp-14)
 10. [Quality: perplexity and task accuracy (WP-16)](#10-quality-perplexity-and-task-accuracy-wp-16)
@@ -589,6 +590,25 @@ quality. The Results page colours good changes green and bad ones red.
 **Estimate vs real (evaluation E1):** before a job the site guesses each size from "bits per
 weight". The Results table shows that guess under the real size, e.g. "est. 79 MB (−21.2 %)" — the
 guess was 21 % too small for this tiny model.
+
+### 8e. Downloads, ± ranges and percentage points (WP-17)
+
+**Streaming a download.** A GGUF file can be 2 GB. The server doesn't read it into memory and send it
+as one answer; `res.download()` sends it in small pieces straight from the disk. The website uses a
+plain link (`<a href="…/download" download>`), so the browser shows its own progress bar and can
+resume a broken download. Model files are never stored in MongoDB — only their path, size and SHA-256.
+
+**SHA-256** is a fingerprint of a file: 64 characters that change completely if even one byte
+changes. After downloading, compare the fingerprint (`certutil -hashfile file.gguf SHA256` on Windows)
+with the one on the Downloads page to be sure the file arrived intact.
+
+**± ranges.** A quality test on 400 HellaSwag questions gives e.g. "40.8 ± 4.8 %": the real accuracy is
+very likely between 36.0 and 45.6 %. If Q5_K_M scores 40.5 and Q4_K_M 40.8, the 0.3 gap is far smaller
+than ± 4.8 — the two are **not really different**; it's noise. More questions → a smaller ±.
+
+**Percentage points (pp).** Accuracy is already a percentage. Going from 42.0 % to 40.8 % is a drop of
+**1.2 percentage points** (40.8 − 42.0). Saying "−2.9 %" (the relative change) would be confusing, so
+the table writes "−1.2 pp".
 
 ## 9. Benchmarking: tokens per second and peak RAM (WP-14)
 

@@ -5,6 +5,45 @@ problems, next step.
 
 ---
 
+## 21 Nov 2026 — Huzaifah — WP-17 Charts + downloads
+
+**Built:** `MetricsChart` (Recharts) and three charts on the Results page; `GET /api/artifacts` and
+`GET /api/artifacts/:jobId/:level/download` (`controllers/artifactController.js`,
+`utils/artifactFiles.js`); the **Downloads** page; a Files card with download buttons on Results;
+results now carry `ranges` (±), `downloadable`, `fileDeleted`, `onThisServer` and `machine`;
+task accuracy changes in percentage points. 11 new tests (191 total). Reviewed Sibghatullah's #66.
+
+**Decisions and why**
+
+- **Downloads are plain links** (`<a href download>`) to an endpoint using `res.download`: the browser
+  shows its own progress bar and can resume, and the server streams the file without loading it
+  into memory.
+- **Only files inside `data/artifacts` are ever sent**, whatever path the database holds, and only to
+  the job's owner.
+- **"On the model machine"** instead of an error: with the shared Atlas database a job's files are on
+  the laptop that ran it; the API checks whether the file is on _its own_ disk.
+- **Deleted F16 not offered** (`fileDeleted`, WP-16) — its numbers stay as the baseline.
+- **Task accuracy in percentage points** (42.0 → 40.8 = −1.2 pp), and the **± range** next to perplexity
+  and accuracy: with 400 HellaSwag tasks the range (~4.8) is bigger than the gap between Q5 and Q4.
+- **Machine = CPU + threads** from llama-bench's saved settings (REQ-21). The fake pipeline saves no
+  CPU, so fake jobs show "—".
+- Speed bars are labelled with the number only ("199"): "199 tok/s" didn't fit a bar and wrapped; the
+  chart caption says "tokens per second".
+- Recharts makes the website bundle > 500 kB (a build warning only); fine for now, code-splitting
+  later if needed.
+
+**Problems:** at phone width the Results page was 546 px wide — the 64-character SHA-256 couldn't wrap;
+it now has its own wrapping line (same as the Downloads page).
+
+**Live test:** local MongoDB + the worker with `FAKE_PIPELINE=true`: job → Results with all metrics,
+accuracy "40.8 ± 4.8 %, −1.2 pp", three charts; Downloads page lists three jobs (deleted F16, files on
+"the model machine", downloadable files); a real download returned the file with its name; F16 → 404
+with the explanation; phone width without sideways scrolling.
+
+**Next step:** WP-19 (recommendation card, `POST /recommend`, profile dropdown, export).
+
+---
+
 ## 20 Nov 2026 — Sibghatullah — WP-18 Recommender + baseline comparison (E3)
 
 **Built**

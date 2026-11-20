@@ -41,4 +41,9 @@ export const getJobs = () => api.get('/jobs').then((r) => r.data);
 export const getJob = (id) => api.get(`/jobs/${id}`).then((r) => r.data); // + queuePosition, events
 export const getResults = (id) => api.get(`/jobs/${id}/results`).then((r) => r.data); // WP-15
 
+// Downloads (WP-17). The download itself is a normal link, so the browser shows its own
+// progress bar and can resume; this only builds the address.
+export const getArtifacts = () => api.get('/artifacts').then((r) => r.data);
+export const artifactDownloadUrl = (jobId, level) => `/api/artifacts/${jobId}/${level}/download`;
+
 export default api;

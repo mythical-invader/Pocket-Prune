@@ -356,3 +356,17 @@ The metrics are saved on each variant by the worker, so Huzaifah's Results page
 
 The same `recommend()` will be called by `POST /api/jobs/:id/recommend` (WP-19) when the user picks
 another device profile on the Results page — no new measurements needed.
+
+## WP-17 — Charts and downloads
+
+| File                                        | What it does                                                                                                                                                                                  |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `frontend/src/components/MetricsChart.jsx`  | One bar chart (Recharts): F16 grey, compressed files blue, value on each bar; colours from `theme.js`. The same numbers are in the table, so nothing is only on hover.                        |
+| `frontend/src/pages/ResultsPage.jsx`        | Adds "At a glance" (size, generation speed, peak RAM), a **Files** card (size, SHA-256, Download / why not) and the machine.                                                                  |
+| `frontend/src/pages/DownloadsPage.jsx`      | `/downloads`: every file of your finished jobs, grouped by job, with full SHA-256 and a Download button.                                                                                      |
+| `backend/controllers/artifactController.js` | `GET /api/artifacts` (the list) and `GET /api/artifacts/:jobId/:level/download` (`res.download` streams the file). Owner only, completed jobs only, passed files only, never the deleted F16. |
+| `backend/utils/artifactFiles.js`            | `isInsideArtifacts` (never send a file outside `data/artifacts`) and `onThisServer` (is the file on this machine's disk?).                                                                    |
+| `backend/services/resultsService.js`        | Rows now also have `ranges` (±), `downloadable`, `fileDeleted`; results have `machine`; task accuracy changes in percentage points (`pointsChange`).                                          |
+
+**Why "on the model machine"?** Both laptops share one database, but files stay on the disk of the
+laptop whose worker made them. Your API can see the job but not the file, so it says where to get it.
