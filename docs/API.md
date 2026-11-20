@@ -288,7 +288,43 @@ results yet: the job has not finished."
 - `measured`: which metrics exist for this job (before WP-14/16 a real job has only `fileSizeMb`).
 - `estimatedSizeMb` / `estimateErrorPct`: the size predicted before the job and how far off it was (E1).
 
+### `GET /api/artifacts` — user
+
+Every file of your **completed** jobs that passed its smoke test, newest job first:
+
+```json
+[
+  {
+    "jobId": "6b00c785…",
+    "model": "SmolLM2 135M Instruct",
+    "license": "Apache-2.0",
+    "level": "Q4_K_M",
+    "fileSizeMb": 100.9,
+    "sha256": "8eacd7a4…",
+    "expiresAt": null,
+    "fileDeleted": false,
+    "onThisServer": true,
+    "finishedAt": "2026-11-21T…",
+    "fake": false
+  }
+]
+```
+
+`fileDeleted: true` = the F16 baseline, deleted after evaluation (numbers kept). `onThisServer: false` =
+the file is on the machine that ran the job, not on this server.
+
+### `GET /api/artifacts/:jobId/:level/download` — user
+
+Sends the GGUF file (`Content-Disposition: attachment; filename=…`), streamed and resumable. `404
+E-NOTFOUND-01` with a message for: someone else's or an unknown job, a level that failed its smoke
+test, the deleted F16 ("was deleted after evaluation"), or a file that isn't on this server ("Files
+stay on the machine that ran the job"). Never sends anything outside `data/artifacts`.
+
+**Results additions (WP-17):** each row of `GET /api/jobs/:id/results` also has `ranges` (`{ perplexity,
+taskAccuracy }` ± values), `downloadable`, `fileDeleted` and `onThisServer`; the answer has
+`machine: { cpu, threads }`; `vsF16.taskAccuracy` is in percentage points.
+
 ## Planned endpoints
 
 Filled in as each WP lands (see `CLAUDE.md` §6): cancel / retry (WP-22),
-downloads (WP-17), recommendation and export (WP-19), auth (WP-21), admin (WP-25).
+recommendation and export (WP-19), auth (WP-21), admin (WP-25).
