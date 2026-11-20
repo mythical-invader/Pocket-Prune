@@ -1,9 +1,9 @@
-// jobRoutes.js — /api/jobs addresses; all need a user. SRS: REQ-6 – REQ-10, REQ-26, REQ-28.
+// jobRoutes.js — /api/jobs addresses; all need a user. SRS: REQ-6 – REQ-10, REQ-26, REQ-28, REQ-31.
 // Owner: Huzaifah.
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware.js';
 import { preflight, createJob, listJobs, getJob } from '../controllers/jobController.js';
-import { getResults } from '../controllers/resultController.js';
+import { getResults, recommendForProfile, exportResults } from '../controllers/resultController.js';
 
 const router = Router();
 
@@ -13,5 +13,7 @@ router.post('/', createJob);
 router.get('/', listJobs);
 router.get('/:id', getJob);
 router.get('/:id/results', getResults);
+router.post('/:id/recommend', recommendForProfile); // WP-19
+router.get('/:id/export', exportResults); // WP-19
 
 export default router;

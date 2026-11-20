@@ -3,8 +3,9 @@
 // versus the F16 baseline, the ± ranges, the machine, which files can be downloaded, and the size
 // estimate made before the job vs the real size (evaluation E1).
 // Plain functions with no database calls, so they are easy to test.
-// SRS: REQ-17, REQ-20, REQ-21, REQ-28, REQ-30. Owner: Huzaifah (WP-15, WP-17).
+// SRS: REQ-17, REQ-20, REQ-21, REQ-28, REQ-30. Owner: Huzaifah (WP-15, WP-17, WP-19).
 import { estimateSizeMb } from '../utils/sizeEstimate.js';
+import { RULES } from './recommender.js';
 
 // The numbers we compare. `better` says which direction is good, so the website can colour a
 // change green or red: smaller files, less RAM and lower perplexity are better; faster is better.
@@ -78,6 +79,9 @@ export function compareVariant(variant, f16, f16SizeMbFromCatalog) {
   };
 }
 
+// A Mongoose sub-document → a plain object (so it can be spread); plain objects stay as they are.
+const plain = (doc) => (typeof doc.toObject === 'function' ? doc.toObject() : doc);
+
 // The whole Results answer for one completed job.
 export function buildResults(job) {
   const variants = job.variants ?? [];
@@ -107,7 +111,9 @@ export function buildResults(job) {
           revision: job.model.revision,
         }
       : null,
-    profile: job.profile ? { name: job.profile.name, preference: job.profile.preference } : null,
+    profile: job.profile
+      ? { _id: job.profile._id, name: job.profile.name, preference: job.profile.preference }
+      : null,
     fake: Boolean(job.fake),
     demoMode: Boolean(job.demoMode),
     llamaCppRef: job.llamaCppRef ?? null,
@@ -115,6 +121,9 @@ export function buildResults(job) {
     metrics: METRICS,
     measured,
     rows,
-    recommendation: job.recommendation?.chosenLevel ? job.recommendation : null,
+    // Any saved recommendation, also "nothing fits" (no chosen level), with its rule in plain words.
+    recommendation: job.recommendation?.ruleFired
+      ? { ...plain(job.recommendation), ruleText: RULES[job.recommendation.ruleFired] ?? null }
+      : null,
   };
 }
