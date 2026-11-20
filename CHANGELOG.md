@@ -7,6 +7,10 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-19: recommendation card (rule in plain words, smallest/largest that fit, quality risk, nothing
+  fits) with a device dropdown (`POST /api/jobs/:id/recommend`, nothing saved), and Export CSV / JSON
+  (`GET /api/jobs/:id/export`) with the settings on every line.
+
 - WP-17: charts + downloads — three bar charts (`MetricsChart`), a Files card and the Downloads page,
   `GET /api/artifacts` + `/api/artifacts/:jobId/:level/download` (owner only, deleted F16 not offered,
   "on the model machine" when the file is elsewhere); task accuracy as % ± range and in percentage

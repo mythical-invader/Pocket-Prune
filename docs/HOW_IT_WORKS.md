@@ -370,3 +370,16 @@ another device profile on the Results page — no new measurements needed.
 
 **Why "on the model machine"?** Both laptops share one database, but files stay on the disk of the
 laptop whose worker made them. Your API can see the job but not the file, so it says where to get it.
+
+## WP-19 — Recommendation card and export
+
+| File                                             | What it does                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/controllers/resultController.js`        | `POST /api/jobs/:id/recommend`: loads your completed job and one of your profiles and calls `recommend()` from `services/recommender.js` on the job's saved measurements. Returns the answer, the rule in plain words and the E3 baselines; saves nothing. `GET /api/jobs/:id/export`: the Results answer as a CSV or JSON file. |
+| `backend/services/exportService.js`              | `toCsv` (one line per file + the settings), `toJson`, `csvCell` (quotes text with commas), `exportFileName`.                                                                                                                                                                                                                     |
+| `frontend/src/components/RecommendationCard.jsx` | The chosen level, the explanation, the rule, smallest/largest that fit, a "Quality risk" badge, or a warning when nothing fits.                                                                                                                                                                                                  |
+| `frontend/src/pages/ResultsPage.jsx`             | The **Device** dropdown (your profiles; "(this job)" marks the one it ran with) and the Export CSV / JSON buttons.                                                                                                                                                                                                               |
+
+**What happens when you pick another device:** the page sends `{ profileId }` → the API runs the
+same six rules on the same numbers with that device's RAM, disk and preference → the card shows
+the new answer. Picking the job's own profile again shows the saved one, without a request.

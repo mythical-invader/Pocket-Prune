@@ -26,7 +26,8 @@ before starting the work package that needs it — and use it to prepare for the
 
 9. [Benchmarking: tokens per second and peak RAM (WP-14)](#9-benchmarking-tokens-per-second-and-peak-ram-wp-14)
 10. [Quality: perplexity and task accuracy (WP-16)](#10-quality-perplexity-and-task-accuracy-wp-16)
-11. The recommendation rules — _WP-18_
+11. [The recommender: choosing a file with rules you can check by hand (WP-18)](#11-the-recommender-choosing-a-file-with-rules-you-can-check-by-hand-wp-18)
+    11b. [Same numbers, another device · exporting results (WP-19)](#11b-same-numbers-another-device--exporting-results-wp-19)
 12. Passwords and JWT login — _WP-21_
 
 ---
@@ -768,3 +769,23 @@ picks a file that loses > 10 % when a safer one fits, and (3) on the user's own 
 
 The recommender is never worse, and it beats each baseline in some cases. WP-20 repeats this with
 real measurements for the benchmark report.
+
+## 11b. Same numbers, another device · exporting results (WP-19)
+
+**Measure once, recommend many times.** A job measures each file once (size, speed, RAM,
+perplexity). Which file is "best" depends on the **device**: a 4 GB phone and a 32 GB desktop get
+different answers from the same numbers. So choosing another profile on the Results page doesn't
+compress or measure anything again — it only runs the six rules again with that device's RAM, disk
+and preference. That takes milliseconds.
+
+Example (SmolLM2-135M): "balanced" laptop → Q4_K_M (fast and small, only +5 % perplexity);
+"quality" desktop → Q5_K_M (lowest perplexity); a phone with 256 MB RAM → nothing fits, "needs
+about 0.4 GB of RAM".
+
+**CSV** ("comma-separated values") is a plain text table: one line per row, commas between cells.
+Excel and Google Sheets open it directly. A cell that itself contains a comma is wrapped in quotes
+(`"Intel(R) Core(TM) i7, 8 cores"`), and a quote inside is doubled (`""`).
+
+**Why export the settings too?** A number like "199 tok/s" means nothing without knowing the
+machine, the llama.cpp version and whether it was demo mode. Every exported line carries them, so
+the numbers can be pasted into the final report and still be checked (reproducibility).
