@@ -1,8 +1,9 @@
 // resultsService.js — turns a finished job into the comparison the Results page shows:
-// every file's size, speed, peak RAM and perplexity, plus how much each changed versus the F16
-// baseline (in %), and the size estimate made before the job vs the real size (evaluation E1).
+// every file's size, speed, peak RAM, perplexity and task accuracy, plus how much each changed
+// versus the F16 baseline, the ± ranges, the machine, which files can be downloaded, and the size
+// estimate made before the job vs the real size (evaluation E1).
 // Plain functions with no database calls, so they are easy to test.
-// SRS: REQ-17, REQ-20, REQ-28. Owner: Huzaifah (WP-15).
+// SRS: REQ-17, REQ-20, REQ-21, REQ-28, REQ-30. Owner: Huzaifah (WP-15, WP-17).
 import { estimateSizeMb } from '../utils/sizeEstimate.js';
 
 // The numbers we compare. `better` says which direction is good, so the website can colour a
@@ -12,15 +13,30 @@ export const METRICS = [
   { key: 'tpsPrompt', label: 'Prompt speed', unit: 'tok/s', better: 'higher' },
   { key: 'tpsGen', label: 'Generation speed', unit: 'tok/s', better: 'higher' },
   { key: 'peakRamMb', label: 'Peak RAM', unit: 'MB', better: 'lower' },
-  { key: 'perplexity', label: 'Perplexity', unit: '', better: 'lower' },
+  { key: 'perplexity', label: 'Perplexity', unit: '', better: 'lower', range: 'perplexityStd' },
   // WP-16 / E2 (added by Sibghatullah): % of HellaSwag tasks answered correctly.
-  { key: 'taskAccuracy', label: 'Task accuracy (HellaSwag)', unit: '%', better: 'higher' },
+  // It is already a percentage, so its change vs F16 is in percentage POINTS (40.8 − 42.0 =
+  // −1.2 pp), not a relative % (that would read −2.9 %). `range` = the ± the tool reports.
+  {
+    key: 'taskAccuracy',
+    label: 'Task accuracy (HellaSwag)',
+    unit: '%',
+    better: 'higher',
+    change: 'points',
+    range: 'taskAccuracyMargin',
+  },
 ];
 
 // (value − base) ÷ base × 100, rounded to 0.1 %. null when either number is missing.
 export function pctChange(value, base) {
   if (value === null || value === undefined || !base) return null;
   return Math.round(((value - base) / base) * 1000) / 10;
+}
+
+// value − base, rounded to 0.1 (for numbers that are already percentages).
+export function pointsChange(value, base) {
+  if (value === null || value === undefined || base === null || base === undefined) return null;
+  return Math.round((value - base) * 10) / 10;
 }
 
 // Size sits on the variant itself; the other numbers are inside `metrics` (WP-14 / WP-16).
@@ -34,9 +50,12 @@ function valueOf(variant, key) {
 export function compareVariant(variant, f16, f16SizeMbFromCatalog) {
   const values = {};
   const vsF16 = {};
-  for (const { key } of METRICS) {
+  const ranges = {}; // the ± range of a measurement, when the tool reports one (WP-16)
+  for (const { key, change, range } of METRICS) {
     values[key] = valueOf(variant, key);
-    vsF16[key] = variant.level === 'F16' ? null : pctChange(values[key], valueOf(f16, key));
+    const compare = change === 'points' ? pointsChange : pctChange;
+    vsF16[key] = variant.level === 'F16' ? null : compare(values[key], valueOf(f16, key));
+    if (range) ranges[key] = variant.metrics?.[range] ?? null;
   }
 
   // E1: what the website estimated before the job vs what the file really is.
@@ -45,7 +64,12 @@ export function compareVariant(variant, f16, f16SizeMbFromCatalog) {
     level: variant.level,
     values,
     vsF16,
+    ranges,
     smokePassed: variant.smokePassed ?? null,
+    // Can it be downloaded? Only files that passed and still exist (F16 is deleted after
+    // evaluation, WP-16 — its numbers stay as the baseline).
+    downloadable: Boolean(variant.smokePassed) && !variant.fileDeleted,
+    fileDeleted: Boolean(variant.fileDeleted),
     sha256: variant.sha256 ?? null,
     estimatedSizeMb: estimatedSizeMb === null ? null : Math.round(estimatedSizeMb * 10) / 10,
     estimateErrorPct:
@@ -68,9 +92,14 @@ export function buildResults(job) {
     (m) => m.key
   );
 
+  // The machine the numbers were measured on (REQ-21): llama-bench saves the CPU and threads.
+  const bench = variants.find((v) => v.metrics?.settings?.cpu)?.metrics.settings;
+  const machine = bench ? { cpu: bench.cpu, threads: bench.threads ?? null } : null;
+
   return {
     jobId: job._id,
     status: job.status,
+    machine,
     model: job.model
       ? {
           displayName: job.model.displayName,
