@@ -5,6 +5,50 @@ problems, next step.
 
 ---
 
+## 20 Nov 2026 — Sibghatullah — WP-16 Perplexity + demo mode + task accuracy (E2)
+
+**Built**
+
+- `llamacpp.js`: `perplexity()` (`-c 512 --chunks N`, reads "Final estimate: PPL = x +/- y") and
+  `hellaswag()` (`--hellaswag --hellaswag-tasks N`, reads accuracy + 95 % range from the last line).
+- `evaluator.js`: `DATASETS` (two fixed files + SHA-256), `checkDatasets()` (`E-DATA-01`),
+  `qualitySizes()` (100 / 400; demo 10 / 100), `measureQuality()`, `addQuality()`.
+- `pipeline.js`: EVALUATING stage after BENCHMARKING; the F16 file is deleted at the end
+  (`fileDeleted: true`, numbers kept); returns `demoMode`. `worker.js` saves `demoMode`.
+- `Job.js`: `perplexityStd`, `taskAccuracy`, `taskAccuracyMargin`, `taskName`, `fileDeleted`.
+- `resultsService.js` (Huzaifah's): `taskAccuracy` added to the compared metrics (one line; his
+  results test now expects it).
+- `scripts/fetch-datasets.js` (renamed from fetch-wikitext.js; `npm run fetch:datasets`, old name
+  kept): WikiText-2 + HellaSwag, SHA-256 checked. `errors.js`: `E-EVAL-01`, `E-DATA-01`.
+- `fakePipeline.js`: real HellaSwag numbers, `fileDeleted` on F16, `demoMode`.
+- `regression.js` runs in demo mode (it compares sizes, not quality) — PASS in 9 min.
+- 16 new tests — 152 in total.
+
+**Real check:** CLI on SmolLM2-135M: perplexity F16 18.92 / Q5_K_M 19.57 / Q4_K_M 19.87 (exactly
+the WP-02 hand measurement); HellaSwag 42.0 / 40.5 / 40.8 % (± 4.8) → Q4_K_M keeps 97 % of F16's
+accuracy. 456 s per job (demo mode 101 s). Then API + worker on Atlas: the website job reached
+COMPLETED; `GET /api/jobs/:id/results` lists all six metrics with changes vs F16; only the Q5_K_M
+and Q4_K_M files are left on disk, F16 has `fileDeleted: true`.
+
+**Decisions and why**
+
+- **HellaSwag via llama-perplexity** (no new tool, no Python): the same binary and pinned build.
+- **Fixed tasks:** llama.cpp picks the 400 tasks with a fixed seed — two runs gave byte-identical
+  output, so every file is tested on the same tasks.
+- **Ranges are saved and shown** (PPL ±, accuracy ± half of the 95 % range): with 400 tasks the
+  range is ±4.8 points, so a 1–2 point drop is not a real difference — the report must say so.
+- **Refuse to measure on changed data** (`E-DATA-01`): checked by SHA-256 before every job; a
+  missing or changed file means "no quality numbers", never a failed job.
+- **Demo mode numbers are for live demos only** (±9 % HellaSwag, short speed tests flagged
+  unstable) — the report uses normal mode.
+
+**Problems:** a name clash (`f16` declared twice in `runStages`) — caught by the tests. The
+regression rewrote `docs/regression-M2.md`; restored it, because that file is the M2 record.
+
+**Next step:** PR `sibghatullah` → `main` (closes #17). Then WP-18 (recommender).
+
+---
+
 ## 15 Nov 2026 — Sibghatullah — WP-14 Benchmarking
 
 **Built**

@@ -24,7 +24,7 @@ before starting the work package that needs it — and use it to prepare for the
    8d. [Comparing with F16: "change vs baseline" (WP-15)](#8d-comparing-with-f16-change-vs-baseline-wp-15)
 
 9. [Benchmarking: tokens per second and peak RAM (WP-14)](#9-benchmarking-tokens-per-second-and-peak-ram-wp-14)
-10. Perplexity — _WP-16_
+10. [Quality: perplexity and task accuracy (WP-16)](#10-quality-perplexity-and-task-accuracy-wp-16)
 11. The recommendation rules — _WP-18_
 12. Passwords and JWT login — _WP-21_
 
@@ -637,3 +637,61 @@ current memory, because a short spike between two samples can't be missed. (The 
 - The same numbers as the hand measurement in WP-02 (974 / 199 tok/s for Q4_K_M) → repeatable.
 - WP-02 showed 320 MB peak RAM for Q4_K_M because it measured with a 4096-token context;
   llama-bench uses 512 + 128 tokens. Always compare RAM measured the same way.
+
+## 10. Quality: perplexity and task accuracy (WP-16)
+
+Compression makes files smaller and faster — but how much "intelligence" is lost? We measure
+quality two ways, always against the **F16 baseline** of the same model.
+
+**Perplexity (PPL).** We give the model real Wikipedia text (WikiText-2) and, word by word, check
+how much probability it gave to the word that really came next. Perplexity turns that into "how
+many words was it torn between": **18.9** means it was, on average, as unsure as choosing among
+~19 equally likely words. **Lower = better.** What matters is the _increase_ vs F16:
+
+```bash
+llama-perplexity -m <file> -f data/wikitext/wiki.test.raw -c 512 --chunks 100 -ngl 0
+# → "Final estimate: PPL = 18.9165 +/- 0.34990"
+```
+
+(`-c 512`: the model reads the text in pieces of 512 tokens; `--chunks 100`: 100 pieces ≈ 51 000
+tokens — enough for a stable number, 30 s for a small model.)
+
+**Task accuracy (HellaSwag, evaluation E2).** Perplexity is hard to explain to people, so we also
+run a common-sense test. Each task is the start of a sentence and four possible endings; the model
+picks the ending it finds most likely:
+
+> _"A man is sitting on a roof. He…"_ — (a) is using wrap to wrap a pair of skis · (b) is ripping
+> level tiles off · (c) is holding a rubik's cube · **(d) starts pulling up roofing on a roof** ✔
+
+Accuracy = % of tasks answered right. **25 % = blind guessing.** We use 400 tasks; llama.cpp picks
+them with a fixed seed, so every file gets the same 400 (we checked: two runs give identical output).
+
+**Confidence range — be honest about noise.** With 400 tasks, a score of 42 % really means "very
+likely between 37 % and 47 %" (95 % range, printed by llama.cpp). So a difference of 1–2 points
+between two files is **not** a real difference. We save the ± with every number and say so in the
+results.
+
+**What we measured** (SmolLM2-135M, b12376, normal mode):
+
+| File   | Perplexity   | vs F16 | HellaSwag    | % of F16 accuracy kept |
+| ------ | ------------ | ------ | ------------ | ---------------------- |
+| F16    | 18.92 ± 0.35 | —      | 42.0 ± 4.8 % | 100 %                  |
+| Q5_K_M | 19.57 ± 0.36 | +3.4 % | 40.5 ± 4.8 % | 96 %                   |
+| Q4_K_M | 19.87 ± 0.36 | +5.0 % | 40.8 ± 4.8 % | 97 %                   |
+
+Q4_K_M is 61 % smaller and twice as fast at writing, but only 5 % "more confused" and not
+measurably worse on the common-sense test. That is the trade-off PocketPrune reports. (The
+recommender in WP-18 rejects a file whose perplexity rises more than 10 %.)
+
+**Same text everywhere.** Both test files are fixed and checked by SHA-256 before every
+measurement (`npm run fetch:datasets` downloads them). If one byte differs, the job refuses to
+measure quality (E-DATA-01) instead of producing numbers that can't be compared.
+
+**Demo mode** (`DEMO_MODE=true`): 10 chunks and 100 tasks, plus a shorter speed test → a full
+SmolLM2-135M job takes ~100 s instead of ~450 s. The numbers are noisier (HellaSwag ± 9 %), so
+they are only for showing the flow live — never for the report. Results made in demo mode are
+marked `demoMode`.
+
+**Deleting F16.** The F16 file is only the yardstick and is the biggest file. Once it is measured,
+the pipeline deletes it (`fileDeleted: true`); its numbers stay in the database, so every level is
+still compared with F16.
