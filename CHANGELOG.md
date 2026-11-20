@@ -7,6 +7,12 @@ All notable changes, grouped by release. Format based on
 
 ### Added
 
+- WP-18: recommender — `services/recommender.js` with the six rules (fits, 10 % quality guard,
+  preference, tie → smaller, nothing fits → what is needed, baselines), a plain-English explanation
+  naming the device (and a note when a speed test was unstable); new RECOMMENDING stage saves the
+  recommendation for the job's device profile; E3 comparison with "always Q4_K_M" and "largest
+  that fits" (`compareWithBaselines`, 36 test cases); CLI `--preference`, `--ram`, `--disk`.
+
 - WP-16: quality — new EVALUATING stage: perplexity on WikiText-2 (100 chunks) and HellaSwag task
   accuracy (400 tasks, E2) with their ± ranges for every file that passed; both test files checked by
   SHA-256 (`E-DATA-01`); demo mode (10 chunks / 100 tasks, `demoMode` saved); the F16 file is

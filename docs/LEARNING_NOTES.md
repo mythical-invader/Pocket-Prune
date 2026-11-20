@@ -695,3 +695,56 @@ marked `demoMode`.
 **Deleting F16.** The F16 file is only the yardstick and is the biggest file. Once it is measured,
 the pipeline deletes it (`fileDeleted: true`); its numbers stay in the database, so every level is
 still compared with F16.
+
+## 11. The recommender: choosing a file with rules you can check by hand (WP-18)
+
+After a job we have 2–3 files with measured numbers. Which one should _this_ person download? A
+machine-learning model could guess, but nobody could explain its answer. PocketPrune uses **six
+plain rules** (`backend/services/recommender.js`) — a teacher can check every answer with a
+calculator.
+
+| Rule            | What it says                                                                                         | Why                                                                |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| 1 Fits          | peak RAM ≤ **75 %** of the device RAM, and file size ≤ free disk − **2 GB**                          | the OS and other apps need the rest; a full disk breaks everything |
+| 2 Quality guard | skip a file whose perplexity is **> 10 %** worse than F16 — unless nothing else fits (`qualityRisk`) | a tiny file that writes nonsense is no use                         |
+| 3 Preference    | quality → lowest perplexity · speed → most tok/s · smallest → smallest file · balanced → score below | the user said what matters most to them                            |
+| 4 Tie           | equal score → the **smaller** file                                                                   | same result, less download and disk                                |
+| 5 Nothing fits  | say how much RAM and disk _would_ be needed                                                          | a useful "no" instead of a silent one                              |
+| 6 Baselines     | also report the smallest and the largest file that fits                                              | lets the Results page show the range of safe choices               |
+
+**The "balanced" score.** Each number is scaled to 0–1 among the files (best = 1, worst = 0), then
+`score = 0.4 × speed + 0.4 × quality + 0.2 × size`. Example with three files of a 1.5 B model:
+
+| File   | gen tok/s | perplexity | size    | speed | quality | size | score    |
+| ------ | --------- | ---------- | ------- | ----- | ------- | ---- | -------- |
+| Q8_0   | 25        | 9.52       | 1570 MB | 0.00  | 1.00    | 0.00 | 0.40     |
+| Q5_K_M | 32        | 9.71       | 1090 MB | 0.64  | 0.56    | 0.76 | **0.63** |
+| Q4_K_M | 36        | 9.95       | 940 MB  | 1.00  | 0.00    | 1.00 | 0.60     |
+
+Q5_K_M wins: not the best at anything, but good at everything — that is what "balanced" means.
+
+**The explanation** names the device and gives the numbers, e.g. _"For "Office laptop" (8.0 GB RAM,
+…), Q4_K_M is the best match: it is the fastest of the files that fit. It needed 320 MB of RAM in
+our test (the limit is 75 % of the device RAM, 6.0 GB)… Perplexity +5.0 % vs the original F16
+model."_ It never says "guaranteed": speed was measured on _our_ machine, and the user's may differ.
+If a speed test was **unstable** (runs differed > 10 %, WP-14), the explanation says so.
+
+**Is it better than a simple rule? (evaluation E3).** Two naive methods to beat:
+
+- **always-Q4** — "everyone on the internet uses Q4_K_M". Never checks whether it fits, never checks
+  quality.
+- **largest-fits** — "bigger is better". Ignores speed.
+
+`compareWithBaselines()` puts all three side by side. The tests run 3 models × 4 devices × 3
+preferences (36 cases) and check that the recommender (1) always picks a file that fits, (2) never
+picks a file that loses > 10 % when a safer one fits, and (3) on the user's own preference is
+**never worse** than either baseline. Example cases:
+
+| Case                               | Recommender | always-Q4                | largest-fits       |
+| ---------------------------------- | ----------- | ------------------------ | ------------------ |
+| 1.5 B model, 2 GB phone, quality   | Q5_K_M      | Q4_K_M (lower quality)   | Q5_K_M             |
+| 1.5 B model, 16 GB laptop, speed   | Q4_K_M      | Q4_K_M                   | Q8_0 (30 % slower) |
+| risky model (Q4 loses 14 %), speed | Q5_K_M      | Q4_K_M (fails the guard) | Q5_K_M             |
+
+The recommender is never worse, and it beats each baseline in some cases. WP-20 repeats this with
+real measurements for the benchmark report.

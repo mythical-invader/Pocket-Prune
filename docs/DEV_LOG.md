@@ -5,6 +5,46 @@ problems, next step.
 
 ---
 
+## 20 Nov 2026 — Sibghatullah — WP-18 Recommender + baseline comparison (E3)
+
+**Built**
+
+- `services/recommender.js` (plain functions, no database): `candidates()`, `fits()`,
+  `qualityLoss()`, `scoreFiles()`, `recommend()` (rules 1–6 of CLAUDE.md §7.3 → `chosenLevel`,
+  `baselineSmallest`, `baselineLargest`, `ruleFired`, `explanation`, `qualityRisk`), `RULES`
+  (every `ruleFired` in plain words), `compareWithBaselines()` (E3).
+- `pipeline.js`: last stage RECOMMENDING when the job has a profile; problems only log a warning.
+- `worker.js`: `populate(['model', 'profile'])`, saves the recommendation.
+- `fakePipeline.js`: real recommender on fake numbers ("FAKE DATA —" in the explanation).
+- `cli.js`: prints the recommendation; `--preference`, `--ram`, `--disk` (default: this computer).
+- 28 new tests (one per rule + E3: 3 models × 4 devices × 3 preferences) — 180 in total.
+
+**Real check:** CLI on SmolLM2-135M, balanced, this laptop: **Q5_K_M** (demo mode 85 s, normal
+384 s). Normal-mode numbers: Q5_K_M 185.4 tok/s, perplexity +3.4 %; Q4_K_M 183.8 tok/s, +5.0 %.
+Same speed, Q5_K_M a bit better quality → balanced picks Q5_K_M. All three speed tests were
+flagged unstable in this run (the laptop was also running other commands) — the explanation said
+so.
+
+**Decisions and why**
+
+- **Rules, not a learned model:** every answer can be checked by hand and explained in the viva.
+- **F16 is never recommended:** it is the yardstick and is deleted after evaluation.
+- **Files without speed/RAM numbers are skipped:** "fits" can't be checked without peak RAM.
+  Missing perplexity → the quality guard can't apply, and the file size stands in for quality.
+- **Unstable speed → a note in the explanation:** found in the first real run (demo mode Q4_K_M
+  122 tok/s, flagged unstable) — the user should know when the speed comparison is shaky.
+- **No profile → no recommendation** (regression script); a deleted profile never fails a job.
+- **E3 checks properties, not only examples:** always fits, never > 10 % loss when a safer file
+  fits, never worse than a baseline on the user's own preference — and it does differ from both
+  baselines in some cases. The 1.5 B numbers in the tests are illustrative; WP-20 uses real ones.
+
+**Problems:** a shell-quoting slip left three empty strings in `pipeline.js` — fixed with the
+editor and caught before any test ran.
+
+**Next step:** PR `sibghatullah` → `main` (closes #19). Then WP-20 after Huzaifah's WP-19.
+
+---
+
 ## 20 Nov 2026 — Sibghatullah — WP-16 Perplexity + demo mode + task accuracy (E2)
 
 **Built**
