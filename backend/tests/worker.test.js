@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import { vi } from 'vitest';
 import { settings } from '../config/settings.js';
 import CatalogModel from '../models/CatalogModel.js';
+import DeviceProfile from '../models/DeviceProfile.js';
 import Job from '../models/Job.js';
 import JobEvent from '../models/JobEvent.js';
 import { jobDir, runPipeline as realPipeline } from '../worker/pipeline.js';
@@ -123,6 +124,35 @@ describe('processJob', () => {
     expect(saved.finishedAt).toBeInstanceOf(Date);
     const messages = (await JobEvent.find({ job: saved._id })).map((e) => e.message);
     expect(messages.some((m) => m.includes('2 of 2 files passed'))).toBe(true);
+  });
+
+  it('gives the pipeline the device profile and saves its recommendation (WP-18)', async () => {
+    const profile = await DeviceProfile.create({
+      user: new mongoose.Types.ObjectId(),
+      name: 'Office laptop',
+      ramMb: 8192,
+      freeDiskMb: 20000,
+      cpuThreads: 8,
+      preference: 'speed',
+    });
+    realPipeline.mockImplementation(async (job) => ({
+      variants: VARIANTS,
+      recommendation: {
+        chosenLevel: 'Q4_K_M',
+        ruleFired: job.profile.preference, // proves the profile was loaded, not just its id
+        explanation: `For "${job.profile.name}"…`,
+      },
+    }));
+    const queued = await queueJob({ profile: profile._id });
+    await processJob(await pickNextJob(), { useFake: false });
+
+    const saved = await Job.findById(queued._id);
+    expect(saved.recommendation).toMatchObject({
+      chosenLevel: 'Q4_K_M',
+      ruleFired: 'speed',
+      explanation: 'For "Office laptop"…',
+      qualityRisk: false,
+    });
   });
 
   it('saves a pipeline error as FAILED with its error code and hint in the log', async () => {

@@ -1,15 +1,15 @@
 // pipeline.js — the real compression pipeline for ONE job, stage by stage:
 //   DOWNLOADING → CONVERTING (F16) → QUANTIZING (each level) → VALIDATING (smoke test)
 //   → BENCHMARKING (speed + peak RAM, WP-14) → EVALUATING (perplexity + HellaSwag, WP-16)
-//   → the F16 baseline file is deleted (its numbers stay).
-// The recommendation is added in WP-18.
+//   → the F16 baseline file is deleted (its numbers stay)
+//   → RECOMMENDING (the best file for the job's device profile, WP-18).
 // It returns the variants; the caller (cli.js or worker.js) saves them.
 // fakePipeline.js exports the same runPipeline(job, report), so the worker can use either.
 // Hardening (WP-13):
 //   - before each heavy step, free disk must stay above the reserve (2 GB) → else E-DISK-01;
 //   - if ANYTHING fails, times out or is cancelled, the job's unfinished files are deleted;
 //   - after conversion the downloaded snapshot is deleted (demo models are kept for fast demos).
-// SRS: REQ-11 – REQ-16. Owner: Sibghatullah (WP-06, hardening WP-13).
+// SRS: REQ-11 – REQ-16, REQ-22. Owner: Sibghatullah (WP-06, hardening WP-13).
 import fs from 'node:fs';
 import path from 'node:path';
 import { settings } from '../config/settings.js';
@@ -20,6 +20,7 @@ import { downloadModel } from './downloader.js';
 import { checkInstalled, convertToF16, quantize, smokeTest } from './llamacpp.js';
 import { addQuality, benchmarkFile, checkDatasets, measureQuality } from './evaluator.js';
 import { consoleReporter } from './reporter.js';
+import { recommend } from '../services/recommender.js';
 
 // The folder for one job's files: data/artifacts/<jobId>/
 export function jobDir(jobId) {
@@ -160,7 +161,30 @@ async function runStages(job, report) {
   baseline.fileDeleted = true;
   await report.log('Deleted the F16 file (its measurements are kept as the baseline).');
 
-  return { variants, llamaCppRef: settings.llamaCppRef, demoMode: settings.demoMode };
+  // 8. Recommend the best file for the job's device profile (CLAUDE.md §7.3). Jobs without a
+  // profile (the regression script) get none. A recommender problem never fails the job:
+  // the files and numbers are still good, and WP-19 can recalculate it later.
+  let recommendation;
+  if (job.profile) {
+    await report.stage('RECOMMENDING', `Choosing the best file for "${job.profile.name}"`);
+    try {
+      recommendation = recommend(variants, job.profile);
+      const { chosenLevel, ruleFired, explanation, qualityRisk } = recommendation;
+      await report.log(
+        `Recommendation: ${chosenLevel ?? 'none'} (${ruleFired}). ${explanation}`,
+        chosenLevel && !qualityRisk ? 'info' : 'warn'
+      );
+    } catch (err) {
+      await report.log(`Could not make a recommendation: ${err.message}`, 'warn');
+    }
+  }
+
+  return {
+    variants,
+    recommendation,
+    llamaCppRef: settings.llamaCppRef,
+    demoMode: settings.demoMode,
+  };
 }
 
 // Stop the job (E-DISK-01) while there is still room, instead of letting the disk fill up and

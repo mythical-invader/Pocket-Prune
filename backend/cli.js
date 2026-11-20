@@ -2,10 +2,15 @@
 // Usage (from the repo root):
 //   npm run pipeline -- --model HuggingFaceTB/SmolLM2-135M-Instruct --levels Q5_K_M,Q4_K_M
 //   npm run pipeline -- --fake            (fake pipeline: no llama.cpp needed)
-// The model's pinned revision comes from the catalog seed list (seedData.js).
-// SRS: REQ-16 (pipeline runnable from the command line). Owner: Sibghatullah (WP-06).
+//   npm run pipeline -- --preference speed --ram 4096 --disk 8000   (recommend for another device)
+// The model's pinned revision comes from the catalog seed list (seedData.js). Without --ram /
+// --disk the recommendation is for THIS computer.
+// SRS: REQ-16 (pipeline runnable from the command line), REQ-22. Owner: Sibghatullah (WP-06).
+import fs from 'node:fs';
+import os from 'node:os';
 import { parseArgs } from 'node:util';
 import { settings } from './config/settings.js';
+import { getHostProfile } from './utils/systemInfo.js';
 import { appError } from './utils/errors.js';
 import { CATALOG_SEED } from './seedData.js';
 import { checkCatalogEntry } from './services/catalogService.js';
@@ -18,8 +23,24 @@ const { values } = parseArgs({
     model: { type: 'string', default: 'HuggingFaceTB/SmolLM2-135M-Instruct' },
     levels: { type: 'string', default: 'Q5_K_M,Q4_K_M' },
     fake: { type: 'boolean', default: settings.fakePipeline },
+    preference: { type: 'string', default: 'balanced' }, // quality | speed | smallest | balanced
+    ram: { type: 'string' }, // device RAM in MB (default: this computer)
+    disk: { type: 'string' }, // device free disk in MB (default: this computer)
   },
 });
+
+// The device to recommend for: this computer, unless --ram / --disk describe another one.
+async function deviceProfile() {
+  fs.mkdirSync(settings.dataDir, { recursive: true }); // free disk is measured on this drive
+  const host = await getHostProfile(settings.dataDir);
+  const custom = values.ram || values.disk;
+  return {
+    name: custom ? 'CLI device' : `this computer (${os.hostname()})`,
+    ramMb: Number(values.ram) || host.ramMb,
+    freeDiskMb: Number(values.disk) || host.freeDiskMb,
+    preference: values.preference,
+  };
+}
 
 async function main() {
   const model = CATALOG_SEED.find((m) => m.hfRepoId === values.model);
@@ -32,6 +53,7 @@ async function main() {
     _id: `cli-${Date.now()}`, // files go to data/artifacts/cli-<time>/
     model,
     quantLevels: values.levels.split(',').map((level) => level.trim()),
+    profile: await deviceProfile(),
   };
   const runPipeline = values.fake ? fakePipeline : realPipeline;
   console.log(
@@ -59,6 +81,15 @@ async function main() {
       file: v.fileDeleted ? 'deleted (baseline)' : 'kept',
     }))
   );
+
+  const rec = result.recommendation;
+  if (rec) {
+    console.log(`\nRecommendation: ${rec.chosenLevel ?? 'none'} (rule: ${rec.ruleFired})`);
+    console.log(`  ${rec.explanation}`);
+    if (rec.baselineSmallest) {
+      console.log(`  Fits: smallest ${rec.baselineSmallest}, largest ${rec.baselineLargest}`);
+    }
+  }
 }
 
 main().catch((err) => {
