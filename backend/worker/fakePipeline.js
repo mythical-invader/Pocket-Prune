@@ -11,6 +11,7 @@ import path from 'node:path';
 import { settings } from '../config/settings.js';
 import { fileSizeMb, sha256File } from '../utils/fileHash.js';
 import { consoleReporter } from './reporter.js';
+import { recommend } from '../services/recommender.js';
 
 // Measured in WP-02 (docs/LEARNING_NOTES.md §5); HellaSwag accuracy measured in WP-16 (400 tasks).
 // Q8_0 was not measured — estimated values.
@@ -105,19 +106,19 @@ export async function runPipeline(job, report = consoleReporter(), { delayMs = 2
   }
   await report.log(`Made ${variants.length} FAKE files in ${outDir}`, 'warn');
 
+  // The real recommender on the fake numbers (WP-18), so the recommendation card can be built
+  // with every rule; the explanation says clearly that the data is fake.
+  let recommendation;
+  if (job.profile) {
+    recommendation = recommend(variants, job.profile);
+    recommendation.explanation = `FAKE DATA — ${recommendation.explanation}`;
+  }
+
   return {
     fake: true,
     variants,
     llamaCppRef: settings.llamaCppRef,
     demoMode: settings.demoMode,
-    recommendation: {
-      chosenLevel: job.quantLevels.includes('Q4_K_M') ? 'Q4_K_M' : job.quantLevels[0],
-      baselineSmallest: job.quantLevels.includes('Q4_K_M') ? 'Q4_K_M' : job.quantLevels[0],
-      baselineLargest: 'F16',
-      ruleFired: 'FAKE',
-      explanation:
-        'FAKE DATA — made by the fake pipeline for building the website. Not a real result.',
-      qualityRisk: false,
-    },
+    recommendation,
   };
 }

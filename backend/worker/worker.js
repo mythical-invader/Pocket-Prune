@@ -16,6 +16,7 @@ import { connectDB, disconnectDB } from '../config/db.js';
 import Job from '../models/Job.js';
 import JobEvent from '../models/JobEvent.js';
 import '../models/CatalogModel.js'; // registers the model, so job.populate('model') works
+import '../models/DeviceProfile.js'; // …and job.populate('profile') (the recommender needs it)
 import { appError } from '../utils/errors.js';
 import { jobDir, runPipeline as realPipeline } from './pipeline.js';
 import { runPipeline as fakePipeline } from './fakePipeline.js';
@@ -71,7 +72,10 @@ export async function processJob(job, { useFake = settings.fakePipeline } = {}) 
   try {
     // Load the catalog model here, inside try: if anything fails from now on, the job is
     // saved as FAILED at once instead of being left "running".
-    await job.populate('model'); // the pipeline needs hfRepoId, revision and f16SizeMb
+    // The pipeline needs the model's hfRepoId, revision and f16SizeMb, and the device profile
+    // (RAM, disk, preference) for the recommendation. A deleted profile only means no
+    // recommendation; a deleted catalog model stops the job.
+    await job.populate(['model', 'profile']);
     if (!job.model) throw appError('E-CAT-01'); // the catalog model was deleted meanwhile
     await JobEvent.create({
       job: job._id,
@@ -89,7 +93,7 @@ export async function processJob(job, { useFake = settings.fakePipeline } = {}) 
         progressPct: 100,
         variants: result.variants,
         llamaCppRef: result.llamaCppRef,
-        // only the fake pipeline returns a recommendation until the recommender (WP-18)
+        // the recommender's answer for the job's device profile (WP-18); none without a profile
         ...(result.recommendation && { recommendation: result.recommendation }),
         fake: Boolean(result.fake),
         demoMode: Boolean(result.demoMode), // shorter tests → "Demo mode" badge (WP-16)

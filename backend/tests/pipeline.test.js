@@ -321,3 +321,32 @@ describe('runPipeline hardening (WP-13)', () => {
     expect(fs.existsSync(snapshot)).toBe(true);
   });
 });
+
+describe('runPipeline recommendation (WP-18)', () => {
+  const profile = { name: 'Test laptop', ramMb: 16384, freeDiskMb: 50000, preference: 'speed' };
+
+  it('ends with RECOMMENDING and returns the choice for the job profile', async () => {
+    const report = recorder();
+    const result = await runPipeline({ ...job, profile }, report);
+    expect(report.stages.at(-1)).toBe('RECOMMENDING: Choosing the best file for "Test laptop"');
+    // the mocks give both levels the same speed and size → rule 4 picks one of them, never F16
+    expect(['Q5_K_M', 'Q4_K_M']).toContain(result.recommendation.chosenLevel);
+    expect(result.recommendation.explanation).toContain('"Test laptop"');
+    expect(report.logs.some((l) => l.message.startsWith('Recommendation: '))).toBe(true);
+  });
+
+  it('gives no recommendation (and no RECOMMENDING stage) when the job has no profile', async () => {
+    const report = recorder();
+    const result = await runPipeline(job, report);
+    expect(result.recommendation).toBeUndefined();
+    expect(report.stages.some((s) => s.startsWith('RECOMMENDING'))).toBe(false);
+  });
+
+  it('logs a warning when nothing fits the device, but the job still finishes', async () => {
+    const report = recorder();
+    const tiny = { ...profile, ramMb: 128 }; // 75 % = 96 MB < the 170 MB peak RAM
+    const result = await runPipeline({ ...job, profile: tiny }, report);
+    expect(result.recommendation).toMatchObject({ chosenLevel: null, ruleFired: 'nothing-fits' });
+    expect(report.logs.find((l) => l.message.startsWith('Recommendation: ')).level).toBe('warn');
+  });
+});

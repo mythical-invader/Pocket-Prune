@@ -27,9 +27,9 @@
 
     { "id": "WP-14", "title": "Benchmarking", "owner": "S", "weight": 4, "phase": 3, "week": "5–6", "needs": ["WP-13"], "status": "merged", "pr": 65 },
     { "id": "WP-15", "title": "Results table", "owner": "H", "weight": 3, "phase": 3, "week": "5–6", "needs": ["WP-12"], "status": "merged", "pr": 63 },
-    { "id": "WP-16", "title": "Perplexity + demo mode + task accuracy (E2)", "owner": "S", "weight": 3, "phase": 3, "week": "7", "needs": ["WP-14"], "status": "in-progress", "pr": null },
+    { "id": "WP-16", "title": "Perplexity + demo mode + task accuracy (E2)", "owner": "S", "weight": 3, "phase": 3, "week": "7", "needs": ["WP-14"], "status": "merged", "pr": 66 },
     { "id": "WP-17", "title": "Charts + downloads", "owner": "H", "weight": 3, "phase": 3, "week": "7", "needs": ["WP-15"], "status": "not-started", "pr": null },
-    { "id": "WP-18", "title": "Recommender + baseline comparison (E3)", "owner": "S", "weight": 4, "phase": 3, "week": "8–9", "needs": ["WP-16"], "status": "not-started", "pr": null },
+    { "id": "WP-18", "title": "Recommender + baseline comparison (E3)", "owner": "S", "weight": 4, "phase": 3, "week": "8–9", "needs": ["WP-16"], "status": "in-progress", "pr": null },
     { "id": "WP-19", "title": "Recommendation card + export", "owner": "H", "weight": 3, "phase": 3, "week": "8–9", "needs": ["WP-17", "WP-18"], "status": "not-started", "pr": null },
     { "id": "WP-20", "title": "Benchmark report (E1, E3, E4) + remove fake pipeline", "owner": "S", "weight": 2, "phase": 3, "week": "10", "needs": ["WP-18", "WP-19"], "status": "not-started", "pr": null },
 
